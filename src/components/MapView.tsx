@@ -15,7 +15,7 @@ import {
   METRO_STATIONS,
 } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
-import { formatDistance, estimateWalkingMinutes } from '../utils/geo';
+import { formatDistance, estimateWalkingMinutes, calculateDistanceKm } from '../utils/geo';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import {
   Crosshair,
@@ -25,7 +25,6 @@ import {
   X,
   Route,
   Train,
-  CheckCircle2,
 } from 'lucide-react';
 
 interface Props {
@@ -67,7 +66,7 @@ export const MapView: React.FC<Props> = ({
 
   const t = TRANSLATIONS[language];
 
-  // Pure SVG/Tailwind widget markers (Lucide icons in colored circular divs)
+  // Custom Mandap / Temple and POI icons
   const createWidgetIcon = (
     type: 'pandal' | 'police' | 'toilet' | 'metro' | 'railway' | 'food' | 'ferry',
     isVisited: boolean = false,
@@ -84,13 +83,35 @@ export const MapView: React.FC<Props> = ({
         size = 34;
         bgColor = '#059669';
         borderColor = '#34D399';
-        iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        // Visited Mandap icon (Lucide Landmark with checkmark)
+        iconSvg = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="22" x2="21" y2="22"/>
+          <line x1="6" y1="18" x2="6" y2="11"/>
+          <line x1="10" y1="18" x2="10" y2="11"/>
+          <line x1="14" y1="18" x2="14" y2="11"/>
+          <line x1="18" y1="18" x2="18" y2="11"/>
+          <polygon points="12 2 20 7 4 7" fill="#FFFFFF" fill-opacity="0.3"/>
+          <line x1="2" y1="11" x2="22" y2="11"/>
+        </svg>`;
+        extraBadge = `
+          <div style="position: absolute; -top: 4px; -right: 4px; width: 14px; height: 14px; border-radius: 9999px; background-color: #10B981; border: 1.5px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #FFFFFF; font-weight: 900;">
+            ✓
+          </div>
+        `;
       } else if (isFeatured) {
         size = 38;
-        bgColor = '#FFB300';
-        borderColor = '#FFFFFF';
-        // Diya / Sacred Flame icon with dark contrast
-        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0B0F19" stroke="#0B0F19" stroke-width="1.5"><path d="M12 2c-1.5 2.5-3 5-3 8 0 2.5 1.5 4 3 4s3-1.5 3-4c0-3-1.5-5.5-3-8z"/><path d="M5 14c0 3.5 3.1 6 7 6s7-2.5 7-6H5z"/></svg>`;
+        bgColor = '#D97706';
+        borderColor = '#FEF3C7';
+        // Rich Ornate Temple / Mandap (Lucide Landmark with golden shikhara pediment)
+        iconSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FEF3C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 20 7 4 7" fill="#FEF3C7" fill-opacity="0.4"/>
+          <line x1="2" y1="11" x2="22" y2="11"/>
+          <line x1="6" y1="18" x2="6" y2="11"/>
+          <line x1="10" y1="18" x2="10" y2="11"/>
+          <line x1="14" y1="18" x2="14" y2="11"/>
+          <line x1="18" y1="18" x2="18" y2="11"/>
+          <line x1="3" y1="22" x2="21" y2="22"/>
+        </svg>`;
         extraBadge = `
           <div style="position: absolute; -top: 4px; -right: 4px; width: 14px; height: 14px; border-radius: 9999px; background-color: #EF4444; border: 1.5px solid #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #FFFFFF; font-weight: 900;">
             ★
@@ -100,43 +121,46 @@ export const MapView: React.FC<Props> = ({
         size = 32;
         bgColor = '#1E293B';
         borderColor = '#FFB300';
-        iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="#FFB300" stroke="#FFB300" stroke-width="1"><path d="M12 2c-1.5 2.5-3 5-3 8 0 2.5 1.5 4 3 4s3-1.5 3-4c0-3-1.5-5.5-3-8z"/><path d="M5 14c0 3.5 3.1 6 7 6s7-2.5 7-6H5z"/></svg>`;
+        // Sacred Temple / Mandap (Lucide Landmark architecture)
+        iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFB300" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="22" x2="21" y2="22"/>
+          <line x1="6" y1="18" x2="6" y2="11"/>
+          <line x1="10" y1="18" x2="10" y2="11"/>
+          <line x1="14" y1="18" x2="14" y2="11"/>
+          <line x1="18" y1="18" x2="18" y2="11"/>
+          <polygon points="12 2 20 7 4 7" fill="#FFB300" fill-opacity="0.25"/>
+          <line x1="2" y1="11" x2="22" y2="11"/>
+        </svg>`;
       }
     } else if (type === 'police') {
       size = 30;
       bgColor = '#EF4444';
       borderColor = '#FEE2E2';
-      // Shield
       iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
     } else if (type === 'toilet') {
       size = 28;
       bgColor = '#10B981';
       borderColor = '#D1FAE5';
-      // Restroom
       iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h6a3 3 0 0 1 3 3v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a3 3 0 0 1 3-3z"/><circle cx="12" cy="3" r="1"/></svg>`;
     } else if (type === 'metro') {
       size = 32;
       bgColor = '#2563EB';
       borderColor = '#DBEAFE';
-      // Train
       iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></svg>`;
     } else if (type === 'railway') {
       size = 32;
       bgColor = '#7C3AED';
       borderColor = '#EDE9FE';
-      // Railway terminal
       iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="15" rx="3"/><path d="M3 10h18"/><circle cx="8" cy="14" r="1.5" fill="#FFF"/><circle cx="16" cy="14" r="1.5" fill="#FFF"/><path d="m7 21-2 2"/><path d="m17 21 2 2"/></svg>`;
     } else if (type === 'food') {
       size = 28;
       bgColor = '#F97316';
       borderColor = '#FFEDD5';
-      // Utensils
       iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2v20M2 6h8a4 4 0 0 1 4 4v12M6 2v4"/></svg>`;
     } else if (type === 'ferry') {
       size = 28;
       bgColor = '#06B6D4';
       borderColor = '#E0F2FE';
-      // Anchor/Waves
       iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/></svg>`;
     }
 
@@ -178,23 +202,20 @@ export const MapView: React.FC<Props> = ({
       zoom: 13,
       minZoom: 11,
       maxZoom: 18,
-      zoomControl: false, // Replaced with custom control stack on top-right
+      zoomControl: false,
       attributionControl: false,
-      // Rigid North orientation: touch-rotation disabled
       touchZoom: true,
       boxZoom: false,
       doubleClickZoom: true,
       scrollWheelZoom: true,
     });
 
-    // 1. Standard, Free OpenStreetMap tile provider (No API Key Required watermark)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     }).addTo(map);
 
-    // Track zoom level for zoom-tiered decluttering
     map.on('zoomend', () => {
       setCurrentZoom(map.getZoom());
     });
@@ -205,7 +226,6 @@ export const MapView: React.FC<Props> = ({
     markersLayerRef.current = markersLayer;
     mapInstanceRef.current = map;
 
-    // Handle container resize
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
     });
@@ -219,10 +239,6 @@ export const MapView: React.FC<Props> = ({
   }, []);
 
   // Update Markers when filter, zoom level, language, or visited list changes
-  // Decluttering logic:
-  // - If zoom < 15: show only featured pandals
-  // - If zoom >= 15: show all pandals
-  // - Critical Facilities & POIs: ONLY show when their specific filter is active
   useEffect(() => {
     const markersLayer = markersLayerRef.current;
     const map = mapInstanceRef.current;
@@ -243,9 +259,6 @@ export const MapView: React.FC<Props> = ({
       const matchSouth = (pandal.zone === 'South' || pandal.zone === 'Central') && showSouth;
 
       if (matchNorth || matchSouth) {
-        // Zoom decluttering constraint:
-        // Default / zoomed-out view (< 15): show only featured pandals!
-        // Zoom >= 15: reveal all pandals
         if (currentZoom < 15 && !pandal.isFeatured && activeFilter === 'all') {
           return;
         }
@@ -266,7 +279,6 @@ export const MapView: React.FC<Props> = ({
     });
 
     // 2. Add POIs (Police, Toilets, Food, Railway, Ferry)
-    // Hoppers Bible Rule: POIs only show when their specific filter pill is active!
     if (activeFilter === 'police' || activeFilter === 'toilets' || activeFilter === 'food' || activeFilter === 'ferry' || activeFilter === 'railway') {
       CRITICAL_FACILITIES.forEach((facility) => {
         let shouldShow = false;
@@ -335,13 +347,12 @@ export const MapView: React.FC<Props> = ({
     }
   }, [activeFilter, currentZoom, language, visitedList]);
 
-  // Handle Active Walking Route Polyline
+  // Handle Active Walking Route Polyline with Smart Viewport Padding
   useEffect(() => {
     const routesLayer = routesLayerRef.current;
     const map = mapInstanceRef.current;
     if (!routesLayer || !map) return;
 
-    // Clear previous routes in this layer if no walk route
     if (!activeWalkRoute) {
       if (!activeMetroRoute) {
         routesLayer.clearLayers();
@@ -374,10 +385,14 @@ export const MapView: React.FC<Props> = ({
     routesLayer.addLayer(glowLine);
     routesLayer.addLayer(dashedLine);
 
-    // Zoom/fit map to show complete route
-    const bounds = L.latLngBounds([from, to]);
-    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 16, animate: true });
-  }, [activeWalkRoute]);
+    // Smart Viewport: keep blue dot visible, with 80px responsive padding
+    const points: [number, number][] = [from, to];
+    if (userCoords) {
+      points.push([userCoords.lat, userCoords.lng]);
+    }
+    const bounds = L.latLngBounds(points);
+    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16, animate: true });
+  }, [activeWalkRoute, userCoords]);
 
   // Handle Active Metro Route Polyline
   useEffect(() => {
@@ -398,8 +413,14 @@ export const MapView: React.FC<Props> = ({
     const lineColor =
       activeMetroRoute.line === 'green'
         ? '#10B981'
-        : activeMetroRoute.line === 'interchange'
+        : activeMetroRoute.line === 'orange'
+        ? '#F59E0B'
+        : activeMetroRoute.line === 'purple'
+        ? '#8B5CF6'
+        : activeMetroRoute.line === 'yellow'
         ? '#EAB308'
+        : activeMetroRoute.line === 'interchange'
+        ? '#EC4899'
         : '#2563EB';
 
     // Outer white casing
@@ -439,9 +460,9 @@ export const MapView: React.FC<Props> = ({
       routesLayer.addLayer(stationDot);
     });
 
-    // Fit map bounds to metro route
+    // Fit map bounds to metro route with clean padding
     const bounds = L.latLngBounds(coords);
-    map.fitBounds(bounds, { padding: [60, 60], animate: true });
+    map.fitBounds(bounds, { padding: [80, 80], animate: true });
   }, [activeMetroRoute, language]);
 
   // GPS "Find My Location" logic with animated pulsing blue dot
@@ -484,115 +505,123 @@ export const MapView: React.FC<Props> = ({
               iconAnchor: [14, 14],
             });
 
-            userMarkerRef.current = L.marker([latitude, longitude], {
+            const marker = L.marker([latitude, longitude], {
               icon: userIcon,
               zIndexOffset: 1000,
             }).addTo(map);
+
+            marker.bindTooltip(t.yourLocation, { direction: 'top' });
+            userMarkerRef.current = marker;
           }
 
-          // Accuracy Ring
           if (userCircleRef.current) {
             userCircleRef.current.setLatLng([latitude, longitude]);
-            userCircleRef.current.setRadius(Math.max(25, accuracy));
+            userCircleRef.current.setRadius(Math.max(50, accuracy));
           } else {
-            userCircleRef.current = L.circle([latitude, longitude], {
-              radius: Math.max(25, accuracy),
+            const circle = L.circle([latitude, longitude], {
+              radius: Math.max(50, accuracy),
               color: '#3B82F6',
               fillColor: '#3B82F6',
-              fillOpacity: 0.15,
+              fillOpacity: 0.12,
               weight: 1.5,
             }).addTo(map);
+            userCircleRef.current = circle;
           }
         }
       },
-      (error) => {
+      (err) => {
         setGpsLoading(false);
-        console.warn('Geolocation denied or unavailable:', error.message);
         setGpsStatusMsg(t.gpsDenied);
-        setTimeout(() => setGpsStatusMsg(null), 4000);
+        setTimeout(() => setGpsStatusMsg(null), 3500);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 15000,
-      }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
     );
   };
 
-  // Zoom controls handlers
   const handleZoomIn = () => {
-    mapInstanceRef.current?.zoomIn();
-  };
-
-  const handleZoomOut = () => {
-    mapInstanceRef.current?.zoomOut();
-  };
-
-  // Reset to True North & Central Kolkata
-  const handleLockNorth = () => {
-    const map = mapInstanceRef.current;
-    if (map) {
-      // Re-center gently with North-facing orientation
-      map.panTo(map.getCenter(), { animate: true });
-      setGpsStatusMsg('Locked True North (0°)');
-      setTimeout(() => setGpsStatusMsg(null), 2000);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomIn();
     }
   };
 
-  // Calculate walking route distance & duration for the floating banner
-  let walkDistanceStr = '';
-  let walkMinutesEst = 0;
-  if (activeWalkRoute) {
-    const dKm =
-      Math.hypot(
-        (activeWalkRoute.pandal.lat - activeWalkRoute.fromCoords.lat) * 111,
-        (activeWalkRoute.pandal.lng - activeWalkRoute.fromCoords.lng) *
-          111 *
-          Math.cos((activeWalkRoute.pandal.lat * Math.PI) / 180)
-      );
-    walkDistanceStr = formatDistance(dKm);
-    walkMinutesEst = estimateWalkingMinutes(dKm);
-  }
+  const handleZoomOut = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomOut();
+    }
+  };
+
+  const handleLockNorth = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.panBy([0, 0]);
+      setGpsStatusMsg('Strict North Orientation Locked');
+      setTimeout(() => setGpsStatusMsg(null), 2500);
+    }
+  };
+
+  const getCommuteAdvice = (km: number) => {
+    if (km < 1.5) return '🚶 Walking Distance (~15 mins)';
+    if (km <= 5.0) return '🛺 Auto/Taxi recommended';
+    return '🚇 Metro/Cab recommended';
+  };
 
   return (
     <div id="map-view-container" className="relative w-full h-[calc(100vh-62px)] overflow-hidden">
-      {/* Map Canvas */}
-      <div ref={mapContainerRef} className="w-full h-full" style={{ zIndex: 1 }} />
+      {/* Primary Map Stage */}
+      <div
+        id="leaflet-map"
+        ref={mapContainerRef}
+        className="w-full h-full bg-[#0F172A] z-0"
+      />
 
-      {/* Floating Active Walk Route Banner */}
-      {activeWalkRoute && (
-        <div
-          id="active-walk-route-banner"
-          className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-amber-500/40 shadow-2xl flex items-center justify-between gap-3 animate-slide-up"
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
-              <Route className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  {t.routeActive}
-                </span>
-                <span className="text-[10px] text-slate-400">• {walkDistanceStr} (~{walkMinutesEst}m)</span>
+      {/* Floating Active Walking Route Banner */}
+      {activeWalkRoute && (() => {
+        const distKm = calculateDistanceKm(
+          activeWalkRoute.fromCoords.lat,
+          activeWalkRoute.fromCoords.lng,
+          activeWalkRoute.pandal.lat,
+          activeWalkRoute.pandal.lng
+        );
+        return (
+          <div
+            id="active-walk-route-banner"
+            className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-amber-500/40 shadow-2xl flex items-center justify-between gap-3 animate-slide-up"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                <Route className="w-4 h-4" />
               </div>
-              <p className="text-xs font-bold text-white truncate">
-                {activeWalkRoute.pandal.name[language] || activeWalkRoute.pandal.name.en}
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                    {formatDistance(distKm)}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">•</span>
+                  <span className="text-[10px] text-slate-300">
+                    ~{estimateWalkingMinutes(distKm)} min walk
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-white truncate">
+                  {activeWalkRoute.pandal.name[language] || activeWalkRoute.pandal.name.en}
+                </p>
+                {/* Commute advice tag */}
+                <p className="text-[10px] text-amber-200 mt-1 font-medium bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 inline-block truncate max-w-full">
+                  {getCommuteAdvice(distKm)}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {onClearWalkRoute && (
-            <button
-              onClick={onClearWalkRoute}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition shrink-0"
-              title={t.clearRoute}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
+            {onClearWalkRoute && (
+              <button
+                onClick={onClearWalkRoute}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition shrink-0"
+                title={t.clearRoute}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Floating Active Metro Route Banner */}
       {activeMetroRoute && !activeWalkRoute && (
@@ -626,16 +655,8 @@ export const MapView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Zoom Tier Level Badge (Top Left) */}
-      <div className="absolute top-4 left-4 z-20 pointer-events-none">
-        <div className="px-2.5 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-[11px] text-slate-300 font-medium shadow-lg flex items-center gap-1.5">
-          <span>{currentZoom < 15 ? '★ Featured Pandals' : 'All Pandals Visible'}</span>
-          <span className="text-[10px] text-amber-400/80 font-mono">z{currentZoom}</span>
-        </div>
-      </div>
-
       {/* Right Controls Stack: Zoom (+/-), Lock North, Find My Location */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-center pointer-events-auto">
+      <div className="absolute top-24 right-4 z-20 flex flex-col gap-2 items-center pointer-events-auto">
         {/* Zoom In & Zoom Out Buttons */}
         <div className="flex flex-col rounded-2xl bg-slate-900/90 backdrop-blur-md border border-white/15 shadow-xl overflow-hidden">
           <button

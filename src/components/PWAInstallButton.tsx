@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
-import { Download, Smartphone, X, Share } from 'lucide-react';
+import { ArrowDownToLine, Smartphone, X, Share, Download } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 
@@ -23,11 +23,11 @@ export const PWAInstallButton: React.FC<Props> = ({ language }) => {
         <button
           id="pwa-install-btn"
           onClick={install}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-[#FFB300] to-[#FF8F00] text-slate-950 text-xs font-semibold shadow-md hover:brightness-110 active:scale-95 transition"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-white/10 shadow-inner active:scale-95 transition"
           title={t.installApp}
+          aria-label={t.installApp}
         >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t.installApp}</span>
+          <ArrowDownToLine className="w-4 h-4 text-amber-400" />
         </button>
       )}
 
@@ -35,10 +35,11 @@ export const PWAInstallButton: React.FC<Props> = ({ language }) => {
         <button
           id="pwa-ios-install-btn"
           onClick={() => setShowIOSGuide(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-amber-300 text-xs font-medium border border-white/10 shadow-sm transition"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-amber-400 border border-white/10 shadow-inner active:scale-95 transition"
+          title={t.installIos}
+          aria-label={t.installIos}
         >
-          <Smartphone className="w-3.5 h-3.5" />
-          <span>{t.installIos}</span>
+          <ArrowDownToLine className="w-4 h-4 text-amber-400" />
         </button>
       )}
 

@@ -50,12 +50,17 @@ export interface FacilityPoint {
   nearPandalId?: string;
 }
 
+export type MetroLine = 'blue' | 'green' | 'orange' | 'purple' | 'yellow';
+
 export interface MetroStation {
   id: string;
   name: LocalizedString;
-  lines: ('blue' | 'green')[];
+  lines: MetroLine[];
   orderBlue?: number;
   orderGreen?: number;
+  orderOrange?: number;
+  orderPurple?: number;
+  orderYellow?: number;
   isInterchange?: boolean;
   lat: number;
   lng: number;
@@ -88,7 +93,7 @@ export interface WalkRoute {
 
 export interface MetroMapRoute {
   stations: MetroStation[];
-  line: 'blue' | 'green' | 'interchange';
+  line: MetroLine | 'interchange';
   coordinates: [number, number][];
 }
 
@@ -96,15 +101,17 @@ export interface RouteResult {
   fromStation: MetroStation;
   toStation: MetroStation;
   isDirect: boolean;
-  line: 'blue' | 'green' | 'interchange';
+  line: MetroLine | 'interchange';
   stationsCount: number;
   estimatedMinutes: number;
   steps: {
     instruction: LocalizedString;
     subtext?: LocalizedString;
-    lineBadge?: 'blue' | 'green';
+    lineBadge?: MetroLine | 'interchange' | 'bypass';
   }[];
   transferStation?: MetroStation;
+  hasBypass?: boolean;
+  bypassNote?: LocalizedString;
   exitGateAdvice?: { gate: string; destination: LocalizedString }[];
   destinationPandals: Pandal[];
   stationsList?: MetroStation[];

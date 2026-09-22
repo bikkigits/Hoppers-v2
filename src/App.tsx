@@ -110,7 +110,7 @@ export function App() {
 
             {/* Metro Router Overlay above the map */}
             {currentTab === 'metro' && (
-              <div className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center p-3 pt-16 pb-20">
+              <div className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center p-3 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
                 <div
                   className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto"
                   onClick={() => setCurrentTab('map')}

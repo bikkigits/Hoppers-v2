@@ -57,6 +57,14 @@ export const EmergencySOSSheet: React.FC<Props> = ({
     },
   ];
 
+  const handleCall = (e: React.MouseEvent, number: string, label: string) => {
+    e.preventDefault();
+    const shouldCall = window.confirm(`Do you want to dial ${number} for ${label}?`);
+    if (shouldCall) {
+      window.location.href = `tel:${number}`;
+    }
+  };
+
   return (
     <div
       id="emergency-sos-modal"
@@ -69,7 +77,7 @@ export const EmergencySOSSheet: React.FC<Props> = ({
       />
 
       {/* Sheet Modal */}
-      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t-2 border-x-2 border-red-500/60 shadow-2xl rounded-t-3xl p-5 pb-20 text-slate-100 animate-slide-up">
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t-2 border-x-2 border-red-500/60 shadow-2xl rounded-t-3xl p-5 pb-[calc(5rem+env(safe-area-inset-bottom))] text-slate-100 animate-slide-up">
         {/* Handle Bar */}
         <div className="w-12 h-1.5 bg-red-500/40 rounded-full mx-auto mb-4" />
 
@@ -100,13 +108,16 @@ export const EmergencySOSSheet: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Dialers Grid */}
+        {/* Dialers Grid with safety confirm() prompt */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-5">
           {emergencyContacts.map((contact) => (
-            <a
+            <div
               key={contact.number}
-              href={`tel:${contact.number}`}
-              className={`p-3.5 rounded-2xl border ${contact.color} transition flex items-center justify-between gap-3 group active:scale-98 shadow-md`}
+              onClick={(e) => handleCall(e, contact.number, contact.label)}
+              className={`p-3.5 rounded-2xl border ${contact.color} transition flex items-center justify-between gap-3 group active:scale-98 shadow-md cursor-pointer`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Call ${contact.label} at ${contact.number}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="p-2 rounded-xl bg-black/40 shrink-0">
@@ -126,7 +137,7 @@ export const EmergencySOSSheet: React.FC<Props> = ({
                 <PhoneCall className="w-3.5 h-3.5" />
                 <span>{contact.number}</span>
               </div>
-            </a>
+            </div>
           ))}
         </div>
 
@@ -139,31 +150,25 @@ export const EmergencySOSSheet: React.FC<Props> = ({
 
           <ul className="space-y-2 text-xs text-slate-300">
             <li className="flex items-start gap-2">
-              <span className="text-amber-400 shrink-0">•</span>
-              <span>{t.safetyTip1}</span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                <strong>Stay Hydrated:</strong> Use nearby Kolkata Municipal Corporation water kiosks or branded stalls along major thoroughfares.
+              </span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-amber-400 shrink-0">•</span>
-              <span>{t.safetyTip2}</span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                <strong>Lost Companions:</strong> Agree upon a physical landmark (e.g. nearest Metro station or designated Police Assistance Booth) rather than relying on phone reception.
+              </span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-amber-400 shrink-0">•</span>
-              <span>{t.safetyTip3}</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-amber-400 shrink-0">•</span>
-              <span>{t.safetyTip4}</span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                <strong>Metro Smart Travel:</strong> Avoid peak midnight rush at central interchange stations (Esplanade/Kalighat) by walking 5-10 mins to adjacent stations.
+              </span>
             </li>
           </ul>
         </div>
-
-        {/* Dismiss Button */}
-        <button
-          onClick={onClose}
-          className="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-white/10 transition"
-        >
-          {t.closeSheet}
-        </button>
       </div>
     </div>
   );

@@ -1,20 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MetroStation, Language, Pandal, MetroMapRoute } from '../types';
+import { MetroStation, Language, Pandal, MetroMapRoute, MetroLine } from '../types';
 import { METRO_STATIONS, PANDALS_DATA } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
-import { calculateMetroRoute } from '../utils/metroRouting';
+import { calculateMetroRoute, getLineColor } from '../utils/metroRouting';
 import {
   Train,
-  ArrowRight,
   ArrowUpDown,
   Clock,
   Navigation,
   Sparkles,
-  MapPin,
-  CheckCircle2,
-  AlertTriangle,
   X,
   Compass,
+  AlertCircle,
 } from 'lucide-react';
 
 interface Props {
@@ -65,51 +62,92 @@ export const MetroRouterView: React.FC<Props> = ({
     setToId(temp);
   };
 
-  const getLineColor = (line: 'blue' | 'green' | 'interchange') => {
-    if (line === 'blue') return 'bg-blue-600 text-blue-100 border-blue-400';
-    if (line === 'green') return 'bg-emerald-600 text-emerald-100 border-emerald-400';
-    return 'bg-gradient-to-r from-blue-600 to-emerald-600 text-white border-amber-400';
+  const getStationLabel = (s: MetroStation) => {
+    const name = s.name[language] || s.name.en;
+    if (s.isInterchange) return `${name} (Interchange)`;
+    return name;
   };
 
   const containerClasses = isOverlay
-    ? 'relative w-full max-w-lg mx-auto bg-slate-950/95 backdrop-blur-xl border border-white/20 p-4 rounded-3xl shadow-2xl space-y-4 pointer-events-auto max-h-[75vh] overflow-y-auto animate-fade-in'
-    : 'w-full max-w-3xl mx-auto px-4 pt-4 pb-28 min-h-[calc(100vh-62px)]';
+    ? 'relative w-full max-w-lg mx-auto bg-slate-950/95 backdrop-blur-xl border border-white/20 p-4 rounded-3xl shadow-2xl space-y-4 pointer-events-auto max-h-[80vh] overflow-y-auto animate-fade-in'
+    : 'w-full max-w-3xl mx-auto px-4 pt-4 pb-28 min-h-[calc(100vh-62px)] space-y-4';
+
+  const renderStationOptions = (currentSelectedId: string, prefix: string) => {
+    const blueList = METRO_STATIONS.filter((s) => s.lines.includes('blue'));
+    const greenList = METRO_STATIONS.filter((s) => s.lines.includes('green') && !s.isInterchange);
+    const orangeList = METRO_STATIONS.filter((s) => s.lines.includes('orange') && !s.isInterchange);
+    const purpleList = METRO_STATIONS.filter((s) => s.lines.includes('purple'));
+    const yellowList = METRO_STATIONS.filter((s) => s.lines.includes('yellow') && !s.isInterchange);
+
+    return (
+      <>
+        <optgroup label="🔵 Blue Line 1 (Dakshineswar ↔ Kavi Subhash)">
+          {blueList.map((s) => (
+            <option key={`${prefix}-${s.id}`} value={s.id}>
+              🔵 {getStationLabel(s)}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="🟢 Green Line 2 (Howrah Maidan ↔ Sector V)">
+          {greenList.map((s) => (
+            <option key={`${prefix}-${s.id}`} value={s.id}>
+              🟢 {getStationLabel(s)}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="🟠 Orange Line 6 (Kavi Subhash ↔ Beleghata)">
+          {orangeList.map((s) => (
+            <option key={`${prefix}-${s.id}`} value={s.id}>
+              🟠 {getStationLabel(s)}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="🟣 Purple Line 3 (Joka ↔ Majerhat)">
+          {purpleList.map((s) => (
+            <option key={`${prefix}-${s.id}`} value={s.id}>
+              🟣 {getStationLabel(s)}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="🟡 Yellow Line 4 (Noapara ↔ Jai Hind)">
+          {yellowList.map((s) => (
+            <option key={`${prefix}-${s.id}`} value={s.id}>
+              🟡 {getStationLabel(s)}
+            </option>
+          ))}
+        </optgroup>
+      </>
+    );
+  };
 
   return (
     <div id="metro-router-view" className={containerClasses}>
       {/* Header Banner */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-950/60 to-slate-900 border border-blue-500/20 shadow-xl mb-4 relative">
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-950/60 to-slate-900 border border-blue-500/20 shadow-xl relative">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 shrink-0">
               <Train className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-white tracking-tight truncate">
                 {t.metroTitle}
               </h2>
-              <p className="text-xs text-slate-300">
-                {t.metroSubtitle}
+              <p className="text-xs text-slate-300 truncate">
+                5-Line Smart Routing & Pujo Reality
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {onViewOnMap && (
-              <button
-                onClick={onViewOnMap}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-600/40 hover:bg-blue-600/60 text-blue-200 border border-blue-400/40 text-xs font-semibold active:scale-95 transition"
-                title="View Route on Map"
-              >
-                <Compass className="w-3.5 h-3.5 text-blue-300" />
-                <span>Map</span>
-              </button>
-            )}
+          {/* Header Action: Only Close "X" Button (Map button removed) */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {isOverlay && onCloseOverlay && (
               <button
+                id="close-metro-overlay-btn"
                 onClick={onCloseOverlay}
-                className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition"
+                className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition"
                 title="Close Metro Overlay"
+                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -119,7 +157,7 @@ export const MetroRouterView: React.FC<Props> = ({
       </div>
 
       {/* Station Selector Card */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 shadow-xl space-y-3 mb-5">
+      <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 shadow-xl space-y-3">
         {/* From Station */}
         <div>
           <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
@@ -130,22 +168,9 @@ export const MetroRouterView: React.FC<Props> = ({
               id="from-station-select"
               value={fromId}
               onChange={(e) => setFromId(e.target.value)}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-sm font-semibold focus:outline-hidden focus:border-amber-500/50 appearance-none"
+              className="w-full py-2.5 pl-3 pr-8 rounded-xl bg-slate-800 border border-white/10 text-white text-xs sm:text-sm font-semibold focus:outline-hidden focus:border-amber-500/50 appearance-none"
             >
-              <optgroup label="Blue Line 1 (North-South)">
-                {METRO_STATIONS.filter((s) => s.lines.includes('blue')).map((s) => (
-                  <option key={`from-${s.id}`} value={s.id}>
-                    🔵 {s.name[language] || s.name.en} {s.isInterchange ? '(Interchange)' : ''}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Green Line 2 (Underwater / East-West)">
-                {METRO_STATIONS.filter((s) => s.lines.includes('green') && !s.isInterchange).map((s) => (
-                  <option key={`from-${s.id}`} value={s.id}>
-                    🟢 {s.name[language] || s.name.en}
-                  </option>
-                ))}
-              </optgroup>
+              {renderStationOptions(fromId, 'from')}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
               ▼
@@ -175,22 +200,9 @@ export const MetroRouterView: React.FC<Props> = ({
               id="to-station-select"
               value={toId}
               onChange={(e) => setToId(e.target.value)}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-sm font-semibold focus:outline-hidden focus:border-amber-500/50 appearance-none"
+              className="w-full py-2.5 pl-3 pr-8 rounded-xl bg-slate-800 border border-white/10 text-white text-xs sm:text-sm font-semibold focus:outline-hidden focus:border-amber-500/50 appearance-none"
             >
-              <optgroup label="Blue Line 1 (North-South)">
-                {METRO_STATIONS.filter((s) => s.lines.includes('blue')).map((s) => (
-                  <option key={`to-${s.id}`} value={s.id}>
-                    🔵 {s.name[language] || s.name.en} {s.isInterchange ? '(Interchange)' : ''}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Green Line 2 (Underwater / East-West)">
-                {METRO_STATIONS.filter((s) => s.lines.includes('green') && !s.isInterchange).map((s) => (
-                  <option key={`to-${s.id}`} value={s.id}>
-                    🟢 {s.name[language] || s.name.en}
-                  </option>
-                ))}
-              </optgroup>
+              {renderStationOptions(toId, 'to')}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
               ▼
@@ -209,11 +221,11 @@ export const MetroRouterView: React.FC<Props> = ({
           {/* Journey Metrics Header */}
           <div className="grid grid-cols-2 gap-2">
             <div className="p-3 rounded-xl bg-slate-900 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 shrink-0">
                 <Clock className="w-4 h-4" />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase font-bold text-slate-400 truncate">
                   {t.estTime}
                 </p>
                 <p className="text-base font-bold text-amber-300">
@@ -223,11 +235,11 @@ export const MetroRouterView: React.FC<Props> = ({
             </div>
 
             <div className="p-3 rounded-xl bg-slate-900 border border-white/10 flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+              <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400 shrink-0">
                 <Train className="w-4 h-4" />
               </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase font-bold text-slate-400 truncate">
                   Total Stations
                 </p>
                 <p className="text-base font-bold text-white">
@@ -246,10 +258,27 @@ export const MetroRouterView: React.FC<Props> = ({
             }`}
           >
             <span>{routeResult.isDirect ? t.directRoute : t.interchangeRequired}</span>
-            <span className="px-2 py-0.5 rounded bg-black/40 uppercase tracking-wider text-[10px]">
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getLineColor(
+                routeResult.line
+              )}`}
+            >
               {routeResult.line.toUpperCase()}
             </span>
           </div>
+
+          {/* Pujo Ground Reality Bypass Banner if Applicable */}
+          {routeResult.bypassNote && (
+            <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs flex items-start gap-2.5">
+              <span className="text-base shrink-0">🛺</span>
+              <div>
+                <p className="font-bold text-amber-300">Pujo Ground Reality Bypass</p>
+                <p className="text-slate-300 mt-0.5">
+                  {routeResult.bypassNote[language] || routeResult.bypassNote.en}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Step-by-Step Navigation List */}
           <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 shadow-xl space-y-4">
@@ -257,7 +286,7 @@ export const MetroRouterView: React.FC<Props> = ({
               Step-by-Step Itinerary
             </h3>
 
-            <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-amber-500 before:to-emerald-500">
+            <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 via-amber-500 to-emerald-500">
               {routeResult.steps.map((step, idx) => (
                 <div key={idx} className="relative">
                   {/* Step Marker Dot */}
@@ -266,9 +295,20 @@ export const MetroRouterView: React.FC<Props> = ({
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-800/80 border border-white/5 space-y-1">
-                    <p className="text-sm font-semibold text-white">
-                      {step.instruction[language] || step.instruction.en}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-white">
+                        {step.instruction[language] || step.instruction.en}
+                      </p>
+                      {step.lineBadge && (
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${getLineColor(
+                            step.lineBadge as MetroLine | 'interchange' | 'bypass'
+                          )}`}
+                        >
+                          {step.lineBadge}
+                        </span>
+                      )}
+                    </div>
                     {step.subtext && (
                       <p className="text-xs text-slate-400">
                         {step.subtext[language] || step.subtext.en}
@@ -339,6 +379,14 @@ export const MetroRouterView: React.FC<Props> = ({
           )}
         </div>
       ) : null}
+
+      {/* Static Informational Footer Banner */}
+      <div className="p-3 rounded-xl bg-gradient-to-r from-blue-900/40 via-amber-900/30 to-purple-900/40 border border-amber-500/30 text-center">
+        <p className="text-xs font-semibold text-amber-200/90 flex items-center justify-center gap-1.5">
+          <span>🚇</span>
+          <span>Pujo Special: Night services till 4:00 AM | Base Fare: ₹5</span>
+        </p>
+      </div>
     </div>
   );
 };

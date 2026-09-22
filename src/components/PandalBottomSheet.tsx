@@ -55,6 +55,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
   // Calculate distance if user coords available
   let distanceStr: string | null = null;
   let walkMin: number | null = null;
+  let distKm: number | null = null;
   if (userCoords) {
     const dKm =
       Math.hypot(
@@ -63,6 +64,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
       );
     distanceStr = formatDistance(dKm);
     walkMin = estimateWalkingMinutes(dKm);
+    distKm = dKm;
   }
 
   const handleMarkVisited = () => {
@@ -158,7 +160,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
       {/* Sheet Content */}
       <div
         id="pandal-bottom-sheet"
-        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-xl border-t border-x border-white/15 shadow-2xl rounded-t-3xl p-5 pb-24 text-slate-100 animate-slide-up"
+        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-xl border-t border-x border-white/15 shadow-2xl rounded-t-3xl p-5 pb-[calc(5rem+env(safe-area-inset-bottom))] text-slate-100 animate-slide-up"
       >
         {/* Drag Handle Bar */}
         <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4" />
@@ -237,6 +239,19 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 </div>
               </div>
             </div>
+
+            {/* Commute Advice Tag */}
+            {distKm !== null && (
+              <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-800/90 border border-white/10 text-xs font-semibold flex items-center gap-2">
+                {distKm < 1.5 ? (
+                  <span className="text-emerald-300">🚶 Walking Distance (~15 mins)</span>
+                ) : distKm <= 5.0 ? (
+                  <span className="text-amber-300">🛺 Auto/Taxi recommended</span>
+                ) : (
+                  <span className="text-blue-300">🚇 Metro/Cab recommended</span>
+                )}
+              </div>
+            )}
 
             {/* Theme Description */}
             <div className="mt-3.5 space-y-2">

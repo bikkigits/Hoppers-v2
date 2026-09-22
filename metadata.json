@@ -1,0 +1,10 @@
+{
+  "name": "Hoppers – Durga Puja Companion",
+  "description": "Offline Durga Puja navigation, crowd tracker, Kolkata metro router, and survival companion.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

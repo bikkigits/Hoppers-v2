@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pandal, FacilityPoint, Language, VisitedPandal, TrailStop } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 import { formatDistance, estimateWalkingMinutes } from '../utils/geo';
@@ -17,7 +17,14 @@ import {
   Info,
   Share2,
   Route,
+  Users,
 } from 'lucide-react';
+import {
+  getPandalCrowdSummary,
+  submitCrowdReport,
+  CrowdIntensity,
+  PandalCrowdSummary,
+} from '../utils/crowdReports';
 
 interface Props {
   selectedItem: Pandal | FacilityPoint | null;
@@ -55,6 +62,47 @@ export const PandalBottomSheet: React.FC<Props> = ({
   const visitInfo = pandal
     ? visitedList.find((v) => v.pandalId === pandal.id)
     : null;
+
+  // Live Crowdsourced Crowd Summary State
+  const [crowdSummary, setCrowdSummary] = useState<PandalCrowdSummary | null>(() =>
+    pandal ? getPandalCrowdSummary(pandal.id, pandal.crowdLevel) : null
+  );
+  const [reportingStatus, setReportingStatus] = useState<string | null>(null);
+  const [isSubmittingCrowd, setIsSubmittingCrowd] = useState(false);
+
+  useEffect(() => {
+    if (!pandal) return;
+    setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+
+    const onCrowdUpdated = (e: Event) => {
+      const customEv = e as CustomEvent<{ pandalId: string }>;
+      if (!customEv.detail || customEv.detail.pandalId === pandal.id) {
+        setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+      }
+    };
+
+    window.addEventListener('hoppers_crowd_updated', onCrowdUpdated);
+    return () => {
+      window.removeEventListener('hoppers_crowd_updated', onCrowdUpdated);
+    };
+  }, [pandal?.id, pandal?.crowdLevel]);
+
+  const handleVoteCrowd = (intensity: CrowdIntensity) => {
+    if (!pandal) return;
+    setIsSubmittingCrowd(true);
+    const result = submitCrowdReport(
+      pandal.id,
+      intensity,
+      userCoords,
+      { lat: pandal.lat, lng: pandal.lng }
+    );
+    setReportingStatus(result.message);
+    setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+    setIsSubmittingCrowd(false);
+    setTimeout(() => {
+      setReportingStatus(null);
+    }, 6000);
+  };
 
   // Calculate distance if user coords available
   let distanceStr: string | null = null;
@@ -193,11 +241,17 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 </span>
                 <span>·</span>
                 {(() => {
-                  const badge = getCrowdBadge(pandal.crowdLevel);
+                  const effective = crowdSummary?.effectiveLevel || pandal.crowdLevel;
+                  const badge = getCrowdBadge(effective);
                   return (
                     <span className="flex items-center gap-1.5">
                       <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
                       <span>{badge.label}</span>
+                      {crowdSummary?.isCrowdsourced && (
+                        <span className="text-[9px] font-bold text-amber-300 bg-amber-400/20 px-1.5 py-0.5 rounded-full border border-amber-400/30">
+                          ⚡ Live
+                        </span>
+                      )}
                     </span>
                   );
                 })()}
@@ -251,6 +305,114 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 )}
               </div>
             )}
+
+            {/* User-Driven Crowd Intensity Reporting Module */}
+            <div
+              id="crowd-reporting-module"
+              className="mt-3 p-3.5 rounded-2xl bg-slate-800/70 border border-slate-750 shadow-md space-y-2.5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Users className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
+                      <span>{t.reportCrowdTitle || 'Report Live Crowd Intensity'}</span>
+                      {crowdSummary?.confidence === 'High (Verified On-Site)' && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          📍 {t.verifiedOnSiteBadge || 'Verified On-Site'}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[10px] text-slate-400">
+                      {t.reportCrowdSubtitle || 'Help fellow devotees know current queue wait times'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Live recency indicator */}
+                {crowdSummary?.isCrowdsourced && crowdSummary.lastReportedTimestamp && (
+                  <span className="text-[10px] text-amber-300 font-semibold bg-amber-400/15 px-2 py-0.5 rounded-full border border-amber-400/25 shrink-0 whitespace-nowrap">
+                    Live · {Math.max(1, Math.round((Date.now() - crowdSummary.lastReportedTimestamp) / 60000))}m ago
+                  </span>
+                )}
+              </div>
+
+              {/* 3 Interactive Buttons: Low, Medium, Heavy */}
+              <div className="grid grid-cols-3 gap-2 pt-0.5">
+                <button
+                  id="crowd-btn-low"
+                  onClick={() => handleVoteCrowd('low')}
+                  disabled={isSubmittingCrowd}
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 active:scale-95 transition group"
+                  title="Smooth entry, short or no waiting"
+                >
+                  <span className="text-base leading-none mb-1">🟢</span>
+                  <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">
+                    Low
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">&lt;10m wait</span>
+                </button>
+
+                <button
+                  id="crowd-btn-medium"
+                  onClick={() => handleVoteCrowd('medium')}
+                  disabled={isSubmittingCrowd}
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 active:scale-95 transition group"
+                  title="Moving queue, 15 to 30 mins wait"
+                >
+                  <span className="text-base leading-none mb-1">🟡</span>
+                  <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300">
+                    Medium
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">15-30m queue</span>
+                </button>
+
+                <button
+                  id="crowd-btn-heavy"
+                  onClick={() => handleVoteCrowd('heavy')}
+                  disabled={isSubmittingCrowd}
+                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-rose-950/40 border border-rose-500/30 hover:border-rose-400 active:scale-95 transition group"
+                  title="Barricaded queue, over 45 mins wait"
+                >
+                  <span className="text-base leading-none mb-1">🔴</span>
+                  <span className="text-xs font-bold text-rose-400 group-hover:text-rose-300">
+                    Heavy
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">&gt;45m wait</span>
+                </button>
+              </div>
+
+              {/* Status Banner */}
+              {reportingStatus && (
+                <div
+                  id="crowd-feedback-toast"
+                  className="p-2 rounded-xl bg-slate-900/95 border border-amber-400/40 text-amber-300 text-xs flex items-center gap-2 animate-fade-in shadow-sm"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-medium text-[11px] leading-tight">{reportingStatus}</span>
+                </div>
+              )}
+
+              {/* Community Votes Breakdown */}
+              {crowdSummary && crowdSummary.isCrowdsourced && crowdSummary.totalRecentReports > 0 && (
+                <div className="pt-1.5 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800">
+                  <span className="font-medium">
+                    {crowdSummary.totalRecentReports}{' '}
+                    {crowdSummary.totalRecentReports === 1 ? 'devotee report' : 'devotee reports'}{' '}
+                    {crowdSummary.onSiteCount > 0 && `(${crowdSummary.onSiteCount} verified on-site)`}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-400 font-semibold">{crowdSummary.counts.low} Low</span>
+                    <span>·</span>
+                    <span className="text-amber-400 font-semibold">{crowdSummary.counts.medium} Med</span>
+                    <span>·</span>
+                    <span className="text-rose-400 font-semibold">{crowdSummary.counts.heavy} Heavy</span>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Theme Description */}
             <div className="mt-3.5 space-y-1.5">

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import {
   Pandal,
@@ -9,6 +9,7 @@ import {
   WalkRoute,
   MetroMapRoute,
   TrailStop,
+  SuggestedPandal,
 } from '../types';
 import {
   PANDALS_DATA,
@@ -28,6 +29,7 @@ import {
   Route,
   Train,
   Sparkles,
+  Search,
 } from 'lucide-react';
 
 interface Props {
@@ -43,6 +45,8 @@ interface Props {
   onClearMetroRoute?: () => void;
   trailStops?: TrailStop[];
   onOpenTrailBuilder?: () => void;
+  onOpenSuggestPandal?: () => void;
+  suggestedPandals?: SuggestedPandal[];
   selectedItem?: Pandal | FacilityPoint | null;
 }
 
@@ -59,6 +63,8 @@ export const MapView: React.FC<Props> = ({
   onClearMetroRoute,
   trailStops,
   onOpenTrailBuilder,
+  onOpenSuggestPandal,
+  suggestedPandals = [],
   selectedItem,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -69,11 +75,34 @@ export const MapView: React.FC<Props> = ({
   const userCircleRef = useRef<L.Circle | null>(null);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [mapFilter, setMapFilter] = useState<'all' | 'featured' | 'heritage' | 'saved'>('all');
+  const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(13);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
 
   const t = TRANSLATIONS[language];
+
+  // Search Results for map search bar
+  const searchResults = useMemo(() => {
+    if (!mapSearchQuery.trim()) return [];
+    const query = mapSearchQuery.toLowerCase();
+    return PANDALS_DATA.filter((pandal) => {
+      const nameMatch =
+        pandal.name.en.toLowerCase().includes(query) ||
+        pandal.name.bn.toLowerCase().includes(query) ||
+        pandal.name.hi.toLowerCase().includes(query);
+      const metroMatch =
+        pandal.nearestMetro.toLowerCase().includes(query) ||
+        pandal.nearestMetroEn.toLowerCase().includes(query);
+      const zoneMatch = pandal.zone.toLowerCase().includes(query);
+      const themeMatch =
+        pandal.theme.en.toLowerCase().includes(query) ||
+        pandal.theme.bn.toLowerCase().includes(query);
+      return nameMatch || metroMatch || zoneMatch || themeMatch;
+    });
+  }, [mapSearchQuery]);
 
   // Custom Mandap / Temple and POI icons
   const createWidgetIcon = (
@@ -317,13 +346,48 @@ export const MapView: React.FC<Props> = ({
     const showNorth = showAll || activeFilter === 'north';
     const showSouth = showAll || activeFilter === 'south';
 
-    // 1. Add Pandals (Zoom-Tiered)
+    // 1. Add Pandals (Zoom-Tiered with Top Filter & Search)
     PANDALS_DATA.forEach((pandal) => {
-      const matchNorth = pandal.zone === 'North' && showNorth;
-      const matchSouth = (pandal.zone === 'South' || pandal.zone === 'Central') && showSouth;
+      // Top filter chips check
+      if (mapFilter === 'featured' && !pandal.isFeatured) return;
+      if (mapFilter === 'saved' && !visitedSet.has(pandal.id)) return;
+      if (mapFilter === 'heritage') {
+        const text = (pandal.theme.en + ' ' + pandal.name.en + ' ' + pandal.description.en).toLowerCase();
+        const isHeritage =
+          text.includes('heritage') ||
+          text.includes('traditional') ||
+          text.includes('rajbari') ||
+          text.includes('bagbazar') ||
+          text.includes('kumartuli') ||
+          text.includes('sovabazar');
+        if (!isHeritage) return;
+      }
 
-      if (matchNorth || matchSouth) {
-        if (currentZoom < 15 && !pandal.isFeatured && activeFilter === 'all') {
+      // Search Query filter check
+      if (mapSearchQuery.trim()) {
+        const q = mapSearchQuery.toLowerCase();
+        const nameMatch =
+          pandal.name.en.toLowerCase().includes(q) ||
+          pandal.name.bn.toLowerCase().includes(q) ||
+          pandal.name.hi.toLowerCase().includes(q);
+        const metroMatch =
+          pandal.nearestMetro.toLowerCase().includes(q) ||
+          pandal.nearestMetroEn.toLowerCase().includes(q);
+        const zoneMatch = pandal.zone.toLowerCase().includes(q);
+        if (!nameMatch && !metroMatch && !zoneMatch) return;
+      }
+
+      const matchNorth = pandal.zone === 'North' && showNorth;
+      const matchSouth = (pandal.zone === 'South' || pandal.zone === 'Central' || pandal.zone === 'East') && showSouth;
+
+      if (matchNorth || matchSouth || showAll) {
+        if (
+          currentZoom < 14 &&
+          !pandal.isFeatured &&
+          activeFilter === 'all' &&
+          mapFilter === 'all' &&
+          !mapSearchQuery.trim()
+        ) {
           return;
         }
 
@@ -341,6 +405,23 @@ export const MapView: React.FC<Props> = ({
         markersLayer.addLayer(marker);
       }
     });
+
+    // 1b. Add Suggested Community Pandals
+    if (suggestedPandals && suggestedPandals.length > 0) {
+      suggestedPandals.forEach((sp) => {
+        const marker = L.marker([sp.lat, sp.lng], {
+          icon: createWidgetIcon('pandal', false, true),
+          title: `[Community] ${sp.name[language] || sp.name.en}`,
+          zIndexOffset: 350,
+        });
+
+        marker.on('click', () => {
+          onSelectPandal(sp as unknown as Pandal);
+        });
+
+        markersLayer.addLayer(marker);
+      });
+    }
 
     // 2. Add POIs (Police, Toilets, Food, Railway, Ferry)
     if (activeFilter === 'police' || activeFilter === 'toilets' || activeFilter === 'food' || activeFilter === 'ferry' || activeFilter === 'railway') {
@@ -409,7 +490,7 @@ export const MapView: React.FC<Props> = ({
         markersLayer.addLayer(marker);
       });
     }
-  }, [activeFilter, currentZoom, language, visitedList]);
+  }, [activeFilter, mapFilter, mapSearchQuery, currentZoom, language, visitedList, suggestedPandals]);
 
   // Handle Active Walking Route Polyline with Smart Viewport Padding
   useEffect(() => {
@@ -718,6 +799,15 @@ export const MapView: React.FC<Props> = ({
     }
   };
 
+  const handleSelectSearchResult = (pandal: Pandal) => {
+    setIsSearchDropdownOpen(false);
+    setMapSearchQuery(pandal.name[language] || pandal.name.en);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([pandal.lat, pandal.lng], 16, { animate: true });
+    }
+    onSelectPandal(pandal);
+  };
+
   const getCommuteAdvice = (km: number) => {
     if (km < 1.5) return '🚶 Walking Distance (~15 mins)';
     if (km <= 5.0) return '🛺 Auto/Taxi recommended';
@@ -733,52 +823,111 @@ export const MapView: React.FC<Props> = ({
         className="w-full h-full bg-[#0F172A] z-0"
       />
 
-      {/* Floating Puja Trail Planner Trigger Button */}
-      <div className="absolute top-3 left-3 z-20 pointer-events-auto">
-        <button
-          id="open-trail-builder-btn"
-          onClick={onOpenTrailBuilder}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl backdrop-blur-xl border shadow-xl active:scale-95 transition ${
-            trailStops && trailStops.length > 0
-              ? 'bg-amber-400 text-slate-950 font-bold border-amber-300 shadow-amber-500/20'
-              : 'bg-slate-900/90 text-white border-amber-500/40 hover:bg-slate-800'
-          }`}
-          title={t.trailBuilderTitle}
-        >
-          <div
-            className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-              trailStops && trailStops.length > 0
-                ? 'bg-slate-950 text-amber-400 font-black text-xs'
-                : 'bg-amber-400/20 text-amber-400'
+      {/* Floating Top Search Bar & Quick Filter Chips */}
+      <div className="absolute top-3 inset-x-3 max-w-md mx-auto z-30 pointer-events-auto">
+        <div className="relative">
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-xl shadow-black/60">
+            <Search className="w-4 h-4 text-amber-400 shrink-0" />
+            <input
+              type="text"
+              value={mapSearchQuery}
+              onChange={(e) => {
+                setMapSearchQuery(e.target.value);
+                setIsSearchDropdownOpen(true);
+              }}
+              onFocus={() => setIsSearchDropdownOpen(true)}
+              placeholder={t.searchPandalsPlaceholder || 'Search pandals...'}
+              className="flex-1 bg-transparent text-xs text-white placeholder:text-slate-400 focus:outline-hidden"
+            />
+            {mapSearchQuery && (
+              <button
+                onClick={() => {
+                  setMapSearchQuery('');
+                  setIsSearchDropdownOpen(false);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Search Autocomplete Dropdown */}
+          {isSearchDropdownOpen && mapSearchQuery.trim() && (
+            <div className="absolute top-12 left-0 right-0 max-h-56 overflow-y-auto bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 space-y-1 z-40 animate-slide-down">
+              {searchResults.length === 0 ? (
+                <div className="p-3 text-center text-xs text-slate-400">
+                  No matching pandals found
+                </div>
+              ) : (
+                searchResults.slice(0, 6).map((pandal) => (
+                  <button
+                    key={pandal.id}
+                    onClick={() => handleSelectSearchResult(pandal)}
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-left transition"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-semibold text-white truncate">
+                        {pandal.name[language] || pandal.name.en}
+                      </p>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {pandal.zone} Kolkata · Near {pandal.nearestMetro}
+                      </p>
+                    </div>
+                    <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">
+                      View
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Filter Chips immediately below Search Bar */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar">
+          <button
+            onClick={() => setMapFilter('all')}
+            className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition shadow-sm ${
+              mapFilter === 'all'
+                ? 'bg-red-600 text-white shadow-red-600/30'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
             }`}
           >
-            {trailStops && trailStops.length > 0 ? (
-              <span>{trailStops.length}</span>
-            ) : (
-              <Route className="w-3.5 h-3.5" />
-            )}
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-bold leading-tight">
-              {trailStops && trailStops.length > 0
-                ? `${trailStops.length} ${t.stopsCount}`
-                : t.planTrailBtn}
-            </p>
-            {trailStops && trailStops.length > 1 ? (
-              <p
-                className={`text-[10px] leading-tight ${
-                  trailStops.length > 0 ? 'text-slate-900 font-semibold' : 'text-slate-400'
-                }`}
-              >
-                {calculateTrailMetrics(trailStops).totalDistanceKm.toFixed(1)} km
-              </p>
-            ) : (
-              <p className="text-[9px] text-amber-400/90 leading-tight">
-                Multi-stop & Detours
-              </p>
-            )}
-          </div>
-        </button>
+            All ({PANDALS_DATA.length})
+          </button>
+          <button
+            onClick={() => setMapFilter('featured')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+              mapFilter === 'featured'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+            }`}
+          >
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            {t.filterFeatured} ({PANDALS_DATA.filter((p) => p.isFeatured).length})
+          </button>
+          <button
+            onClick={() => setMapFilter('heritage')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+              mapFilter === 'heritage'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+            }`}
+          >
+            👑 {t.filterHeritage}
+          </button>
+          <button
+            onClick={() => setMapFilter('saved')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+              mapFilter === 'saved'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+            }`}
+          >
+            🔖 {t.filterSaved} ({visitedList.length})
+          </button>
+        </div>
       </div>
 
       {/* Floating Active Walking Route Banner */}
@@ -864,7 +1013,7 @@ export const MapView: React.FC<Props> = ({
       )}
 
       {/* Right Controls Stack: Zoom (+/-), Lock North, Find My Location */}
-      <div className="absolute top-24 right-3 z-20 flex flex-col gap-2 items-center pointer-events-auto">
+      <div className="absolute top-32 right-3 z-20 flex flex-col gap-2 items-center pointer-events-auto">
         {/* Zoom In & Zoom Out Buttons */}
         <div className="flex flex-col rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-800 shadow-lg overflow-hidden">
           <button
@@ -927,8 +1076,46 @@ export const MapView: React.FC<Props> = ({
         )}
       </div>
 
+      {/* Floating Bottom Action Buttons (Matching Video: Add Pandal on Left & Route on Right) */}
+      <div className="absolute bottom-20 inset-x-3 z-30 pointer-events-none flex items-center justify-between">
+        {/* Floating Left: + Add Pandal */}
+        {onOpenSuggestPandal && (
+          <button
+            id="map-floating-add-pandal-btn"
+            onClick={onOpenSuggestPandal}
+            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs shadow-xl shadow-red-950/80 border border-red-400/50 active:scale-95 transition"
+            title={t.suggestPandalTitle}
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>{t.addPandalBtn}</span>
+          </button>
+        )}
+
+        {/* Floating Right: Route Planner */}
+        {onOpenTrailBuilder && (
+          <button
+            id="map-floating-route-btn"
+            onClick={onOpenTrailBuilder}
+            className={`pointer-events-auto ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-full backdrop-blur-md font-bold text-xs shadow-xl shadow-black/80 border active:scale-95 transition ${
+              trailStops && trailStops.length > 0
+                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-amber-400/20'
+                : 'bg-slate-900/90 text-slate-200 border-slate-700 hover:bg-slate-800'
+            }`}
+            title={t.trailBuilderTitle}
+          >
+            <Route className="w-4 h-4" />
+            <span>{t.tabTrail || 'Route'}</span>
+            {trailStops && trailStops.length > 0 && (
+              <span className="w-4 h-4 rounded-full bg-slate-950 text-amber-400 text-[9px] font-black flex items-center justify-center">
+                {trailStops.length}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+
       {/* Floating Filter Bar directly above the bottom dock */}
-      <div className="absolute bottom-20 left-0 right-0 z-20 pointer-events-none">
+      <div className="absolute bottom-28 left-0 right-0 z-20 pointer-events-none">
         <NearbyFilterBar
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}

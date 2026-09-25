@@ -1,6 +1,7 @@
 import { Pandal, FacilityPoint, MetroStation } from '../types';
+import { IMPORTED_PANDALS } from './importedPandals';
 
-export const PANDALS_DATA: Pandal[] = [
+const CURATED_PANDALS: Pandal[] = [
   {
     id: 'bagbazar',
     name: {
@@ -728,6 +729,14 @@ export const PANDALS_DATA: Pandal[] = [
     isFeatured: true,
   }
 ];
+
+// Merge curated showcase pandals with imported pandals (deduplicating by normalized name)
+const curatedNames = new Set(CURATED_PANDALS.map((p) => p.name.en.toLowerCase().replace(/[^a-z0-9]/g, '')));
+const filteredImported = IMPORTED_PANDALS.filter(
+  (p) => !curatedNames.has(p.name.en.toLowerCase().replace(/[^a-z0-9]/g, ''))
+);
+
+export const PANDALS_DATA: Pandal[] = [...CURATED_PANDALS, ...filteredImported];
 
 export const CRITICAL_FACILITIES: FacilityPoint[] = [
   // Police & Medical Assistance

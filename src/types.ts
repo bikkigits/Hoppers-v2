@@ -26,6 +26,9 @@ export interface Pandal {
   highlight: LocalizedString;
   exitGateSuggestion?: string;
   isFeatured?: boolean;
+  rating?: number;
+  category?: string;
+  address?: string;
 }
 
 export type FacilityCategory =
@@ -156,5 +159,27 @@ export interface CuratedTrailPreset {
   zone: Zone | 'Iconic';
   badge: string;
   pandalIds: string[];
+}
+
+export interface SuggestedPandal {
+  id: string;
+  name: LocalizedString;
+  zone: Zone;
+  locality?: string;
+  nearestMetro: string;
+  nearestMetroEn: string;
+  walkingTimeToMetroMin: number;
+  lat: number;
+  lng: number;
+  theme: LocalizedString;
+  crowdLevel: CrowdLevel;
+  facilities: string[];
+  description: LocalizedString;
+  highlight: LocalizedString;
+  submitterName: string;
+  submitterPhone: string;
+  submitterEmail?: string;
+  status: 'pending' | 'verified';
+  createdAt: number;
 }
 

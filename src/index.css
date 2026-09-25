@@ -109,3 +109,95 @@
 .leaflet-control-attribution a {
   color: #94A3B8 !important;
 }
+
+/* Light Mode Theme Overrides */
+html.theme-light {
+  color-scheme: light;
+}
+
+html.theme-light body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+html.theme-light #app-topbar {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-bottom-color: #E2E8F0 !important;
+}
+
+html.theme-light #app-topbar h1 {
+  color: #0F172A !important;
+}
+
+html.theme-light #app-bottom-nav {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-top-color: #E2E8F0 !important;
+}
+
+html.theme-light .bg-slate-900,
+html.theme-light .bg-slate-950,
+html.theme-light .bg-\[\#080B11\] {
+  background-color: #FFFFFF !important;
+}
+
+html.theme-light .bg-slate-900\/80,
+html.theme-light .bg-slate-900\/85,
+html.theme-light .bg-slate-900\/90,
+html.theme-light .bg-slate-900\/95,
+html.theme-light .bg-slate-800\/80,
+html.theme-light .bg-slate-800\/60,
+html.theme-light .bg-slate-800\/70,
+html.theme-light .bg-slate-800\/40,
+html.theme-light .bg-slate-800 {
+  background-color: #F1F5F9 !important;
+}
+
+html.theme-light .text-white {
+  color: #0F172A !important;
+}
+
+html.theme-light .text-slate-100,
+html.theme-light .text-slate-200,
+html.theme-light .text-slate-300 {
+  color: #1E293B !important;
+}
+
+html.theme-light .text-slate-400 {
+  color: #64748B !important;
+}
+
+html.theme-light .border-slate-800,
+html.theme-light .border-slate-750,
+html.theme-light .border-slate-700 {
+  border-color: #E2E8F0 !important;
+}
+
+html.theme-light .dark-tiles .leaflet-tile {
+  filter: brightness(1.02) contrast(1.04) !important;
+}
+
+html.theme-light .leaflet-container {
+  background: #F1F5F9 !important;
+}
+
+html.theme-light .leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+
+html.theme-light .leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+html.theme-light .leaflet-control-zoom a {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.theme-light .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #64748B !important;
+}

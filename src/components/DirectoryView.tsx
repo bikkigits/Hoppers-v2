@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Pandal,
   FacilityPoint,
@@ -10,6 +10,7 @@ import {
 import { PANDALS_DATA, CRITICAL_FACILITIES, METRO_STATIONS } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
 import { calculateDistanceKm, formatDistance } from '../utils/geo';
+import { getPandalCrowdSummary } from '../utils/crowdReports';
 import {
   Search,
   Train,
@@ -69,6 +70,22 @@ export const DirectoryView: React.FC<Props> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZone, setSelectedZone] = useState<'all' | 'North' | 'Central' | 'South' | 'East'>('all');
   const [sortBy, setSortBy] = useState<'distance' | 'crowd' | 'name'>(userCoords ? 'distance' : 'name');
+  const [visibleCount, setVisibleCount] = useState(50);
+  const [, setCrowdUpdateTick] = useState(0);
+
+  useEffect(() => {
+    const handleCrowdUpdate = () => {
+      setCrowdUpdateTick((t) => t + 1);
+    };
+    window.addEventListener('hoppers_crowd_updated', handleCrowdUpdate);
+    return () => {
+      window.removeEventListener('hoppers_crowd_updated', handleCrowdUpdate);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    setVisibleCount(50);
+  }, [searchTerm, selectedZone, sortBy]);
 
   // POI section states
   const [poiSearch, setPoiSearch] = useState('');
@@ -441,10 +458,11 @@ export const DirectoryView: React.FC<Props> = ({
 
           {/* Pandals List */}
           <div className="space-y-2.5">
-            {filteredPandals.map((pandal) => {
+            {filteredPandals.slice(0, visibleCount).map((pandal) => {
               const isVisited = visitedSet.has(pandal.id);
               const isInTrail = trailStopIds.has(pandal.id);
-              const crowd = getCrowdBadge(pandal.crowdLevel);
+              const crowdSummary = getPandalCrowdSummary(pandal.id, pandal.crowdLevel);
+              const crowd = getCrowdBadge(crowdSummary.effectiveLevel);
               const distKm = userCoords
                 ? calculateDistanceKm(userCoords.lat, userCoords.lng, pandal.lat, pandal.lng)
                 : null;
@@ -477,6 +495,11 @@ export const DirectoryView: React.FC<Props> = ({
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${crowd.dot}`} />
                           <span>{crowd.label}</span>
+                          {crowdSummary.isCrowdsourced && (
+                            <span className="text-[8px] font-bold text-amber-300 bg-amber-400/25 px-1 rounded-sm">
+                              Live
+                            </span>
+                          )}
                         </span>
                       </div>
 
@@ -552,6 +575,22 @@ export const DirectoryView: React.FC<Props> = ({
               );
             })}
           </div>
+
+          {/* Show More Button for large list */}
+          {visibleCount < filteredPandals.length && (
+            <div className="pt-2 text-center">
+              <button
+                id="load-more-pandals-btn"
+                onClick={() => setVisibleCount((prev) => prev + 50)}
+                className="w-full py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-400/50 hover:bg-slate-800 text-amber-300 font-semibold text-xs shadow-md transition active:scale-98 flex items-center justify-center gap-2"
+              >
+                <span>Show More Pandals</span>
+                <span className="text-[11px] text-slate-400">
+                  (Showing {Math.min(visibleCount, filteredPandals.length)} of {filteredPandals.length})
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 

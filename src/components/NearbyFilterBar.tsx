@@ -42,7 +42,7 @@ export const NearbyFilterBar: React.FC<Props> = ({
   return (
     <div
       id="nearby-filter-bar"
-      className="w-full overflow-hidden pointer-events-auto py-1.5"
+      className="w-full overflow-hidden pointer-events-auto py-1"
     >
       <div
         ref={scrollContainerRef}
@@ -56,10 +56,10 @@ export const NearbyFilterBar: React.FC<Props> = ({
               key={filter.id}
               id={`filter-${filter.id}`}
               onClick={() => onFilterChange(filter.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 border active:scale-95 shadow-lg backdrop-blur-md shrink-0 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-150 active:scale-95 shadow-xs backdrop-blur-md shrink-0 border ${
                 isActive
-                  ? 'bg-[#FFB300] text-slate-950 border-[#FFB300] shadow-[#FFB300]/20 font-bold ring-1 ring-[#FFB300]/50'
-                  : 'bg-slate-900/85 text-slate-300 border-white/10 hover:border-white/20 hover:text-white'
+                  ? 'bg-amber-400 text-slate-950 border-amber-400 font-semibold shadow-amber-500/10'
+                  : 'bg-slate-900/80 text-slate-300 border-slate-800/80 hover:border-slate-700 hover:text-white'
               }`}
             >
               <span className={isActive ? 'text-slate-950' : 'text-slate-400'}>

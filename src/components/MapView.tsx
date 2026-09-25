@@ -8,6 +8,7 @@ import {
   VisitedPandal,
   WalkRoute,
   MetroMapRoute,
+  TrailStop,
 } from '../types';
 import {
   PANDALS_DATA,
@@ -16,6 +17,7 @@ import {
 } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
 import { formatDistance, estimateWalkingMinutes, calculateDistanceKm } from '../utils/geo';
+import { calculateTrailMetrics } from '../utils/trailRouting';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import {
   Crosshair,
@@ -25,6 +27,7 @@ import {
   X,
   Route,
   Train,
+  Sparkles,
 } from 'lucide-react';
 
 interface Props {
@@ -38,6 +41,9 @@ interface Props {
   onClearWalkRoute?: () => void;
   activeMetroRoute?: MetroMapRoute | null;
   onClearMetroRoute?: () => void;
+  trailStops?: TrailStop[];
+  onOpenTrailBuilder?: () => void;
+  selectedItem?: Pandal | FacilityPoint | null;
 }
 
 export const MapView: React.FC<Props> = ({
@@ -51,6 +57,9 @@ export const MapView: React.FC<Props> = ({
   onClearWalkRoute,
   activeMetroRoute,
   onClearMetroRoute,
+  trailStops,
+  onOpenTrailBuilder,
+  selectedItem,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -68,7 +77,22 @@ export const MapView: React.FC<Props> = ({
 
   // Custom Mandap / Temple and POI icons
   const createWidgetIcon = (
-    type: 'pandal' | 'police' | 'toilet' | 'metro' | 'railway' | 'food' | 'ferry',
+    type:
+      | 'pandal'
+      | 'police'
+      | 'helpdesk'
+      | 'toilet'
+      | 'metro'
+      | 'railway'
+      | 'food'
+      | 'ferry'
+      | 'medical'
+      | 'pharmacy'
+      | 'parking'
+      | 'atm'
+      | 'landmark'
+      | 'hotel'
+      | 'petrol',
     isVisited: boolean = false,
     isFeatured: boolean = false
   ) => {
@@ -137,6 +161,11 @@ export const MapView: React.FC<Props> = ({
       bgColor = '#EF4444';
       borderColor = '#FEE2E2';
       iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+    } else if (type === 'helpdesk') {
+      size = 32;
+      bgColor = '#F59E0B';
+      borderColor = '#FEF3C7';
+      iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/></svg>`;
     } else if (type === 'toilet') {
       size = 28;
       bgColor = '#10B981';
@@ -162,6 +191,41 @@ export const MapView: React.FC<Props> = ({
       bgColor = '#06B6D4';
       borderColor = '#E0F2FE';
       iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/></svg>`;
+    } else if (type === 'medical') {
+      size = 30;
+      bgColor = '#E11D48';
+      borderColor = '#FFE4E6';
+      iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`;
+    } else if (type === 'pharmacy') {
+      size = 28;
+      bgColor = '#059669';
+      borderColor = '#A7F3D0';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12M6 12h12"/></svg>`;
+    } else if (type === 'parking') {
+      size = 28;
+      bgColor = '#0284C7';
+      borderColor = '#BAE6FD';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>`;
+    } else if (type === 'atm') {
+      size = 28;
+      bgColor = '#0D9488';
+      borderColor = '#CCFBF1';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`;
+    } else if (type === 'landmark') {
+      size = 30;
+      bgColor = '#CA8A04';
+      borderColor = '#FEF08A';
+      iconSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10M9 21V10M15 21V10M19 21V10M2 10h20L12 3z"/></svg>`;
+    } else if (type === 'hotel') {
+      size = 28;
+      bgColor = '#D97706';
+      borderColor = '#FDE68A';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>`;
+    } else if (type === 'petrol') {
+      size = 28;
+      bgColor = '#DC2626';
+      borderColor = '#FECACA';
+      iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v17M3 11h10M13 8l3 3v8a2 2 0 0 0 4 0v-7a3 3 0 0 0-3-3h-4"/></svg>`;
     }
 
     const html = `
@@ -465,6 +529,102 @@ export const MapView: React.FC<Props> = ({
     map.fitBounds(bounds, { padding: [80, 80], animate: true });
   }, [activeMetroRoute, language]);
 
+  // Handle Multi-Stop Trail Polyline & Numbered Badges
+  useEffect(() => {
+    const routesLayer = routesLayerRef.current;
+    const map = mapInstanceRef.current;
+    if (!routesLayer || !map) return;
+
+    if (!trailStops || trailStops.length < 2) {
+      if (!activeWalkRoute && !activeMetroRoute) {
+        routesLayer.clearLayers();
+      }
+      return;
+    }
+
+    routesLayer.clearLayers();
+
+    const latlngs: [number, number][] = trailStops.map((s) => [s.lat, s.lng]);
+
+    // Outer warm gold glow casing
+    const glowLine = L.polyline(latlngs, {
+      color: '#F59E0B',
+      weight: 8,
+      opacity: 0.35,
+      lineCap: 'round',
+      lineJoin: 'round',
+    });
+
+    // Inner bright dashed line
+    const dashedLine = L.polyline(latlngs, {
+      color: '#FBBF24',
+      weight: 4,
+      dashArray: '8, 8',
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round',
+    });
+
+    routesLayer.addLayer(glowLine);
+    routesLayer.addLayer(dashedLine);
+
+    // Add numbered badges along the trail
+    trailStops.forEach((stop, idx) => {
+      const isStart = idx === 0;
+      const isEnd = idx === trailStops.length - 1;
+      const numberHtml = `
+        <div style="
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: ${isStart ? '#10B981' : isEnd ? '#E11D48' : '#F59E0B'};
+          color: #020617;
+          border: 2px solid #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 13px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+          cursor: pointer;
+        ">
+          ${idx + 1}
+        </div>
+      `;
+      const icon = L.divIcon({
+        className: 'trail-stop-badge',
+        html: numberHtml,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([stop.lat, stop.lng], { icon, zIndexOffset: 2000 + idx });
+      marker.bindTooltip(`Stop #${idx + 1}: ${stop.name[language] || stop.name.en}`, {
+        direction: 'top',
+        offset: [0, -14],
+      });
+
+      if (stop.pandalId) {
+        marker.on('click', () => {
+          const found = PANDALS_DATA.find((p) => p.id === stop.pandalId);
+          if (found) onSelectPandal(found);
+        });
+      }
+
+      routesLayer.addLayer(marker);
+    });
+
+    const bounds = L.latLngBounds(latlngs);
+    map.fitBounds(bounds, { padding: [70, 70], maxZoom: 16, animate: true });
+  }, [trailStops, language]);
+
+  // Center map on selectedItem (whether pandal or POI facility)
+  useEffect(() => {
+    if (!selectedItem || !mapInstanceRef.current) return;
+    mapInstanceRef.current.setView([selectedItem.lat, selectedItem.lng], 16, { animate: true });
+  }, [selectedItem]);
+
+
   // GPS "Find My Location" logic with animated pulsing blue dot
   const handleFindLocation = () => {
     if (!navigator.geolocation) {
@@ -573,6 +733,54 @@ export const MapView: React.FC<Props> = ({
         className="w-full h-full bg-[#0F172A] z-0"
       />
 
+      {/* Floating Puja Trail Planner Trigger Button */}
+      <div className="absolute top-3 left-3 z-20 pointer-events-auto">
+        <button
+          id="open-trail-builder-btn"
+          onClick={onOpenTrailBuilder}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl backdrop-blur-xl border shadow-xl active:scale-95 transition ${
+            trailStops && trailStops.length > 0
+              ? 'bg-amber-400 text-slate-950 font-bold border-amber-300 shadow-amber-500/20'
+              : 'bg-slate-900/90 text-white border-amber-500/40 hover:bg-slate-800'
+          }`}
+          title={t.trailBuilderTitle}
+        >
+          <div
+            className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+              trailStops && trailStops.length > 0
+                ? 'bg-slate-950 text-amber-400 font-black text-xs'
+                : 'bg-amber-400/20 text-amber-400'
+            }`}
+          >
+            {trailStops && trailStops.length > 0 ? (
+              <span>{trailStops.length}</span>
+            ) : (
+              <Route className="w-3.5 h-3.5" />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="text-xs font-bold leading-tight">
+              {trailStops && trailStops.length > 0
+                ? `${trailStops.length} ${t.stopsCount}`
+                : t.planTrailBtn}
+            </p>
+            {trailStops && trailStops.length > 1 ? (
+              <p
+                className={`text-[10px] leading-tight ${
+                  trailStops.length > 0 ? 'text-slate-900 font-semibold' : 'text-slate-400'
+                }`}
+              >
+                {calculateTrailMetrics(trailStops).totalDistanceKm.toFixed(1)} km
+              </p>
+            ) : (
+              <p className="text-[9px] text-amber-400/90 leading-tight">
+                Multi-stop & Detours
+              </p>
+            )}
+          </div>
+        </button>
+      </div>
+
       {/* Floating Active Walking Route Banner */}
       {activeWalkRoute && (() => {
         const distKm = calculateDistanceKm(
@@ -584,27 +792,27 @@ export const MapView: React.FC<Props> = ({
         return (
           <div
             id="active-walk-route-banner"
-            className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3.5 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-amber-500/40 shadow-2xl flex items-center justify-between gap-3 animate-slide-up"
+            className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+              <div className="p-2 rounded-xl bg-amber-400/15 text-amber-400 shrink-0">
                 <Route className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <span className="font-semibold text-amber-400">
                     {formatDistance(distKm)}
                   </span>
-                  <span className="text-slate-400 text-[10px]">•</span>
-                  <span className="text-[10px] text-slate-300">
+                  <span>·</span>
+                  <span>
                     ~{estimateWalkingMinutes(distKm)} min walk
                   </span>
                 </div>
-                <p className="text-xs font-bold text-white truncate">
+                <p className="text-xs font-semibold text-white truncate mt-0.5">
                   {activeWalkRoute.pandal.name[language] || activeWalkRoute.pandal.name.en}
                 </p>
                 {/* Commute advice tag */}
-                <p className="text-[10px] text-amber-200 mt-1 font-medium bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 inline-block truncate max-w-full">
+                <p className="text-[11px] text-slate-300 mt-1 font-medium bg-slate-800/80 px-2 py-0.5 rounded-md inline-block truncate max-w-full">
                   {getCommuteAdvice(distKm)}
                 </p>
               </div>
@@ -613,7 +821,7 @@ export const MapView: React.FC<Props> = ({
             {onClearWalkRoute && (
               <button
                 onClick={onClearWalkRoute}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition shrink-0"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 active:scale-95 transition shrink-0"
                 title={t.clearRoute}
               >
                 <X className="w-4 h-4" />
@@ -627,17 +835,17 @@ export const MapView: React.FC<Props> = ({
       {activeMetroRoute && !activeWalkRoute && (
         <div
           id="active-metro-route-banner"
-          className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-blue-500/40 shadow-2xl flex items-center justify-between gap-3 animate-slide-up"
+          className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 shrink-0">
+            <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 shrink-0">
               <Train className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400">
                 Metro Route Active
               </span>
-              <p className="text-xs font-bold text-white truncate">
+              <p className="text-xs font-semibold text-white truncate">
                 {activeMetroRoute.stations[0]?.name[language] || activeMetroRoute.stations[0]?.name.en} → {activeMetroRoute.stations[activeMetroRoute.stations.length - 1]?.name[language] || activeMetroRoute.stations[activeMetroRoute.stations.length - 1]?.name.en}
               </p>
             </div>
@@ -646,7 +854,7 @@ export const MapView: React.FC<Props> = ({
           {onClearMetroRoute && (
             <button
               onClick={onClearMetroRoute}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 active:scale-95 transition shrink-0"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 active:scale-95 transition shrink-0"
               title={t.clearRoute}
             >
               <X className="w-4 h-4" />
@@ -656,63 +864,63 @@ export const MapView: React.FC<Props> = ({
       )}
 
       {/* Right Controls Stack: Zoom (+/-), Lock North, Find My Location */}
-      <div className="absolute top-24 right-4 z-20 flex flex-col gap-2 items-center pointer-events-auto">
+      <div className="absolute top-24 right-3 z-20 flex flex-col gap-2 items-center pointer-events-auto">
         {/* Zoom In & Zoom Out Buttons */}
-        <div className="flex flex-col rounded-2xl bg-slate-900/90 backdrop-blur-md border border-white/15 shadow-xl overflow-hidden">
+        <div className="flex flex-col rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-800 shadow-lg overflow-hidden">
           <button
             id="map-zoom-in-btn"
             onClick={handleZoomIn}
-            className="p-2.5 hover:bg-slate-800 text-white transition active:scale-95 border-b border-white/10"
+            className="p-2 hover:bg-slate-800 text-slate-300 hover:text-white transition active:scale-95 border-b border-slate-800/80"
             title="Zoom In"
           >
-            <Plus className="w-4 h-4 text-slate-200" />
+            <Plus className="w-4 h-4" />
           </button>
           <button
             id="map-zoom-out-btn"
             onClick={handleZoomOut}
-            className="p-2.5 hover:bg-slate-800 text-white transition active:scale-95"
+            className="p-2 hover:bg-slate-800 text-slate-300 hover:text-white transition active:scale-95"
             title="Zoom Out"
           >
-            <Minus className="w-4 h-4 text-slate-200" />
+            <Minus className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Lock North Button (Placed on RIGHT side directly below zoom controls) */}
+        {/* Lock North Button */}
         <button
           id="lock-north-btn"
           onClick={handleLockNorth}
-          className="flex flex-col items-center justify-center w-10 h-10 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-white/15 text-white shadow-xl hover:bg-slate-800 active:scale-95 transition"
+          className="flex flex-col items-center justify-center w-9 h-9 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white shadow-lg hover:bg-slate-800 active:scale-95 transition"
           title="Strictly Locked to True North (N 0°)"
         >
           <Compass className="w-4 h-4 text-amber-400" />
-          <span className="text-[9px] font-bold leading-none text-slate-300 mt-0.5">N</span>
+          <span className="text-[8px] font-semibold leading-none text-slate-400 mt-0.5">N</span>
         </button>
 
-        {/* Find My Location (Placed on RIGHT side directly below Lock North) */}
+        {/* Find My Location */}
         <button
           id="gps-locate-btn"
           onClick={handleFindLocation}
           disabled={gpsLoading}
-          className={`flex flex-col items-center justify-center w-10 h-10 rounded-2xl shadow-xl border backdrop-blur-md transition-all active:scale-95 ${
+          className={`flex flex-col items-center justify-center w-9 h-9 rounded-xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
             userCoords
-              ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/20'
-              : 'bg-slate-900/90 text-slate-200 border-white/15 hover:bg-slate-800'
+              ? 'bg-blue-600 text-white border-blue-500 shadow-blue-500/20'
+              : 'bg-slate-900/85 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white'
           }`}
           title={gpsLoading ? t.gpsSearching : t.locateMe}
         >
           <Crosshair
-            className={`w-4 h-4 text-blue-400 ${
-              gpsLoading ? 'animate-spin' : ''
-            }`}
+            className={`w-4 h-4 ${
+              userCoords ? 'text-white' : 'text-slate-300'
+            } ${gpsLoading ? 'animate-spin' : ''}`}
           />
-          <span className="text-[8px] font-bold leading-none mt-0.5">GPS</span>
+          <span className="text-[7px] font-bold leading-none mt-0.5">GPS</span>
         </button>
 
         {/* Status Toast */}
         {gpsStatusMsg && (
           <div
             id="gps-status-pill"
-            className="absolute right-12 top-20 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-amber-500/40 text-amber-300 text-xs font-medium shadow-2xl backdrop-blur-md whitespace-nowrap animate-fade-in"
+            className="absolute right-11 top-20 px-2.5 py-1 rounded-lg bg-slate-900/95 border border-slate-800 text-slate-200 text-xs font-medium shadow-xl backdrop-blur-md whitespace-nowrap animate-fade-in"
           >
             {gpsStatusMsg}
           </div>

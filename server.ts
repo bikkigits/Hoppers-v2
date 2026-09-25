@@ -1,3 +1,8 @@
+// Prevent '.' from leaking as __dirname into ESM packages that check `typeof __dirname !== 'undefined'`
+if ((globalThis as { __dirname?: string }).__dirname === '.') {
+  delete (globalThis as { __dirname?: string }).__dirname;
+}
+
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -16,7 +21,7 @@ async function startServer() {
   // Vite middleware for development vs static serve for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });
     app.use(vite.middlewares);

@@ -30,13 +30,20 @@ export interface Pandal {
 
 export type FacilityCategory =
   | 'police'
+  | 'helpdesk'
   | 'toilets'
   | 'metro'
   | 'railway'
   | 'food'
+  | 'restaurant'
   | 'ferry'
   | 'medical'
+  | 'pharmacy'
+  | 'atm'
   | 'parking'
+  | 'hotel'
+  | 'landmark'
+  | 'petrol'
   | 'entry-exit';
 
 export interface FacilityPoint {
@@ -46,7 +53,10 @@ export interface FacilityPoint {
   lat: number;
   lng: number;
   details: LocalizedString;
+  address?: LocalizedString;
   contact?: string;
+  hours?: LocalizedString;
+  pujaHoursBadge?: string;
   nearPandalId?: string;
 }
 
@@ -116,3 +126,35 @@ export interface RouteResult {
   destinationPandals: Pandal[];
   stationsList?: MetroStation[];
 }
+
+export type TravelMode = 'walking' | 'driving' | 'cycling' | 'transit';
+
+export interface TrailStop {
+  id: string;
+  name: LocalizedString;
+  lat: number;
+  lng: number;
+  pandalId?: string;
+  nearestMetro?: string;
+  crowdLevel?: CrowdLevel;
+  zone?: Zone;
+}
+
+export interface CorridorDetourSuggestion {
+  pandal: Pandal;
+  insertIndex: number;
+  perpendicularDistanceKm: number;
+  extraDetourKm: number;
+  betweenStopA: string;
+  betweenStopB: string;
+}
+
+export interface CuratedTrailPreset {
+  id: string;
+  title: LocalizedString;
+  subtitle: LocalizedString;
+  zone: Zone | 'Iconic';
+  badge: string;
+  pandalIds: string[];
+}
+

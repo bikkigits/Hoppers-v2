@@ -25,15 +25,15 @@ export const OfflineIndicator: React.FC<Props> = ({ language }) => {
     return (
       <div
         id="offline-banner"
-        className="fixed top-16 left-3 right-3 z-40 max-w-md mx-auto flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-amber-500/90 text-slate-950 font-medium text-xs shadow-lg backdrop-blur-md border border-amber-300/30"
+        className="fixed top-14 left-3 right-3 z-40 max-w-md mx-auto flex items-center justify-between gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900/95 text-slate-200 font-medium text-xs shadow-xl backdrop-blur-md border border-slate-800"
       >
-        <div className="flex items-center gap-2">
-          <WifiOff className="w-4 h-4 shrink-0 text-slate-950 animate-pulse" />
-          <span>{messages.offline[language]}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <WifiOff className="w-4 h-4 shrink-0 text-amber-400" />
+          <span className="truncate">{messages.offline[language]}</span>
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className="p-1 hover:bg-black/10 rounded-full transition"
+          className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded-md transition shrink-0"
           aria-label="Dismiss"
         >
           <X className="w-3.5 h-3.5" />

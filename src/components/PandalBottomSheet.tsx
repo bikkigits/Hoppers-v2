@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pandal, FacilityPoint, Language, VisitedPandal } from '../types';
+import { Pandal, FacilityPoint, Language, VisitedPandal, TrailStop } from '../types';
 import { TRANSLATIONS } from '../data/translations';
 import { formatDistance, estimateWalkingMinutes } from '../utils/geo';
 import confetti from 'canvas-confetti';
@@ -27,6 +27,8 @@ interface Props {
   visitedList: VisitedPandal[];
   onToggleVisited: (pandalId: string) => void;
   onPlanRoute?: (pandal: Pandal) => void;
+  trailStops?: TrailStop[];
+  onToggleTrailStop?: (pandal: Pandal) => void;
 }
 
 export const PandalBottomSheet: React.FC<Props> = ({
@@ -37,6 +39,8 @@ export const PandalBottomSheet: React.FC<Props> = ({
   visitedList,
   onToggleVisited,
   onPlanRoute,
+  trailStops,
+  onToggleTrailStop,
 }) => {
   if (!selectedItem) return null;
 
@@ -160,80 +164,75 @@ export const PandalBottomSheet: React.FC<Props> = ({
       {/* Sheet Content */}
       <div
         id="pandal-bottom-sheet"
-        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-xl border-t border-x border-white/15 shadow-2xl rounded-t-3xl p-5 pb-[calc(5rem+env(safe-area-inset-bottom))] text-slate-100 animate-slide-up"
+        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 shadow-2xl rounded-t-3xl p-5 pb-[calc(5rem+env(safe-area-inset-bottom))] text-slate-100 animate-slide-up"
       >
         {/* Drag Handle Bar */}
-        <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4" />
+        <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4" />
 
         {/* Close Button */}
         <button
           id="close-sheet-btn"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition"
           aria-label="Close"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {isPandal && pandal ? (
           <div>
             {/* Header: Name & Zone */}
-            <div className="flex items-start justify-between gap-3 pr-8">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {pandal.zone === 'North'
-                      ? t.zoneNorth
-                      : pandal.zone === 'South'
-                      ? t.zoneSouth
-                      : t.zoneCentral}
-                  </span>
-
-                  {/* Crowd Meter Badge */}
-                  {(() => {
-                    const badge = getCrowdBadge(pandal.crowdLevel);
-                    return (
-                      <span
-                        className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${badge.bg}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                        {badge.label}
-                      </span>
-                    );
-                  })()}
-                </div>
-
-                <h2 className="text-xl font-bold text-white tracking-tight leading-snug">
-                  {pandal.name[language] || pandal.name.en}
-                </h2>
+            <div className="pr-8">
+              <div className="flex items-center gap-2 flex-wrap mb-1.5 text-xs text-slate-400">
+                <span className="font-semibold text-amber-400">
+                  {pandal.zone === 'North'
+                    ? t.zoneNorth
+                    : pandal.zone === 'South'
+                    ? t.zoneSouth
+                    : t.zoneCentral}
+                </span>
+                <span>·</span>
+                {(() => {
+                  const badge = getCrowdBadge(pandal.crowdLevel);
+                  return (
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                      <span>{badge.label}</span>
+                    </span>
+                  );
+                })()}
               </div>
+
+              <h2 className="text-xl font-bold text-white tracking-tight leading-snug">
+                {pandal.name[language] || pandal.name.en}
+              </h2>
             </div>
 
             {/* Distance & Nearest Metro summary row */}
-            <div className="mt-3.5 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-800/80 border border-white/5">
+            <div className="mt-3.5 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-800/60 border border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
+                <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 shrink-0">
                   <Train className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400">
+                  <p className="text-[10px] uppercase font-medium text-slate-400">
                     {t.nearestMetroLabel}
                   </p>
-                  <p className="text-xs font-medium text-slate-200 truncate">
+                  <p className="text-xs font-semibold text-slate-200 truncate">
                     {pandal.nearestMetro}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                <div className="p-1.5 rounded-lg bg-amber-400/15 text-amber-400 shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400">
+                  <p className="text-[10px] uppercase font-medium text-slate-400">
                     {distanceStr ? t.distanceAway : t.walkTime}
                   </p>
-                  <p className="text-xs font-semibold text-amber-300">
+                  <p className="text-xs font-semibold text-slate-200">
                     {distanceStr ? `${distanceStr} (~${walkMin}m)` : `${pandal.walkingTimeToMetroMin}m from Metro`}
                   </p>
                 </div>
@@ -242,7 +241,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
 
             {/* Commute Advice Tag */}
             {distKm !== null && (
-              <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-800/90 border border-white/10 text-xs font-semibold flex items-center gap-2">
+              <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-800 text-xs font-medium flex items-center gap-2">
                 {distKm < 1.5 ? (
                   <span className="text-emerald-300">🚶 Walking Distance (~15 mins)</span>
                 ) : distKm <= 5.0 ? (
@@ -254,10 +253,10 @@ export const PandalBottomSheet: React.FC<Props> = ({
             )}
 
             {/* Theme Description */}
-            <div className="mt-3.5 space-y-2">
-              <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                <p className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
+            <div className="mt-3.5 space-y-1.5">
+              <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
                   {t.themeLabel}
                 </p>
                 <p className="text-sm font-medium text-white">
@@ -265,14 +264,14 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 </p>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-300 leading-relaxed px-0.5 pt-1">
                 {pandal.description[language] || pandal.description.en}
               </p>
             </div>
 
             {/* Exit Gate Advice */}
             {pandal.exitGateSuggestion && (
-              <div className="mt-3 p-2.5 rounded-xl bg-slate-800/60 border border-white/5 text-xs text-slate-300">
+              <div className="mt-3 p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-300">
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                   <Info className="w-3.5 h-3.5 text-blue-400" />
                   {t.exitGateTip}
@@ -290,7 +289,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 {pandal.facilities.map((fac, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 rounded-lg bg-slate-800 border border-white/10 text-[11px] text-slate-300 font-medium"
+                    className="px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-750 text-[11px] text-slate-300 font-medium"
                   >
                     {fac}
                   </span>
@@ -299,26 +298,50 @@ export const PandalBottomSheet: React.FC<Props> = ({
             </div>
 
             {/* Actions: Stamp Passport, Plan Route & WhatsApp Share */}
-            <div className="mt-5 space-y-2.5">
+            <div className="mt-5 space-y-2">
               {/* Primary: Plan Route from Current Location */}
               <button
                 id="plan-route-btn"
                 onClick={handlePlanRoute}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/20 active:scale-98 transition"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-sm active:scale-98 transition"
               >
                 <Route className="w-4 h-4 text-slate-950" />
                 <span>{t.planRoute}</span>
               </button>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              {/* Add / Remove from Multi-Stop Trail */}
+              {onToggleTrailStop && (() => {
+                const isInTrail = trailStops?.some((s) => s.pandalId === pandal.id);
+                const stopIdx = trailStops?.findIndex((s) => s.pandalId === pandal.id);
+                return (
+                  <button
+                    id="toggle-trail-btn"
+                    onClick={() => onToggleTrailStop(pandal)}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs border active:scale-98 transition ${
+                      isInTrail
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 hover:bg-amber-500/30'
+                        : 'bg-slate-800 text-slate-200 border-slate-700 hover:border-amber-400/50 hover:text-amber-300'
+                    }`}
+                  >
+                    <Route className="w-4 h-4 text-amber-400" />
+                    <span>
+                      {isInTrail
+                        ? `${t.inTrail} (Stop #${(stopIdx ?? 0) + 1}) • ${t.removeFromTrail}`
+                        : `+ ${t.addToTrail}`}
+                    </span>
+                  </button>
+                );
+              })()}
+
+              <div className="grid grid-cols-2 gap-2">
                 {/* Stamp in Passport */}
                 <button
                   id="stamp-passport-btn"
                   onClick={handleMarkVisited}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 active:scale-98 border ${
+                  className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs transition-all duration-200 active:scale-98 border ${
                     isVisited
-                      ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50'
-                      : 'bg-slate-800 text-slate-200 border-white/10 hover:bg-slate-700'
+                      ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40'
+                      : 'bg-slate-800/80 text-slate-200 border-slate-700 hover:bg-slate-800'
                   }`}
                 >
                   {isVisited ? (
@@ -338,9 +361,9 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 <button
                   id="share-whatsapp-btn"
                   onClick={handleShareWhatsapp}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs border border-emerald-400/40 active:scale-98 transition shadow-md shadow-emerald-950/40"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700 active:scale-98 transition"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
+                  <Share2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="truncate">{t.shareWhatsapp}</span>
                 </button>
               </div>
@@ -355,24 +378,22 @@ export const PandalBottomSheet: React.FC<Props> = ({
         ) : facility ? (
           <div>
             {/* Facility Details View */}
-            <div className="flex items-start justify-between gap-2 pr-8">
-              <div>
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30 mb-1 inline-block">
-                  {facility.category.toUpperCase()}
-                </span>
-                <h2 className="text-lg font-bold text-white leading-snug">
-                  {facility.name[language] || facility.name.en}
-                </h2>
-              </div>
+            <div className="pr-8">
+              <span className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-1 inline-block">
+                {facility.category.toUpperCase()}
+              </span>
+              <h2 className="text-lg font-bold text-white leading-snug">
+                {facility.name[language] || facility.name.en}
+              </h2>
             </div>
 
-            <div className="mt-3 p-3 rounded-xl bg-slate-800/80 border border-white/5 space-y-2">
+            <div className="mt-3 p-3 rounded-xl bg-slate-800/60 border border-slate-800 space-y-2">
               <p className="text-xs text-slate-300 leading-relaxed">
                 {facility.details[language] || facility.details.en}
               </p>
 
               {facility.contact && (
-                <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 pt-2 border-t border-white/5">
+                <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 pt-2 border-t border-slate-800">
                   <PhoneCall className="w-3.5 h-3.5" />
                   <a href={`tel:${facility.contact.split('/')[0].trim()}`} className="underline">
                     {facility.contact}
@@ -383,16 +404,16 @@ export const PandalBottomSheet: React.FC<Props> = ({
               {distanceStr && (
                 <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
                   <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{distanceStr} from current position (~{walkMin}m walk)</span>
+                  <span>{distanceStr} away (~{walkMin}m walk)</span>
                 </div>
               )}
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-2.5">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 id="facility-navigate-btn"
                 onClick={openGoogleMaps}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-xs shadow-lg active:scale-98 transition"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs active:scale-98 transition shadow-xs"
               >
                 <Navigation className="w-3.5 h-3.5" />
                 <span>{t.takeMeThere}</span>
@@ -401,9 +422,9 @@ export const PandalBottomSheet: React.FC<Props> = ({
               <button
                 id="facility-share-whatsapp-btn"
                 onClick={handleShareWhatsapp}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg active:scale-98 transition"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-xs active:scale-98 transition"
               >
-                <Share2 className="w-3.5 h-3.5" />
+                <Share2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{t.shareWhatsapp}</span>
               </button>
             </div>

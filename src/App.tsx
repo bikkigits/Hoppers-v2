@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { NavigationTab, Language, Pandal, FacilityPoint, VisitedPandal, WalkRoute, MetroMapRoute, TrailStop, SuggestedPandal } from './types';
 import { PANDALS_DATA } from './data/mockData';
 import { TopBar } from './components/TopBar';
@@ -381,6 +382,9 @@ export function App() {
         onOpenSuggestPandal={() => setIsSuggestModalOpen(true)}
         onLocateUser={handleLocateUser}
       />
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }

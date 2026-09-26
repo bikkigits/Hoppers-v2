@@ -114,7 +114,7 @@ export const OfflineIndicator: React.FC<Props> = ({ language }) => {
         <aside
           id="offline-banner"
           aria-label="Offline Mode Status"
-          className="fixed top-14 left-3 right-3 z-40 max-w-md mx-auto flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-2xl bg-[#0F172A]/95 text-slate-200 text-xs shadow-2xl backdrop-blur-xl border border-amber-500/40 animate-fade-in"
+          className="fixed top-[calc(var(--top-header-height)+var(--safe-top)+6px)] left-3 right-3 z-40 max-w-md mx-auto flex items-center justify-between gap-2.5 px-3.5 py-2 rounded-2xl bg-[#0F172A]/95 text-slate-200 text-xs shadow-2xl backdrop-blur-xl border border-amber-500/40 animate-fade-in"
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">

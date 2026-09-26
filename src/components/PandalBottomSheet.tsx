@@ -237,18 +237,18 @@ export const PandalBottomSheet: React.FC<Props> = ({
   return (
     <div
       id="pandal-bottom-sheet-overlay"
-      className="fixed inset-0 z-40 flex items-end justify-center pointer-events-none"
+      className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs pointer-events-auto transition-opacity"
         onClick={onClose}
       />
 
       {/* Sheet Content */}
       <div
         id="pandal-bottom-sheet"
-        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 shadow-2xl rounded-t-3xl p-5 pb-[calc(5rem+env(safe-area-inset-bottom))] text-slate-100 animate-slide-up"
+        className="relative w-full max-w-lg max-h-[85dvh] overflow-y-auto overscroll-y-contain pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 shadow-2xl rounded-t-3xl p-5 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] text-slate-100 animate-slide-up"
       >
         {/* Drag Handle Bar */}
         <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4" />

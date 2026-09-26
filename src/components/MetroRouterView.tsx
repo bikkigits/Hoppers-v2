@@ -86,8 +86,8 @@ export const MetroRouterView: React.FC<Props> = ({
   };
 
   const containerClasses = isOverlay
-    ? 'relative w-full max-w-lg mx-auto bg-slate-900/95 backdrop-blur-2xl border border-slate-800 p-4 rounded-3xl shadow-2xl space-y-3.5 pointer-events-auto max-h-[82vh] overflow-y-auto animate-fade-in'
-    : 'w-full max-w-2xl mx-auto px-4 pt-4 pb-28 min-h-[calc(100vh-62px)] space-y-4';
+    ? 'relative w-full max-w-lg mx-auto bg-slate-900/95 backdrop-blur-2xl border border-slate-800 p-4 rounded-3xl shadow-2xl space-y-3.5 pointer-events-auto max-h-[82dvh] overflow-y-auto animate-fade-in'
+    : 'w-full max-w-2xl mx-auto px-4 pt-3 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] h-full overflow-y-auto overscroll-y-contain space-y-4';
 
   const renderStationOptions = (currentSelectedId: string, prefix: string) => {
     const blueList = METRO_STATIONS.filter((s) => s.lines.includes('blue'));

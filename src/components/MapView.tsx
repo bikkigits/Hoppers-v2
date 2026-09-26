@@ -1035,7 +1035,7 @@ export const MapView: React.FC<Props> = ({
   };
 
   return (
-    <div id="map-view-container" className="relative w-full h-[calc(100vh-62px)] overflow-hidden">
+    <div id="map-view-container" className="relative w-full h-full overflow-hidden">
       {/* Primary Map Stage */}
       <div
         id="leaflet-map"
@@ -1044,8 +1044,8 @@ export const MapView: React.FC<Props> = ({
       />
 
       {/* Floating Top Search Bar & Quick Filter Chips */}
-      <div className="absolute top-3 inset-x-3 max-w-md mx-auto z-30 pointer-events-auto">
-        <div className="relative">
+      <div className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
+        <div className="relative pointer-events-auto">
           <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-xl shadow-black/60">
             <Search className="w-4 h-4 text-amber-400 shrink-0" />
             <input
@@ -1074,7 +1074,7 @@ export const MapView: React.FC<Props> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchDropdownOpen && mapSearchQuery.trim() && (
-            <div className="absolute top-12 left-0 right-0 max-h-56 overflow-y-auto bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 space-y-1 z-40 animate-slide-down">
+            <div className="absolute top-11 left-0 right-0 max-h-56 overflow-y-auto bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-2xl shadow-2xl p-1.5 space-y-1 z-35 animate-slide-down">
               {searchResults.length === 0 ? (
                 <div className="p-3 text-center text-xs text-slate-400">
                   No matching pandals found
@@ -1105,7 +1105,7 @@ export const MapView: React.FC<Props> = ({
         </div>
 
         {/* Filter Chips immediately below Search Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar pointer-events-auto px-0.5">
           <button
             onClick={() => setMapFilter('all')}
             className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition shadow-sm ${
@@ -1161,7 +1161,7 @@ export const MapView: React.FC<Props> = ({
         return (
           <div
             id="active-walk-route-banner"
-            className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
+            className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="p-2 rounded-xl bg-amber-400/15 text-amber-400 shrink-0">
@@ -1203,7 +1203,7 @@ export const MapView: React.FC<Props> = ({
       {activeMetroRoute && !activeWalkRoute && (
         <div
           id="active-metro-route-banner"
-          className="absolute top-3 inset-x-3 max-w-md mx-auto z-20 pointer-events-auto p-3 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
+          className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 shrink-0">
@@ -1231,9 +1231,9 @@ export const MapView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Docked MetroLegend Component at Map Corner (top-28 left-3) */}
+      {/* Docked MetroLegend Component at Map Corner */}
       {isMetroActive && (
-        <div className="absolute top-28 left-3 z-20 pointer-events-auto">
+        <div className="absolute top-[96px] left-2.5 z-15 pointer-events-auto">
           <MetroLegend
             language={language}
             isolatedLine={isolatedLine}
@@ -1245,7 +1245,7 @@ export const MapView: React.FC<Props> = ({
       )}
 
       {/* Right Controls Stack: METRO Toggle, Zoom (+/-), Lock North, Find My Location */}
-      <div className="absolute top-28 right-3 z-20 flex flex-col gap-2 items-center pointer-events-auto">
+      <div className="absolute top-[96px] right-2.5 z-15 flex flex-col gap-1.5 items-center pointer-events-auto">
         {/* Dedicated METRO Map Layer Toggle */}
         <button
           id="map-metro-toggle-btn"
@@ -1323,52 +1323,59 @@ export const MapView: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Floating Bottom Action Buttons (+ Add Pandal on Left & Route on Right) */}
-      <div className="absolute bottom-20 inset-x-3 z-30 pointer-events-none flex items-center justify-between">
-        {/* Floating Left: + Add Pandal */}
-        {onOpenSuggestPandal && (
-          <button
-            id="map-floating-add-pandal-btn"
-            onClick={onOpenSuggestPandal}
-            className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs shadow-xl shadow-red-950/80 border border-red-400/50 active:scale-95 transition"
-            title={t.suggestPandalTitle}
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>{t.addPandalBtn}</span>
-          </button>
-        )}
+      {/* Unified Floating Bottom Stage (Strictly anchored above BottomNav dock with zero overlap) */}
+      <div
+        id="map-floating-bottom-stage"
+        className="absolute bottom-[calc(var(--bottom-dock-height)+var(--safe-bottom)+12px)] inset-x-0 z-20 pointer-events-none flex flex-col gap-2"
+      >
+        {/* Row 1: Action Buttons (+ Add Pandal on Left & Route on Right) */}
+        <div className="flex items-center justify-between px-3 w-full max-w-md mx-auto">
+          {/* Floating Left: + Add Pandal */}
+          {onOpenSuggestPandal && (
+            <button
+              id="map-floating-add-pandal-btn"
+              onClick={onOpenSuggestPandal}
+              className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-black/80 border border-red-400/50 active:scale-95 transition"
+              title={t.suggestPandalTitle}
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>{t.addPandalBtn}</span>
+            </button>
+          )}
 
-        {/* Floating Right: Route Planner */}
-        {onOpenTrailBuilder && (
-          <button
-            id="map-floating-route-btn"
-            onClick={onOpenTrailBuilder}
-            className={`pointer-events-auto ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-full backdrop-blur-md font-bold text-xs shadow-xl shadow-black/80 border active:scale-95 transition ${
-              trailStops && trailStops.length > 0
-                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-amber-400/20'
-                : 'bg-slate-900/90 text-slate-200 border-slate-700 hover:bg-slate-800'
-            }`}
-            title={t.trailBuilderTitle}
-          >
-            <Route className="w-4 h-4" />
-            <span>{t.tabTrail || 'Route'}</span>
-            {trailStops && trailStops.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-slate-950 text-amber-400 text-[9px] font-black flex items-center justify-center">
-                {trailStops.length}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
+          {/* Floating Right: Route Planner */}
+          {onOpenTrailBuilder && (
+            <button
+              id="map-floating-route-btn"
+              onClick={onOpenTrailBuilder}
+              className={`pointer-events-auto ml-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-md font-bold text-xs shadow-lg shadow-black/80 border active:scale-95 transition ${
+                trailStops && trailStops.length > 0
+                  ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-amber-400/20'
+                  : 'bg-slate-900/90 text-slate-200 border-slate-700 hover:bg-slate-800'
+              }`}
+              title={t.trailBuilderTitle}
+            >
+              <Route className="w-3.5 h-3.5" />
+              <span>{t.tabTrail || 'Route'}</span>
+              {trailStops && trailStops.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-slate-950 text-amber-400 text-[9px] font-black flex items-center justify-center">
+                  {trailStops.length}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
 
-      {/* Floating Filter Bar directly above the bottom dock */}
-      <div className="absolute bottom-28 inset-x-0 z-20 pointer-events-none flex justify-center px-1">
-        <NearbyFilterBar
-          activeFilter={activeFilter}
-          onFilterChange={handleFilterChange}
-          language={language}
-        />
+        {/* Row 2: Horizontal Nearby Filter Rail */}
+        <div className="w-full">
+          <NearbyFilterBar
+            activeFilter={activeFilter}
+            onFilterChange={handleFilterChange}
+            language={language}
+          />
+        </div>
       </div>
     </div>
   );
 };
+

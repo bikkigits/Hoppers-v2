@@ -68,7 +68,7 @@ export const BottomNav: React.FC<Props> = ({
   return (
     <nav
       id="bottom-floating-dock"
-      className="fixed bottom-3 left-3 right-3 z-40 max-w-md mx-auto pointer-events-auto pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-2.5 left-2.5 right-2.5 z-40 max-w-md mx-auto pointer-events-auto pb-[var(--safe-bottom)]"
       role="navigation"
       aria-label="Main Navigation"
     >

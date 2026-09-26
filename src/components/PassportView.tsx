@@ -65,7 +65,7 @@ export const PassportView: React.FC<Props> = ({
   return (
     <div
       id="passport-view"
-      className="w-full max-w-2xl mx-auto px-4 pt-4 pb-28 min-h-[calc(100vh-62px)]"
+      className="w-full max-w-2xl mx-auto px-4 pt-3 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] h-full overflow-y-auto overscroll-y-contain"
     >
       {/* Passport Identity Header */}
       <div className="relative overflow-hidden rounded-2xl p-5 bg-slate-900/80 border border-slate-800 shadow-sm mb-5">

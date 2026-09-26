@@ -330,7 +330,7 @@ export const DirectoryView: React.FC<Props> = ({
   return (
     <div
       id="directory-view"
-      className="w-full max-w-2xl mx-auto px-4 pt-4 pb-28 min-h-[calc(100vh-62px)]"
+      className="w-full max-w-2xl mx-auto px-4 pt-3 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] h-full overflow-y-auto overscroll-y-contain"
     >
       {/* Active Trail Floating Banner */}
       {trailStops.length > 0 && onOpenTrailBuilder && (

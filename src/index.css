@@ -1,6 +1,28 @@
 @import "tailwindcss";
 
+:root {
+  --top-header-height: 52px;
+  --bottom-dock-height: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @layer base {
+  html, body, #root {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', 'Hind Siliguri', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: #080B11;

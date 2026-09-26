@@ -50,7 +50,7 @@ export const TopBar: React.FC<Props> = ({
     <>
       <header
         id="app-topbar"
-        className="sticky top-0 z-30 w-full bg-[#080B11]/90 backdrop-blur-md border-b border-slate-800/60 px-3.5 py-2 pt-[calc(0.5rem+env(safe-area-inset-top))] transition-all duration-200"
+        className="sticky top-0 z-30 w-full shrink-0 bg-[#080B11]/90 backdrop-blur-md border-b border-slate-800/60 px-3.5 py-2 pt-[calc(0.4rem+var(--safe-top))] transition-all duration-200"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           {/* Brand with Morphing Animated Hamburger/Diya Button & Static Hoppers Logo */}

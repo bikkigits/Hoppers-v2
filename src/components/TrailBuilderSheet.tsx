@@ -281,7 +281,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
       >
         <div
           id="trail-builder-sheet"
-          className="w-full max-w-xl mx-auto bg-[#090D16] border-t border-amber-500/30 rounded-t-3xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-slide-up"
+          className="w-full max-w-xl mx-auto bg-[#090D16] border-t border-amber-500/30 rounded-t-3xl shadow-2xl flex flex-col max-h-[88dvh] overflow-hidden animate-slide-up"
         >
           {/* Sheet Handle */}
           <div className="pt-2.5 pb-1 flex justify-center shrink-0">
@@ -829,7 +829,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
           </div>
 
           {/* Sticky Bottom Actions Bar */}
-          <div className="p-3 bg-[#080C14] border-t border-slate-800/90 shrink-0">
+          <div className="p-3 pb-[calc(0.75rem+var(--safe-bottom))] bg-[#080C14] border-t border-slate-800/90 shrink-0">
             <div className="flex items-center gap-2">
               {/* Google Maps Turn-by-Turn Export Button */}
               <a

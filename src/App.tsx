@@ -220,7 +220,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080B11] text-slate-100 flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
+    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#080B11] text-slate-100 flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
       {/* Top Bar with Brand & Trilingual Switcher */}
       <TopBar
         language={language}
@@ -237,7 +237,7 @@ export function App() {
       <OfflineIndicator language={language} />
 
       {/* Main Content Area based on Tab */}
-      <main className="flex-1 relative w-full overflow-x-hidden">
+      <main className="flex-1 relative w-full h-[calc(100dvh-var(--top-header-height))] overflow-hidden">
         {(currentTab === 'map' || currentTab === 'metro') && (
           <div className="relative w-full h-full">
             <MapView

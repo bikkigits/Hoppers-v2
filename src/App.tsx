@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationTab, Language, Pandal, FacilityPoint, VisitedPandal, WalkRoute, MetroMapRoute, TrailStop, SuggestedPandal } from './types';
+import {
+  NavigationTab,
+  Language,
+  Pandal,
+  FacilityPoint,
+  MetroStation,
+  VisitedPandal,
+  WalkRoute,
+  MetroMapRoute,
+  TrailStop,
+  SuggestedPandal,
+  SelectedMapItem,
+} from './types';
 import { PANDALS_DATA } from './data/mockData';
 import { TopBar } from './components/TopBar';
 import { MapView } from './components/MapView';
@@ -54,7 +66,7 @@ export function App() {
     return [];
   });
 
-  const [selectedItem, setSelectedItem] = useState<Pandal | FacilityPoint | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SelectedMapItem | null>(null);
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [activeWalkRoute, setActiveWalkRoute] = useState<WalkRoute | null>(null);
@@ -260,6 +272,7 @@ export function App() {
               language={language}
               onSelectPandal={(pandal) => setSelectedItem(pandal)}
               onSelectFacility={(facility) => setSelectedItem(facility)}
+              onSelectStation={(station) => setSelectedItem(station)}
               userCoords={userCoords}
               onUserCoordsChange={setUserCoords}
               visitedList={visitedList}
@@ -321,7 +334,7 @@ export function App() {
         )}
       </main>
 
-      {/* Pandal & Facility Detail Bottom Sheet */}
+      {/* Pandal, Station & Facility Detail Bottom Sheet */}
       <PandalBottomSheet
         selectedItem={selectedItem}
         onClose={() => setSelectedItem(null)}
@@ -330,6 +343,7 @@ export function App() {
         visitedList={visitedList}
         onToggleVisited={handleToggleVisited}
         onPlanRoute={handlePlanRoute}
+        onSelectPandal={(pandal) => setSelectedItem(pandal)}
         trailStops={trailStops}
         onToggleTrailStop={handleToggleTrailStop}
       />

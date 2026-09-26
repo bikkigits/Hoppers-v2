@@ -703,3 +703,93 @@ export const METRO_STATIONS: MetroStation[] = [
     connectingPandals: [],
   },
 ];
+
+export const METRO_LINES: import('../types').MetroLineMeta[] = [
+  {
+    id: 'blue',
+    code: 'Line 1',
+    name: { en: 'Blue Line (Line 1)', bn: 'ব্লু লাইন (লাইন ১)', hi: 'ब्लू लाइन (लाइन 1)' },
+    color: '#2563EB',
+    corridor: {
+      en: 'North–South spine from Dakshineswar to Kavi Subhash',
+      bn: 'উত্তর-দক্ষিণ করিডোর: দক্ষিণেশ্বর থেকে কবি সুভাষ',
+      hi: 'उत्तर-दक्षिण गलियारा: दक्षिणेश्वर से कवि सुभाष'
+    },
+    stationsCount: 26,
+    terminalStart: { en: 'Dakshineswar', bn: 'দক্ষিণেশ্বর', hi: 'दक्षिणेश्वर' },
+    terminalEnd: { en: 'Kavi Subhash', bn: 'কবি সুভাষ', hi: 'कवि सुभाष' },
+    highlightHaloColor: 'rgba(37, 99, 235, 0.4)',
+  },
+  {
+    id: 'green',
+    code: 'Line 2',
+    name: { en: 'Green Line (Line 2)', bn: 'গ্রিন লাইন (লাইন ২)', hi: 'ग्रीन लाइन (लाइन 2)' },
+    color: '#10B981',
+    corridor: {
+      en: 'East–West corridor, featuring under-river Hooghly tunnel & Bowbazar connector',
+      bn: 'পূর্ব-পশ্চিম করিডোর: গঙ্গার তলা দিয়ে টানেল ও বউবাজার সংযোগ',
+      hi: 'पूर्व-पश्चिम गलियारा: हुगली नदी सुरंग व बहूबाजार कनेक्टर'
+    },
+    stationsCount: 12,
+    terminalStart: { en: 'Howrah Maidan', bn: 'হাওড়া ময়দান', hi: 'हावड़ा मैदान' },
+    terminalEnd: { en: 'Salt Lake Sector V', bn: 'সল্টলেক সেক্টর ৫', hi: 'सॉल्ट लेक सेक्टर 5' },
+    highlightHaloColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  {
+    id: 'orange',
+    code: 'Line 6',
+    name: { en: 'Orange Line (Line 6)', bn: 'অরেঞ্জ লাইন (লাইন ৬)', hi: 'ऑरेंज लाइन (लाइन 6)' },
+    color: '#F97316',
+    corridor: {
+      en: 'EM Bypass corridor to Ruby & Beleghata',
+      bn: 'ইএম বাইপাস করিডোর: রুবি ও বেলেঘাটা অভিমুখী',
+      hi: 'ईएम बाईपास गलियारा: रूबी व बेलेघाटा'
+    },
+    stationsCount: 9,
+    terminalStart: { en: 'Kavi Subhash', bn: 'কবি সুভাষ', hi: 'कवि सुभाष' },
+    terminalEnd: { en: 'Beleghata', bn: 'বেলেঘাটা', hi: 'बेलेघाटा' },
+    highlightHaloColor: 'rgba(249, 115, 22, 0.4)',
+  },
+  {
+    id: 'purple',
+    code: 'Line 3',
+    name: { en: 'Purple Line (Line 3)', bn: 'পার্পল লাইন (লাইন ৩)', hi: 'पर्पल लाइन (लाइन 3)' },
+    color: '#9333EA',
+    corridor: {
+      en: 'Diamond Harbour Rd from Joka to Majerhat',
+      bn: 'ডায়মন্ড হারবার রোড: জোকা থেকে মাঝেরহাট',
+      hi: 'डायमंड हार्बर रोड: जोका से माझेरहाट'
+    },
+    stationsCount: 7,
+    terminalStart: { en: 'Joka', bn: 'জোকা', hi: 'जोका' },
+    terminalEnd: { en: 'Majerhat', bn: 'মাঝেরহাট', hi: 'माझेरहाट' },
+    highlightHaloColor: 'rgba(147, 51, 234, 0.4)',
+  },
+  {
+    id: 'yellow',
+    code: 'Line 4',
+    name: { en: 'Yellow Line (Line 4)', bn: 'ইয়েলো লাইন (লাইন ৪)', hi: 'येलो लाइन (लाइन 4)' },
+    color: '#EAB308',
+    corridor: {
+      en: 'Airport Express corridor to Jai Hind Airport',
+      bn: 'বিমানবন্দর এক্সপ্রেস: নোয়াপাড়া থেকে জয় হিন্দ বিমানবন্দর',
+      hi: 'एयरपोर्ट एक्सप्रेस: नोआपाड़ा से जय हिन्द एयरपोर्ट'
+    },
+    stationsCount: 4,
+    terminalStart: { en: 'Noapara', bn: 'নোয়াপাড়া', hi: 'नोआपाड़ा' },
+    terminalEnd: { en: 'Jai Hind (Airport)', bn: 'জয় হিন্দ (বিমানবন্দর)', hi: 'जय हिन्द (हवाई अड्डा)' },
+    highlightHaloColor: 'rgba(234, 179, 8, 0.4)',
+  },
+];
+
+export function getLineStations(lineId: import('../types').MetroLine): MetroStation[] {
+  return METRO_STATIONS.filter((s) => s.lines.includes(lineId)).sort((a, b) => {
+    if (lineId === 'blue') return (a.orderBlue ?? 0) - (b.orderBlue ?? 0);
+    if (lineId === 'green') return (a.orderGreen ?? 0) - (b.orderGreen ?? 0);
+    if (lineId === 'orange') return (a.orderOrange ?? 0) - (b.orderOrange ?? 0);
+    if (lineId === 'purple') return (a.orderPurple ?? 0) - (b.orderPurple ?? 0);
+    if (lineId === 'yellow') return (a.orderYellow ?? 0) - (b.orderYellow ?? 0);
+    return 0;
+  });
+}
+

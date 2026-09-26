@@ -65,6 +65,18 @@ export interface FacilityPoint {
 
 export type MetroLine = 'blue' | 'green' | 'orange' | 'purple' | 'yellow';
 
+export interface MetroLineMeta {
+  id: MetroLine;
+  code: string;
+  name: LocalizedString;
+  color: string;
+  corridor: LocalizedString;
+  stationsCount: number;
+  terminalStart: LocalizedString;
+  terminalEnd: LocalizedString;
+  highlightHaloColor?: string;
+}
+
 export interface MetroStation {
   id: string;
   name: LocalizedString;
@@ -80,6 +92,8 @@ export interface MetroStation {
   exitGates: { gate: string; destination: LocalizedString }[];
   connectingPandals: string[]; // Pandal IDs
 }
+
+export type SelectedMapItem = Pandal | FacilityPoint | MetroStation;
 
 export interface VisitedPandal {
   pandalId: string;
@@ -181,5 +195,12 @@ export interface SuggestedPandal {
   submitterEmail?: string;
   status: 'pending' | 'verified';
   createdAt: number;
+}
+
+export interface CrowdReport {
+  pandalId: string;
+  intensity: 'Low' | 'Medium' | 'Heavy' | 'Extreme';
+  timestamp: number;
+  reportCount?: number;
 }
 

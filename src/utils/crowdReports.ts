@@ -1,4 +1,4 @@
-import { CrowdLevel } from '../types';
+import { CrowdLevel, Language } from '../types';
 
 export type CrowdIntensity = 'low' | 'medium' | 'heavy';
 
@@ -28,6 +28,60 @@ export interface PandalCrowdSummary {
 const STORAGE_KEY = 'hoppers_crowd_reports_v2';
 const COOLDOWN_MS = 8 * 60 * 1000; // 8 minutes per pandal to prevent spam
 const EXPIRY_MS = 90 * 60 * 1000; // 90 minutes rolling validity window
+
+// BroadcastChannel for instant cross-tab live syncing
+let broadcastChannel: BroadcastChannel | null = null;
+try {
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    broadcastChannel = new BroadcastChannel('hoppers_crowd_sync');
+    broadcastChannel.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'CROWD_SYNC_REPORT' && ev.data?.payload) {
+        const incoming: CrowdReportItem = ev.data.payload;
+        const all = getAllCrowdReports();
+        if (!all.some((r) => r.id === incoming.id)) {
+          const updated = [incoming, ...all].slice(0, 1000);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          window.dispatchEvent(
+            new CustomEvent('hoppers_crowd_updated', {
+              detail: { pandalId: incoming.pandalId, intensity: incoming.intensity, isVerifiedOnSite: incoming.isVerifiedOnSite },
+            })
+          );
+        }
+      }
+    });
+  }
+} catch {
+  // Graceful fallback
+}
+
+// Calculate decay status and localized badge for crowd reports
+export function getCrowdDecayInfo(timestamp: number | null, language: Language) {
+  if (!timestamp) return null;
+  const minutesAgo = Math.max(1, Math.round((Date.now() - timestamp) / 60000));
+  
+  if (minutesAgo <= 15) {
+    return {
+      text: language === 'bn' ? `তাজা (${minutesAgo} মি আগে)` : language === 'hi' ? `ताजा (${minutesAgo} मि पूर्व)` : `Fresh (${minutesAgo}m ago)`,
+      badgeClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+      dotColor: '#10B981',
+      isFresh: true,
+    };
+  } else if (minutesAgo <= 45) {
+    return {
+      text: language === 'bn' ? `সাম্প্রতিক (${minutesAgo} মি আগে)` : language === 'hi' ? `हालिया (${minutesAgo} मि पूर्व)` : `Recent (${minutesAgo}m ago)`,
+      badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+      dotColor: '#F59E0B',
+      isFresh: true,
+    };
+  } else {
+    return {
+      text: language === 'bn' ? `ফেইডিং (${minutesAgo} মি আগে)` : language === 'hi' ? `धुंधला (${minutesAgo} मि पूर्व)` : `Fading (${minutesAgo}m ago)`,
+      badgeClass: 'bg-slate-500/20 text-slate-400 border border-slate-500/30',
+      dotColor: '#94A3B8',
+      isFresh: false,
+    };
+  }
+}
 
 // Calculate geodesic distance in meters
 function getDistanceMeters(
@@ -114,6 +168,31 @@ export function submitCrowdReport(
 
   const updatedList = [newReport, ...all].slice(0, 1000); // keep at most 1000 recent reports
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+
+  // Broadcast to other tabs
+  try {
+    broadcastChannel?.postMessage({
+      type: 'CROWD_SYNC_REPORT',
+      payload: newReport,
+    });
+  } catch {
+    // Ignore broadcast error
+  }
+
+  // Background sync to server API
+  try {
+    fetch('/api/crowd-reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pandalId,
+        intensity,
+        timestamp: now,
+      }),
+    }).catch(() => {});
+  } catch {
+    // Graceful offline fallback
+  }
 
   // Dispatch custom window event so all reactive views immediately refresh
   window.dispatchEvent(

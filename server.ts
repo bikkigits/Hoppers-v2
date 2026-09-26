@@ -13,9 +13,47 @@ async function startServer() {
 
   app.use(express.json());
 
+  // In-memory crowd reports store
+  const liveCrowdReports: Record<string, { pandalId: string; intensity: string; timestamp: number; reportCount: number }> = {};
+
   // API health route
   app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", app: "Hoppers – Durga Puja Companion" });
+    res.json({ status: "ok", app: "Hoppers – Durga Puja Companion", offlineReady: true });
+  });
+
+  // Pandal locations and offline festival metadata endpoint
+  app.get("/api/pandals", async (_req, res) => {
+    try {
+      const mockData = await import("./src/data/mockData.ts");
+      res.json({
+        total: mockData.PANDALS_DATA.length,
+        pandals: mockData.PANDALS_DATA,
+        metroStations: mockData.METRO_STATIONS,
+        facilities: mockData.CRITICAL_FACILITIES,
+      });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to load pandal metadata" });
+    }
+  });
+
+  // Crowd reports sync endpoint
+  app.get("/api/crowd-reports", (_req, res) => {
+    res.json(liveCrowdReports);
+  });
+
+  app.post("/api/crowd-reports", (req, res) => {
+    const { pandalId, intensity, timestamp, reportCount } = req.body;
+    if (!pandalId || !intensity) {
+      return res.status(400).json({ error: "Missing pandalId or intensity" });
+    }
+    const existing = liveCrowdReports[pandalId];
+    liveCrowdReports[pandalId] = {
+      pandalId,
+      intensity,
+      timestamp: timestamp || Date.now(),
+      reportCount: reportCount || (existing ? existing.reportCount + 1 : 1),
+    };
+    return res.json({ success: true, report: liveCrowdReports[pandalId] });
   });
 
   // Vite middleware for development vs static serve for production

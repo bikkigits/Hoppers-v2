@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Pandal, FacilityPoint, Language, VisitedPandal, TrailStop } from '../types';
+import {
+  Pandal,
+  FacilityPoint,
+  MetroStation,
+  Language,
+  VisitedPandal,
+  TrailStop,
+  SelectedMapItem,
+} from '../types';
+import { PANDALS_DATA } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
 import { formatDistance, estimateWalkingMinutes } from '../utils/geo';
 import confetti from 'canvas-confetti';
@@ -8,16 +17,16 @@ import {
   Navigation,
   CheckCircle2,
   MapPin,
-  Clock,
   Train,
-  ShieldAlert,
   Sparkles,
   Award,
   PhoneCall,
   Info,
   Share2,
   Route,
-  Users,
+  ArrowRight,
+  Footprints,
+  Compass,
 } from 'lucide-react';
 import {
   getPandalCrowdSummary,
@@ -27,13 +36,14 @@ import {
 } from '../utils/crowdReports';
 
 interface Props {
-  selectedItem: Pandal | FacilityPoint | null;
+  selectedItem: SelectedMapItem | null;
   onClose: () => void;
   userCoords: { lat: number; lng: number } | null;
   language: Language;
   visitedList: VisitedPandal[];
   onToggleVisited: (pandalId: string) => void;
   onPlanRoute?: (pandal: Pandal) => void;
+  onSelectPandal?: (pandal: Pandal) => void;
   trailStops?: TrailStop[];
   onToggleTrailStop?: (pandal: Pandal) => void;
 }
@@ -46,15 +56,18 @@ export const PandalBottomSheet: React.FC<Props> = ({
   visitedList,
   onToggleVisited,
   onPlanRoute,
+  onSelectPandal,
   trailStops,
   onToggleTrailStop,
 }) => {
-  if (!selectedItem) return null;
-
   const t = TRANSLATIONS[language];
-  const isPandal = 'theme' in selectedItem;
-  const pandal = isPandal ? (selectedItem as Pandal) : null;
-  const facility = !isPandal ? (selectedItem as FacilityPoint) : null;
+  const isPandal = selectedItem ? 'theme' in selectedItem : false;
+  const isStation = selectedItem ? 'exitGates' in selectedItem && 'lines' in selectedItem : false;
+  const isFacility = selectedItem ? !isPandal && !isStation : false;
+
+  const pandal = isPandal && selectedItem ? (selectedItem as Pandal) : null;
+  const station = isStation && selectedItem ? (selectedItem as MetroStation) : null;
+  const facility = isFacility && selectedItem ? (selectedItem as FacilityPoint) : null;
 
   const isVisited = pandal
     ? visitedList.some((v) => v.pandalId === pandal.id)
@@ -63,12 +76,12 @@ export const PandalBottomSheet: React.FC<Props> = ({
     ? visitedList.find((v) => v.pandalId === pandal.id)
     : null;
 
-  // Live Crowdsourced Crowd Summary State
+  // Live Crowdsourced Crowd Summary State for Pandals
   const [crowdSummary, setCrowdSummary] = useState<PandalCrowdSummary | null>(() =>
     pandal ? getPandalCrowdSummary(pandal.id, pandal.crowdLevel) : null
   );
-  const [reportingStatus, setReportingStatus] = useState<string | null>(null);
-  const [isSubmittingCrowd, setIsSubmittingCrowd] = useState(false);
+  const [, setReportingStatus] = useState<string | null>(null);
+  const [, setIsSubmittingCrowd] = useState(false);
 
   useEffect(() => {
     if (!pandal) return;
@@ -87,6 +100,27 @@ export const PandalBottomSheet: React.FC<Props> = ({
     };
   }, [pandal?.id, pandal?.crowdLevel]);
 
+  // Find Feeder Pandals for Metro Station
+  const feederPandals = React.useMemo(() => {
+    if (!station) return [];
+    const stationNameEn = station.name.en.toLowerCase();
+    return PANDALS_DATA.filter((p) => {
+      if (station.connectingPandals && station.connectingPandals.includes(p.id)) {
+        return true;
+      }
+      const pMetroEn = p.nearestMetroEn.toLowerCase();
+      const pMetro = p.nearestMetro.toLowerCase();
+      return (
+        pMetroEn.includes(stationNameEn) ||
+        stationNameEn.includes(pMetroEn) ||
+        pMetro.includes(stationNameEn)
+      );
+    });
+  }, [station]);
+
+  // Early return only after all hooks are unconditionally initialized
+  if (!selectedItem) return null;
+
   const handleVoteCrowd = (intensity: CrowdIntensity) => {
     if (!pandal) return;
     setIsSubmittingCrowd(true);
@@ -104,10 +138,9 @@ export const PandalBottomSheet: React.FC<Props> = ({
     }, 6000);
   };
 
-  // Calculate distance if user coords available
+  // Distance calculation if user coords available
   let distanceStr: string | null = null;
   let walkMin: number | null = null;
-  let distKm: number | null = null;
   if (userCoords) {
     const dKm =
       Math.hypot(
@@ -116,14 +149,12 @@ export const PandalBottomSheet: React.FC<Props> = ({
       );
     distanceStr = formatDistance(dKm);
     walkMin = estimateWalkingMinutes(dKm);
-    distKm = dKm;
   }
 
   const handleMarkVisited = () => {
     if (!pandal) return;
 
     if (!isVisited) {
-      // Trigger festive celebratory confetti
       try {
         confetti({
           particleCount: 90,
@@ -145,6 +176,11 @@ export const PandalBottomSheet: React.FC<Props> = ({
       const themeStr = pandal.theme[language] || pandal.theme.en;
       const metroStr = pandal.nearestMetro;
       const text = `🪔 Let's meet at *${nameStr}*!\n✨ Theme: ${themeStr}\n🚇 Nearest Metro: ${metroStr}\n📍 Map Location: https://www.google.com/maps?q=${pandal.lat},${pandal.lng}\n\nShared via Hoppers — Offline Durga Puja Guide`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    } else if (station) {
+      const nameStr = station.name[language] || station.name.en;
+      const linesStr = station.lines.map((l) => l.toUpperCase()).join(', ');
+      const text = `🚇 *${nameStr} Metro Station* (Lines: ${linesStr})\n📍 Location: https://www.google.com/maps?q=${station.lat},${station.lng}\n\nShared via Hoppers Kolkata Guide`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     } else if (facility) {
       const nameStr = facility.name[language] || facility.name.en;
@@ -227,7 +263,8 @@ export const PandalBottomSheet: React.FC<Props> = ({
           <X className="w-4 h-4" />
         </button>
 
-        {isPandal && pandal ? (
+        {/* 1. PANDAL DETAIL VIEW */}
+        {isPandal && pandal && (
           <div>
             {/* Header: Name & Zone */}
             <div className="pr-8">
@@ -260,158 +297,76 @@ export const PandalBottomSheet: React.FC<Props> = ({
               <h2 className="text-xl font-bold text-white tracking-tight leading-snug">
                 {pandal.name[language] || pandal.name.en}
               </h2>
+
+              {language !== 'en' && (
+                <p className="text-xs text-slate-400 mt-0.5">{pandal.name.en}</p>
+              )}
             </div>
 
-            {/* Distance & Nearest Metro summary row */}
-            <div className="mt-3.5 grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-800/60 border border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 shrink-0">
+            {/* Quick Stats: Distance & Metro */}
+            <div className="mt-3.5 grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
                   <Train className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-medium text-slate-400">
+                  <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
                     {t.nearestMetroLabel}
                   </p>
-                  <p className="text-xs font-semibold text-slate-200 truncate">
+                  <p className="text-xs font-semibold text-white truncate">
                     {pandal.nearestMetro}
+                  </p>
+                  <p className="text-[10px] text-blue-400">
+                    ~{pandal.walkingTimeToMetroMin} min {t.walkTime}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-amber-400/15 text-amber-400 shrink-0">
-                  <Clock className="w-4 h-4" />
+              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 shrink-0">
+                  <MapPin className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-medium text-slate-400">
-                    {distanceStr ? t.distanceAway : t.walkTime}
+                  <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+                    Distance
                   </p>
-                  <p className="text-xs font-semibold text-slate-200">
-                    {distanceStr ? `${distanceStr} (~${walkMin}m)` : `${pandal.walkingTimeToMetroMin}m from Metro`}
+                  <p className="text-xs font-semibold text-white truncate">
+                    {distanceStr || 'Kolkata'}
+                  </p>
+                  <p className="text-[10px] text-amber-400">
+                    {walkMin ? `~${walkMin}m walk` : 'Zone ' + pandal.zone}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Commute Advice Tag */}
-            {distKm !== null && (
-              <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-800 text-xs font-medium flex items-center gap-2">
-                {distKm < 1.5 ? (
-                  <span className="text-emerald-300">🚶 Walking Distance (~15 mins)</span>
-                ) : distKm <= 5.0 ? (
-                  <span className="text-amber-300">🛺 Auto/Taxi recommended</span>
-                ) : (
-                  <span className="text-blue-300">🚇 Metro/Cab recommended</span>
-                )}
-              </div>
-            )}
-
-            {/* User-Driven Crowd Intensity Reporting Module */}
-            <div
-              id="crowd-reporting-module"
-              className="mt-3 p-3.5 rounded-2xl bg-slate-800/70 border border-slate-750 shadow-md space-y-2.5"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
-                    <Users className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
-                      <span>{t.reportCrowdTitle || 'Report Live Crowd Intensity'}</span>
-                      {crowdSummary?.confidence === 'High (Verified On-Site)' && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          📍 {t.verifiedOnSiteBadge || 'Verified On-Site'}
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-[10px] text-slate-400">
-                      {t.reportCrowdSubtitle || 'Help fellow devotees know current queue wait times'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Live recency indicator */}
-                {crowdSummary?.isCrowdsourced && crowdSummary.lastReportedTimestamp && (
-                  <span className="text-[10px] text-amber-300 font-semibold bg-amber-400/15 px-2 py-0.5 rounded-full border border-amber-400/25 shrink-0 whitespace-nowrap">
-                    Live · {Math.max(1, Math.round((Date.now() - crowdSummary.lastReportedTimestamp) / 60000))}m ago
-                  </span>
-                )}
+            {/* Live Crowd Voting Section */}
+            <div className="mt-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800/80 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-300">Live Crowd Condition</span>
+                <span className="text-[11px] text-slate-400">Vote condition:</span>
               </div>
 
-              {/* 3 Interactive Buttons: Low, Medium, Heavy */}
-              <div className="grid grid-cols-3 gap-2 pt-0.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 <button
-                  id="crowd-btn-low"
                   onClick={() => handleVoteCrowd('low')}
-                  disabled={isSubmittingCrowd}
-                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 active:scale-95 transition group"
-                  title="Smooth entry, short or no waiting"
+                  className="py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition text-center"
                 >
-                  <span className="text-base leading-none mb-1">🟢</span>
-                  <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">
-                    Low
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">&lt;10m wait</span>
+                  🟢 Low
                 </button>
-
                 <button
-                  id="crowd-btn-medium"
                   onClick={() => handleVoteCrowd('medium')}
-                  disabled={isSubmittingCrowd}
-                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-amber-950/40 border border-amber-500/30 hover:border-amber-400 active:scale-95 transition group"
-                  title="Moving queue, 15 to 30 mins wait"
+                  className="py-1.5 px-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition text-center"
                 >
-                  <span className="text-base leading-none mb-1">🟡</span>
-                  <span className="text-xs font-bold text-amber-400 group-hover:text-amber-300">
-                    Medium
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">15-30m queue</span>
+                  🟡 Moderate
                 </button>
-
                 <button
-                  id="crowd-btn-heavy"
                   onClick={() => handleVoteCrowd('heavy')}
-                  disabled={isSubmittingCrowd}
-                  className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-900/90 hover:bg-rose-950/40 border border-rose-500/30 hover:border-rose-400 active:scale-95 transition group"
-                  title="Barricaded queue, over 45 mins wait"
+                  className="py-1.5 px-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition text-center"
                 >
-                  <span className="text-base leading-none mb-1">🔴</span>
-                  <span className="text-xs font-bold text-rose-400 group-hover:text-rose-300">
-                    Heavy
-                  </span>
-                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">&gt;45m wait</span>
+                  🔴 Heavy
                 </button>
               </div>
-
-              {/* Status Banner */}
-              {reportingStatus && (
-                <div
-                  id="crowd-feedback-toast"
-                  className="p-2 rounded-xl bg-slate-900/95 border border-amber-400/40 text-amber-300 text-xs flex items-center gap-2 animate-fade-in shadow-sm"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="font-medium text-[11px] leading-tight">{reportingStatus}</span>
-                </div>
-              )}
-
-              {/* Community Votes Breakdown */}
-              {crowdSummary && crowdSummary.isCrowdsourced && crowdSummary.totalRecentReports > 0 && (
-                <div className="pt-1.5 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800">
-                  <span className="font-medium">
-                    {crowdSummary.totalRecentReports}{' '}
-                    {crowdSummary.totalRecentReports === 1 ? 'devotee report' : 'devotee reports'}{' '}
-                    {crowdSummary.onSiteCount > 0 && `(${crowdSummary.onSiteCount} verified on-site)`}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-emerald-400 font-semibold">{crowdSummary.counts.low} Low</span>
-                    <span>·</span>
-                    <span className="text-amber-400 font-semibold">{crowdSummary.counts.medium} Med</span>
-                    <span>·</span>
-                    <span className="text-rose-400 font-semibold">{crowdSummary.counts.heavy} Heavy</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Theme Description */}
@@ -459,9 +414,8 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Actions: Stamp Passport, Plan Route & WhatsApp Share */}
+            {/* Actions */}
             <div className="mt-5 space-y-2">
-              {/* Primary: Plan Route from Current Location */}
               <button
                 id="plan-route-btn"
                 onClick={handlePlanRoute}
@@ -471,7 +425,6 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 <span>{t.planRoute}</span>
               </button>
 
-              {/* Add / Remove from Multi-Stop Trail */}
               {onToggleTrailStop && (() => {
                 const isInTrail = trailStops?.some((s) => s.pandalId === pandal.id);
                 const stopIdx = trailStops?.findIndex((s) => s.pandalId === pandal.id);
@@ -496,7 +449,6 @@ export const PandalBottomSheet: React.FC<Props> = ({
               })()}
 
               <div className="grid grid-cols-2 gap-2">
-                {/* Stamp in Passport */}
                 <button
                   id="stamp-passport-btn"
                   onClick={handleMarkVisited}
@@ -519,7 +471,6 @@ export const PandalBottomSheet: React.FC<Props> = ({
                   )}
                 </button>
 
-                {/* WhatsApp Share Location */}
                 <button
                   id="share-whatsapp-btn"
                   onClick={handleShareWhatsapp}
@@ -537,9 +488,195 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </p>
             )}
           </div>
-        ) : facility ? (
+        )}
+
+        {/* 2. METRO STATION DETAIL VIEW */}
+        {isStation && station && (
+          <div id="metro-station-sheet-content">
+            {/* Header: Station Name & Line Badges */}
+            <div className="pr-8">
+              <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                {station.lines.map((l) => {
+                  const lineBg =
+                    l === 'blue'
+                      ? 'bg-blue-600 text-white'
+                      : l === 'green'
+                      ? 'bg-emerald-600 text-white'
+                      : l === 'orange'
+                      ? 'bg-orange-600 text-white'
+                      : l === 'purple'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-yellow-500 text-slate-950 font-bold';
+
+                  const lineCode =
+                    l === 'blue'
+                      ? 'Line 1 Blue'
+                      : l === 'green'
+                      ? 'Line 2 Green'
+                      : l === 'orange'
+                      ? 'Line 6 Orange'
+                      : l === 'purple'
+                      ? 'Line 3 Purple'
+                      : 'Line 4 Yellow';
+
+                  return (
+                    <span
+                      key={l}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${lineBg}`}
+                    >
+                      {lineCode}
+                    </span>
+                  );
+                })}
+
+                {station.isInterchange && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center gap-1">
+                    <span>⇄</span>
+                    <span>{t.interchangeHubBadge || 'Transfer Hub'}</span>
+                  </span>
+                )}
+              </div>
+
+              <h2 className="text-xl font-bold text-white tracking-tight leading-snug">
+                {station.name[language] || station.name.en}
+              </h2>
+
+              {language !== 'en' && (
+                <p className="text-xs text-slate-400 mt-0.5">{station.name.en}</p>
+              )}
+            </div>
+
+            {/* Quick Stat Pill: Location / Distance */}
+            {distanceStr && (
+              <div className="mt-3 p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center justify-between text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-400" />
+                  <span>{distanceStr} from your location</span>
+                </div>
+                {walkMin && (
+                  <span className="text-[11px] font-semibold text-blue-400">
+                    ~{walkMin} min walk
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Exit Gates & Destinations */}
+            <div className="mt-4 space-y-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Footprints className="w-3.5 h-3.5 text-amber-400" />
+                <span>{t.exitGatesLabel || 'Exit Gates & Destinations'}</span>
+              </p>
+
+              <div className="space-y-1.5">
+                {station.exitGates && station.exitGates.length > 0 ? (
+                  station.exitGates.map((gate, i) => (
+                    <div
+                      key={i}
+                      className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 flex items-start gap-2.5 text-xs"
+                    >
+                      <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-bold text-[10px] shrink-0 border border-blue-500/30">
+                        {gate.gate}
+                      </span>
+                      <p className="text-slate-200 font-medium">
+                        {gate.destination[language] || gate.destination.en}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-400">
+                    Standard street exits available. Follow station signage.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Feeder Pandals Near Station */}
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{t.feederPandalsLabel || 'Feeder Pandals near Station'}</span>
+                </p>
+                <span className="text-[10px] text-amber-400 font-bold">
+                  {feederPandals.length} {feederPandals.length === 1 ? 'pandal' : 'pandals'}
+                </span>
+              </div>
+
+              {feederPandals.length === 0 ? (
+                <div className="p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 text-xs text-slate-400 text-center">
+                  {t.noConnectingPujo || 'No major registered puja directly at station gate. Use transit routes to reach nearby hubs.'}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {feederPandals.map((p) => {
+                    const crowdBadge = getCrowdBadge(p.crowdLevel);
+                    return (
+                      <div
+                        key={p.id}
+                        className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-750 transition flex items-center justify-between gap-2.5"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-bold text-white truncate">
+                              {p.name[language] || p.name.en}
+                            </span>
+                            <span className={`text-[9px] px-1.5 py-0.2 rounded-full border font-semibold shrink-0 ${crowdBadge.bg}`}>
+                              {crowdBadge.label}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 truncate">
+                            {p.theme[language] || p.theme.en}
+                          </p>
+                          <p className="text-[10px] text-blue-400 font-medium mt-0.5">
+                            ~{p.walkingTimeToMetroMin}m walk from {p.nearestMetro}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            if (onSelectPandal) {
+                              onSelectPandal(p);
+                            }
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[10px] shrink-0 flex items-center gap-1 active:scale-95 transition"
+                        >
+                          <span>{t.viewPandalDetails || 'View'}</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                id="station-navigate-btn"
+                onClick={openGoogleMaps}
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs active:scale-98 transition shadow-xs"
+              >
+                <Navigation className="w-4 h-4" />
+                <span>{t.takeMeToStation || 'Directions to Station'}</span>
+              </button>
+
+              <button
+                id="station-share-whatsapp-btn"
+                onClick={handleShareWhatsapp}
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-xs active:scale-98 transition"
+              >
+                <Share2 className="w-4 h-4 text-emerald-400" />
+                <span>{t.shareWhatsapp}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 3. FACILITY DETAIL VIEW */}
+        {isFacility && facility && (
           <div>
-            {/* Facility Details View */}
             <div className="pr-8">
               <span className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-1 inline-block">
                 {facility.category.toUpperCase()}
@@ -591,7 +728,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </button>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

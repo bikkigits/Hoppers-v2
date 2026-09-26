@@ -104,10 +104,15 @@ export type FilterType =
   | 'all'
   | 'north'
   | 'south'
+  | 'central'
+  | 'saltlake'
+  | 'rajarhat'
+  | 'dumdum'
+  | 'west'
+  | 'behala'
   | 'police'
   | 'toilets'
   | 'food'
-  | 'metro'
   | 'railway'
   | 'ferry';
 

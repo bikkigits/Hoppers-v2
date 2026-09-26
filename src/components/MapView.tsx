@@ -26,6 +26,7 @@ import { createDynamicMarkerIcon, MarkerCategory } from '../utils/markerStyles';
 import { MapMarkerSizeHelper } from '../utils/MapMarkerSizeHelper';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import { MetroLegend } from './MetroLegend';
+import { matchesPandalFilter } from '../utils/pandalClassification';
 import {
   Crosshair,
   Compass,
@@ -99,8 +100,8 @@ export const MapView: React.FC<Props> = ({
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
 
-  // Synchronized Metro state
-  const isMetroActive = activeFilter === 'metro';
+  // Dedicated Metro state (toggled via HUD button or Metro tab)
+  const [isMetroActive, setIsMetroActive] = useState(false);
   const [isolatedLine, setIsolatedLine] = useState<MetroLine | null>(null);
   const [isLegendExpanded, setIsLegendExpanded] = useState(true);
 
@@ -108,31 +109,39 @@ export const MapView: React.FC<Props> = ({
 
   // Synchronized Metro rail toggle handler
   const handleToggleMetro = () => {
+    setIsMetroActive((prev) => !prev);
     if (isMetroActive) {
-      // Toggle OFF: Restore previous non-metro filter or default to 'all'
-      const fallbackFilter = prevNonMetroFilterRef.current === 'metro' ? 'all' : prevNonMetroFilterRef.current;
-      setActiveFilter(fallbackFilter);
       setIsolatedLine(null);
     } else {
-      // Toggle ON: Remember current non-metro filter, activate metro, and expand legend
-      prevNonMetroFilterRef.current = activeFilter;
-      setActiveFilter('metro');
       setIsLegendExpanded(true);
     }
   };
 
   // Intercept category filter selection from NearbyFilterBar
   const handleFilterChange = (newFilter: FilterType) => {
-    if (newFilter === 'metro') {
-      if (activeFilter !== 'metro') {
-        prevNonMetroFilterRef.current = activeFilter;
+    prevNonMetroFilterRef.current = newFilter;
+    setActiveFilter(newFilter);
+    setIsolatedLine(null);
+
+    // Smoothly pan to zone centers when micro-zone filter is tapped
+    const map = mapInstanceRef.current;
+    if (map) {
+      const zoneCenters: Partial<Record<FilterType, { lat: number; lng: number; zoom: number }>> = {
+        all: { lat: 22.5726, lng: 88.3639, zoom: 13 },
+        north: { lat: 22.5991, lng: 88.3683, zoom: 14 },
+        south: { lat: 22.5200, lng: 88.3550, zoom: 14 },
+        central: { lat: 22.5680, lng: 88.3620, zoom: 14 },
+        saltlake: { lat: 22.5850, lng: 88.4150, zoom: 14 },
+        rajarhat: { lat: 22.6100, lng: 88.4550, zoom: 14 },
+        dumdum: { lat: 22.6250, lng: 88.4000, zoom: 14 },
+        west: { lat: 22.5350, lng: 88.3150, zoom: 14 },
+        behala: { lat: 22.4950, lng: 88.3150, zoom: 14 },
+      };
+
+      const target = zoneCenters[newFilter];
+      if (target) {
+        map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.0 });
       }
-      setActiveFilter('metro');
-      setIsLegendExpanded(true);
-    } else {
-      prevNonMetroFilterRef.current = newFilter;
-      setActiveFilter(newFilter);
-      setIsolatedLine(null);
     }
   };
 
@@ -579,47 +588,49 @@ export const MapView: React.FC<Props> = ({
           if (!nameMatch && !metroMatch && !zoneMatch) return;
         }
 
-        const matchNorth = pandal.zone === 'North' && showNorth;
-        const matchSouth = (pandal.zone === 'South' || pandal.zone === 'Central' || pandal.zone === 'East') && showSouth;
+        // Bottom Category Rail Filter Check
+        const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter);
+        if (!isMatchedByFilter) return;
 
-        if (matchNorth || matchSouth || showAll) {
-          if (
-            currentZoom < 14 &&
-            !pandal.isFeatured &&
-            activeFilter === 'all' &&
-            mapFilter === 'all' &&
-            !mapSearchQuery.trim()
-          ) {
-            return;
-          }
-
-          const isVisited = visitedSet.has(pandal.id);
-          const marker = L.marker([pandal.lat, pandal.lng], {
-            icon: createDynamicMarkerIcon('pandal', currentZoom, {
-              isVisited,
-              isFeatured: pandal.isFeatured,
-            }),
-            title: pandal.name[language] || pandal.name.en,
-            zIndexOffset: isVisited ? 100 : pandal.isFeatured ? 300 : 200,
-          });
-
-          marker.bindTooltip(pandal.name[language] || pandal.name.en, {
-            direction: 'top',
-            offset: tooltipOffset,
-            className: 'hopper-metro-station-tooltip',
-          });
-
-          marker.on('click', () => {
-            onSelectPandal(pandal);
-          });
-
-          batchMarkers.push(marker);
+        // In 'all' view with no search, show featured first when zoomed out
+        if (
+          currentZoom < 14 &&
+          !pandal.isFeatured &&
+          activeFilter === 'all' &&
+          mapFilter === 'all' &&
+          !mapSearchQuery.trim()
+        ) {
+          return;
         }
+
+        const isVisited = visitedSet.has(pandal.id);
+        const marker = L.marker([pandal.lat, pandal.lng], {
+          icon: createDynamicMarkerIcon('pandal', currentZoom, {
+            isVisited,
+            isFeatured: pandal.isFeatured,
+          }),
+          title: pandal.name[language] || pandal.name.en,
+          zIndexOffset: isVisited ? 100 : pandal.isFeatured ? 300 : 200,
+        });
+
+        marker.bindTooltip(pandal.name[language] || pandal.name.en, {
+          direction: 'top',
+          offset: tooltipOffset,
+          className: 'hopper-metro-station-tooltip',
+        });
+
+        marker.on('click', () => {
+          onSelectPandal(pandal);
+        });
+
+        batchMarkers.push(marker);
       });
 
       // 1b. Add Suggested Community Pandals
       if (suggestedPandals && suggestedPandals.length > 0) {
         suggestedPandals.forEach((sp) => {
+          if (!matchesPandalFilter(sp as unknown as Pandal, activeFilter)) return;
+
           const marker = L.marker([sp.lat, sp.lng], {
             icon: createDynamicMarkerIcon('pandal', currentZoom, {
               isCommunity: true,
@@ -899,8 +910,7 @@ export const MapView: React.FC<Props> = ({
   const handleToggleLineIsolation = (lineId: MetroLine | null) => {
     const map = mapInstanceRef.current;
     if (!isMetroActive) {
-      prevNonMetroFilterRef.current = activeFilter;
-      setActiveFilter('metro');
+      setIsMetroActive(true);
       setIsLegendExpanded(true);
     }
 

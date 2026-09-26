@@ -577,20 +577,36 @@ export const TrailBuilderSheet: React.FC<Props> = ({
 
             {/* Stops List */}
             {trailStops.length === 0 ? (
-              <div className="text-center py-8 px-4 rounded-2xl bg-slate-900/60 border border-slate-800">
-                <Compass className="w-10 h-10 text-amber-400/50 mx-auto mb-2" />
-                <p className="text-xs text-slate-300 max-w-xs mx-auto leading-relaxed">
-                  {t.emptyTrailPrompt}
-                </p>
-                {userCoords && (
+              <div className="text-center py-10 px-5 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-inner space-y-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center mx-auto shadow-md shadow-amber-500/10">
+                  <Compass className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-white tracking-tight">
+                    No stops added yet
+                  </h4>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                    {t.emptyTrailPrompt}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                   <button
-                    onClick={handleAddUserLocationStart}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-amber-400 border border-amber-400/30 text-xs font-semibold shadow-xs"
+                    onClick={() => setIsAddingStop(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 active:scale-95 transition"
                   >
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{t.startLocation}</span>
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span>Add First Stop</span>
                   </button>
-                )}
+                  {userCoords && (
+                    <button
+                      onClick={handleAddUserLocationStart}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 text-xs font-semibold shadow-xs active:scale-95 transition"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{t.startLocation}</span>
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="space-y-1.5">

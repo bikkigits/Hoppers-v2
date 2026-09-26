@@ -84,60 +84,32 @@ export function App() {
     return [];
   });
 
-  // Multi-Stop Trail State & Drawer
+  // Multi-Stop Trail State & Drawer (starts completely empty by default on all devices)
   const [isTrailBuilderOpen, setIsTrailBuilderOpen] = useState(false);
   const [trailStops, setTrailStops] = useState<TrailStop[]>(() => {
     try {
       const saved = localStorage.getItem('hoppers_trail_stops');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Check if this is the legacy initial 4-stop preset from previous builds
+          const isLegacyDefault =
+            parsed.length === 4 &&
+            parsed[0]?.id === 'bagbazar' &&
+            parsed[1]?.id === 'kumartuli' &&
+            parsed[2]?.id === 'sovabazar-rajbari' &&
+            parsed[3]?.id === 'ahiritola';
+
+          if (!isLegacyDefault) {
+            return parsed;
+          }
+        }
       }
     } catch (e) {
       console.warn('Failed to parse trail stops from localStorage:', e);
     }
-    // Default initial preview trail: North Kolkata Heritage Circuit
-    return [
-      {
-        id: 'bagbazar',
-        pandalId: 'bagbazar',
-        name: { en: 'Bagbazar Sarbojanin', bn: 'বাগবাজার সার্বজনীন', hi: 'बागबाजार सार्वजनीन' },
-        lat: 22.6033,
-        lng: 88.3672,
-        nearestMetro: 'Shyambazar',
-        crowdLevel: 'Extreme',
-        zone: 'North',
-      },
-      {
-        id: 'kumartuli',
-        pandalId: 'kumartuli',
-        name: { en: 'Kumartuli Park', bn: 'কুমোরটুলি পার্ক', hi: 'कुमोरटुली पार्क' },
-        lat: 22.5996,
-        lng: 88.3639,
-        nearestMetro: 'Sovabazar Sutanuti',
-        crowdLevel: 'Heavy',
-        zone: 'North',
-      },
-      {
-        id: 'sovabazar-rajbari',
-        pandalId: 'sovabazar-rajbari',
-        name: { en: 'Sovabazar Rajbari Puja', bn: 'শোভাবাজার রাজবাড়ি', hi: 'शोभाबाजार राजबाड़ी' },
-        lat: 22.5975,
-        lng: 88.3650,
-        nearestMetro: 'Sovabazar Sutanuti',
-        crowdLevel: 'Heavy',
-        zone: 'North',
-      },
-      {
-        id: 'ahiritola',
-        pandalId: 'ahiritola',
-        name: { en: 'Ahiritola Sarbojanin', bn: 'আহিরীটোলা সার্বজনীন', hi: 'आहिरीটোলা सार्वजनीन' },
-        lat: 22.5925,
-        lng: 88.3586,
-        nearestMetro: 'Sovabazar Sutanuti',
-        crowdLevel: 'Moderate',
-        zone: 'North',
-      },
-    ];
+    // Clean initial launch state: 0 stops on all devices
+    return [];
   });
 
   // Persist language

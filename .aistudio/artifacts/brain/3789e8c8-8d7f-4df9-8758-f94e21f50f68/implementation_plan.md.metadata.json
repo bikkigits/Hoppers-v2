@@ -1,6 +1,6 @@
 {
-  "summary":  "Comprehensive implementation plan addressing map density clustering, 5-line metro overlay with interchange nodes, and offline crowd sync with freshness decay.",
-  "updatedAt":  "2026-09-26T06:18:29.562943509Z",
+  "summary":  "Implementation plan for the Survival Power Save Mode, detailing hardware-level battery saving differences compared to the standard theme toggle, OLED black optimization, GPS & animation throttling, and grayscale high-contrast map rendering.",
+  "updatedAt":  "2026-09-26T12:29:07.838969353Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

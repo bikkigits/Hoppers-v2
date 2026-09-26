@@ -1,67 +1,52 @@
-# Implementation Plan: Map UX Refinement, Metro Transit Tracks, and Crowd Sync
+# Implementation Plan: Ultra-Low Battery 'Power Save' Survival Mode
 
-Based on the end-to-end video analysis of **Hoppers (Offline Durga Puja Companion)**, this plan outlines the architectural improvements to resolve visual clutter, enhance metro transit visualization, and ensure seamless offline crowd reporting.
+## 1. Why Power Save Mode is Different from the Theme Toggle
 
----
-
-## 1. Map Density & Zoom-Adaptive Pin Clustering
-### Problem
-When zoomed out to city level, rendering all 724 pandals produces an overlapping carpet of icons, obscuring streets, landmarks, and zones.
-
-### Proposed Solution
-* **Grid/Distance-Based Dynamic Clustering**:
-  * At zoom levels `< 14`, group closely-situated pandals into neighborhood clusters with distinctive glowing badge counts (*e.g., "Sovabazar (18)", "Gariahat (24)", "Salt Lake (15)"*).
-  * Clicking a cluster smoothly zooms in and expands into individual pins.
-  * Curated & Award-Winning Featured Pandals (*110 showcase pandals*) remain visible as priority hero pins.
-* **Marker Size Optimization**:
-  * Scale marker pin dimensions dynamically: 22px at low zoom, 32px at medium zoom, 40px at street level.
+| Feature | Standard Dark/Light Theme Toggle | 🔋 Survival Power Save Mode |
+| :--- | :--- | :--- |
+| **Purpose** | Visual comfort & aesthetic preference | Maximum hardware battery conservation when phone is below 15% |
+| **OLED Pixel Power** | Dark slate gray (`#0F172A` / `#0B0F19`) where OLED pixels remain lit | Pure true AMOLED `#000000` (physically turns off OLED subpixels) |
+| **Map Rendering** | Full color or standard dark tiles | Grayscale high-contrast filtered tiles (`grayscale(100%) contrast(140%) brightness(70%)`) |
+| **Animations & GPU** | Glowing neon radar sweeps, pulse rings, shimmer animations active | **All non-essential CSS keyframes & transitions disabled** (`* { animation: none !important }`) |
+| **GPS & Sensor Polling** | Continuous high-accuracy GPS watch (`watchPosition`) | Throttled low-power GPS polling / on-demand location checks |
+| **Crowd Sync API** | Regular background polling (every 15s) | Suspended or throttled to 90s interval to prevent wake-locks |
+| **Survival HUD** | Standard multi-tab view | Condensed Emergency HUD highlighting nearest metro station, distance, and 1-tap SOS |
 
 ---
 
-## 2. 5-Line Metro Transit System Overlay & Interchange Nodes
-### Problem
-Currently, selecting the Metro filter displays identical 32px blue circular pins that overlap heavily and fail to show which lines connect which stations.
+## 2. Proposed Changes & Implementation Steps
 
-### Proposed Solution
-* **Station-to-Station Track Polylines**:
-  * Render styled transit tracks connecting all stations across all 5 operational & priority lines:
-    1. **Line 1 (Blue Line - North-South)**: `#2563EB` (Dakshineswar ↔ Kavi Subhash, 26 stations).
-    2. **Line 2 (Green Line - East-West)**: `#10B981` (Howrah Maidan ↔ Salt Lake Sector V, 12 stations including underwater river tunnel).
-    3. **Line 3 (Purple Line - Joka)**: `#9333EA` (Joka ↔ Majerhat, 7 stations).
-    4. **Line 6 (Orange Line - EM Bypass)**: `#F97316` (Kavi Subhash ↔ Beleghata, 9 stations).
-    5. **Line 4 (Yellow Line - Airport)**: `#EAB308` (Noapara ↔ Jai Hind Airport, 4 stations).
-  * Double-layer casing (outer contrasting glow + inner core line) for crisp visibility in both Light and Dark themes.
-* **Sleek Station Dots**:
-  * Standard stations: Compact 14px circular nodes with line-colored border and white center.
-  * **Interchange Stations**: Prominent 22px double-ring nodes with transfer icon `⇄` for **Esplanade** (Blue ↔ Green), **Noapara** (Blue ↔ Yellow), **Kavi Subhash** (Blue ↔ Orange), and **Salt Lake Sector V** (Green ↔ Orange).
-  * Tapping any station or interchange opens gate-specific exit advice and immediate walking distance to nearby pujas.
+### Step 1: Power Save Context & State Management (`src/context/PowerSaveContext.tsx` or `src/hooks/usePowerSave.ts`)
+- Track `isPowerSaveActive: boolean`.
+- Listen for Web Battery API (`navigator.getBattery()`) if supported, with automatic low-battery (<15%) suggestion prompt.
+- Persist user preference to `localStorage`.
 
----
+### Step 2: Global Low-Power Styling & AMOLED Filter (`src/index.css`)
+- Add `.power-save-active` utility class:
+  - Background forced to pure `#000000`.
+  - Disable all CSS keyframe loops (`pulse`, `spin`, `ping`, `shimmer`).
+  - Grayscale & high-contrast filter applied to Leaflet map container:
+    ```css
+    .power-save-active .leaflet-tile-pane {
+      filter: grayscale(100%) contrast(140%) brightness(65%) invert(100%) hue-rotate(180deg);
+    }
+    ```
+  - High-contrast monochromatic marker outlines for effortless sunlight & night legibility.
 
-## 3. Offline Crowd Reporting Engine with P2P/Mesh Sync & Time-Decay
-### Problem
-Devotees need accurate crowd wait times, but purely local `localStorage` without synchronization limits awareness across multiple visitors.
+### Step 3: Map Performance & Frame-Rate Optimization (`src/components/MapView.tsx`)
+- When `isPowerSaveActive` is enabled:
+  - Disable Leaflet zoom and tile fade animations (`fadeAnimation: false`).
+  - Throttle marker re-rendering on zoom/pan events.
+  - Dim non-essential background layers (e.g. decorative polyline glow effects).
 
-### Proposed Solution
-* **Time-Decayed Freshness Weighting**:
-  * Reports older than 90 minutes automatically decay.
-  * Recent reports (< 20 mins) receive highest visual weighting with a pulsing `⚡ Live` indicator and timestamp countdown (*"Updated 6m ago"*).
-* **BroadcastChannel & Background P2P Synchronization**:
-  * Uses Web `BroadcastChannel` API and service worker sync cache for immediate multi-tab and nearby device message exchange.
-  * Queues local submissions and aggregates weighted consensus scores based on on-site GPS verification tags.
+### Step 4: UI Toggle & Quick Access Controls (`src/components/Header.tsx` & Floating HUD)
+- Add a battery-saving toggle in the top bar / menu alongside battery indicator.
+- Display a minimal, persistent Power Save status pill with one-tap toggle and quick battery level indicator.
 
 ---
 
-## 4. Mobile Viewport & Theme Optimization
-* **Collapsible Filter Bar**:
-  * Auto-collapse secondary filter rows on drag/pan to maximize interactive map canvas on mobile devices.
-* **Synchronized Light/Dark Leaflet Tiles**:
-  * Synchronize base map raster tiles when switching between Dark Mode and Light Mode for optimal sunlight legibility.
-
----
-
-## Verification & Testing Plan
-* **Visual Verification**: Check high-zoom-out city overview for clean cluster badges with no pin overlap.
-* **Transit Verification**: Test each of the 5 metro line tracks and ensure interchange nodes (Esplanade, Noapara, Kavi Subhash) display dual connections.
-* **Route Verification**: Verify Trail Builder recalculation across multiple sequential stops.
-* **Build Verification**: Run `compile_applet` and test in dark & light themes.
+## 3. Verification & Testing Plan
+- Toggle Power Save Mode and verify immediate transition to pure `#000000` AMOLED styling.
+- Confirm all animations cease and map tiles transition to high-contrast grayscale.
+- Verify GPS location checks and background polling adjust to energy-saving mode.
+- Ensure all critical survival features (SOS, Metro Router, Offline Pandals) remain 100% functional.

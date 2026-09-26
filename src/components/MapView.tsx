@@ -1362,7 +1362,7 @@ export const MapView: React.FC<Props> = ({
       </div>
 
       {/* Floating Filter Bar directly above the bottom dock */}
-      <div className="absolute bottom-28 left-0 right-0 z-20 pointer-events-none">
+      <div className="absolute bottom-28 inset-x-0 z-20 pointer-events-none flex justify-center px-1">
         <NearbyFilterBar
           activeFilter={activeFilter}
           onFilterChange={handleFilterChange}

@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "PandalCrowd": {
+      "title": "PandalCrowd",
+      "description": "Aggregated crowd vote tallies and majority status per pandal",
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "number",
+          "description": "Count of low crowd votes"
+        },
+        "moderate": {
+          "type": "number",
+          "description": "Count of moderate crowd votes"
+        },
+        "heavy": {
+          "type": "number",
+          "description": "Count of heavy crowd votes"
+        },
+        "extreme": {
+          "type": "number",
+          "description": "Count of extreme crowd votes"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of most recent community crowd vote"
+        }
+      },
+      "required": ["low", "moderate", "heavy", "extreme"]
+    }
+  },
+  "firestore": {
+    "/pandal_crowd/{pandalId}": {
+      "schema": {
+        "$ref": "#/entities/PandalCrowd"
+      },
+      "description": "Public crowdsourced real-time crowd voting tallies per pandal"
+    }
+  }
+}

@@ -21,12 +21,24 @@ import {
 } from '../data/mockData';
 import { METRO_LINES, getLineStations } from '../data/metroStations';
 import { TRANSLATIONS } from '../data/translations';
-import { formatDistance, estimateWalkingMinutes, calculateDistanceKm } from '../utils/geo';
+import {
+  formatDistance,
+  estimateWalkingMinutes,
+  calculateDistanceKm,
+  calculateCrowdWalkingEta,
+  clampToKolkata,
+  ESPLANADE_CENTER,
+} from '../utils/geo';
+import {
+  subscribeAllPandalCrowds,
+  PandalCrowdRecord,
+} from '../services/firebaseCrowd';
 import { createDynamicMarkerIcon, MarkerCategory } from '../utils/markerStyles';
 import { MapMarkerSizeHelper } from '../utils/MapMarkerSizeHelper';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import { MetroLegend } from './MetroLegend';
 import { matchesPandalFilter } from '../utils/pandalClassification';
+import { useThrottledLocation } from '../hooks/useThrottledLocation';
 import {
   Crosshair,
   Compass,
@@ -37,12 +49,7 @@ import {
   Train,
   Sparkles,
   Search,
-  ChevronDown,
-  ChevronUp,
-  Layers,
-  ArrowLeftRight,
-  Waves,
-  Eye,
+  Navigation,
 } from 'lucide-react';
 
 interface Props {
@@ -91,14 +98,40 @@ export const MapView: React.FC<Props> = ({
   const userMarkerRef = useRef<L.Marker | null>(null);
   const userCircleRef = useRef<L.Circle | null>(null);
 
+  // Throttled GPS coordinates (50m displacement filter + bounding box clamp)
+  const throttledCoords = useThrottledLocation(userCoords, 50, mapInstanceRef.current);
+
   const prevNonMetroFilterRef = useRef<FilterType>('all');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [mapFilter, setMapFilter] = useState<'all' | 'featured' | 'heritage' | 'saved'>('all');
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(13);
+  const [crowdConsensusMap, setCrowdConsensusMap] = useState<Map<string, PandalCrowdRecord>>(new Map());
+
+  // Subscribe to all pandals crowd consensus updates
+  useEffect(() => {
+    const unsubscribe = subscribeAllPandalCrowds((records) => {
+      setCrowdConsensusMap(new Map(records));
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const [mapCenterCoords, setMapCenterCoords] = useState<{ lat: number; lng: number }>({
+    lat: ESPLANADE_CENTER.lat,
+    lng: ESPLANADE_CENTER.lng,
+  });
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
+
+  // Effective reference coordinates for Haversine proximity calculations
+  // Priority: Throttled GPS coords -> Fallback to Map Center coords (updated strictly on moveend)
+  const effectiveCoords = useMemo(() => {
+    if (throttledCoords) return throttledCoords;
+    return mapCenterCoords;
+  }, [throttledCoords, mapCenterCoords]);
 
   // Dedicated Metro state (toggled via HUD button or Metro tab)
   const [isMetroActive, setIsMetroActive] = useState(false);
@@ -106,6 +139,15 @@ export const MapView: React.FC<Props> = ({
   const [isLegendExpanded, setIsLegendExpanded] = useState(true);
 
   const t = TRANSLATIONS[language];
+
+  // Helper to test if active filter is a critical utility layer
+  const isUtilityActive =
+    activeFilter === 'police' ||
+    activeFilter === 'toilets' ||
+    activeFilter === 'food' ||
+    activeFilter === 'ferry' ||
+    activeFilter === 'railway' ||
+    (activeFilter as string) === 'hospital';
 
   // Synchronized Metro rail toggle handler
   const handleToggleMetro = () => {
@@ -127,7 +169,7 @@ export const MapView: React.FC<Props> = ({
     const map = mapInstanceRef.current;
     if (map) {
       const zoneCenters: Partial<Record<FilterType, { lat: number; lng: number; zoom: number }>> = {
-        all: { lat: 22.5726, lng: 88.3639, zoom: 13 },
+        all: { lat: 22.5697, lng: 88.3516, zoom: 13 },
         north: { lat: 22.5991, lng: 88.3683, zoom: 14 },
         south: { lat: 22.5200, lng: 88.3550, zoom: 14 },
         central: { lat: 22.5680, lng: 88.3620, zoom: 14 },
@@ -165,13 +207,51 @@ export const MapView: React.FC<Props> = ({
     });
   }, [mapSearchQuery]);
 
+  // Proximity Summary for Active Utility Filter (Memoized with pure isolation)
+  const closestUtilitySummary = useMemo(() => {
+    if (!isUtilityActive) return null;
+
+    const refLat = effectiveCoords.lat;
+    const refLng = effectiveCoords.lng;
+
+    const matching = CRITICAL_FACILITIES.filter((facility) => {
+      if (activeFilter === 'police') return facility.category === 'police';
+      if (activeFilter === 'toilets') return facility.category === 'toilets';
+      if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
+      if (activeFilter === 'ferry') return facility.category === 'ferry';
+      if (activeFilter === 'railway') return facility.category === 'railway';
+      if ((activeFilter as string) === 'hospital') return facility.category === 'hospital' || facility.category === 'medical';
+      return false;
+    }).map((facility) => {
+      const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
+      const distM = distKm * 1000;
+      return { facility, distKm, distM };
+    });
+
+    if (matching.length === 0) return null;
+    matching.sort((a, b) => a.distKm - b.distKm);
+    const closest = matching[0];
+    const eta = calculateCrowdWalkingEta(closest.distM);
+    const distBadge =
+      closest.distM < 1000
+        ? `${Math.round(closest.distM)}m • ${eta.text}`
+        : `${closest.distKm.toFixed(1)} km • ${eta.text}`;
+
+    return {
+      totalCount: matching.length,
+      closest: closest.facility,
+      distanceBadge: distBadge,
+      googleMapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${closest.facility.lat},${closest.facility.lng}`,
+    };
+  }, [activeFilter, isUtilityActive, effectiveCoords]);
+
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     // Central Kolkata default
     const map = L.map(mapContainerRef.current, {
-      center: [22.5645, 88.3516], // Esplanade central hub
+      center: [ESPLANADE_CENTER.lat, ESPLANADE_CENTER.lng], // Esplanade central hub
       zoom: 13,
       minZoom: 10,
       maxZoom: 18,
@@ -193,6 +273,20 @@ export const MapView: React.FC<Props> = ({
 
     map.on('zoomend', () => {
       setCurrentZoom(map.getZoom());
+    });
+
+    // Strict moveend listener: guarantees ZERO Haversine execution during continuous drag/pan events.
+    // Only triggers mapCenterCoords state update when the user finishes dragging and displacement >= 50m.
+    map.on('moveend', () => {
+      const center = map.getCenter();
+      const clamped = clampToKolkata(center.lat, center.lng);
+      setMapCenterCoords((prev) => {
+        const distKm = calculateDistanceKm(prev.lat, prev.lng, clamped.lat, clamped.lng);
+        if (distKm * 1000 >= 50) {
+          return clamped;
+        }
+        return prev;
+      });
     });
 
     // Layer Groups: Metro Polylines on bottom, Routes in middle, Stations & Markers on top
@@ -531,7 +625,7 @@ export const MapView: React.FC<Props> = ({
     };
   }, [isMetroActive, isolatedLine, currentZoom, language]);
 
-  // Update Pandals and other POI Markers (Mutual Visibility & Layer Isolation with RAF Batching)
+  // Update Pandals and other POI Markers (Strict Exclusive Layer Isolation with RAF Batching)
   useEffect(() => {
     const markersLayer = markersLayerRef.current;
     if (!markersLayer) return;
@@ -539,163 +633,234 @@ export const MapView: React.FC<Props> = ({
     let rafId: number | null = null;
 
     rafId = requestAnimationFrame(() => {
+      // Always clear entire markers layer first to prevent orphaned DOM nodes
       markersLayer.clearLayers();
 
-      // When Metro mode is active, completely clear & isolate metro view (hide all pandals & POIs)
+      // Invariant 1: When Metro mode is active, completely clear all pandals and POIs
       if (isMetroActive) {
         return;
       }
 
       const visitedSet = new Set(visitedList.map((v) => v.pandalId));
-
-      const showAll = activeFilter === 'all';
-      const showNorth = showAll || activeFilter === 'north';
-      const showSouth = showAll || activeFilter === 'south';
-
       const dim = MapMarkerSizeHelper.getDimensions(currentZoom);
       const tooltipOffset: [number, number] = [0, -dim.iconAnchor[1] - 4];
-
       const batchMarkers: L.Marker[] = [];
 
-      // 1. Add Pandals (Zoom-Tiered with Top Filter & Search)
-      PANDALS_DATA.forEach((pandal) => {
-        // Top filter chips check
-        if (mapFilter === 'featured' && !pandal.isFeatured) return;
-        if (mapFilter === 'saved' && !visitedSet.has(pandal.id)) return;
-        if (mapFilter === 'heritage') {
-          const text = (pandal.theme.en + ' ' + pandal.name.en + ' ' + pandal.description.en).toLowerCase();
-          const isHeritage =
-            text.includes('heritage') ||
-            text.includes('traditional') ||
-            text.includes('rajbari') ||
-            text.includes('bagbazar') ||
-            text.includes('kumartuli') ||
-            text.includes('sovabazar');
-          if (!isHeritage) return;
-        }
+      const refLat = effectiveCoords.lat;
+      const refLng = effectiveCoords.lng;
 
-        // Search Query filter check
-        if (mapSearchQuery.trim()) {
-          const q = mapSearchQuery.toLowerCase();
-          const nameMatch =
-            pandal.name.en.toLowerCase().includes(q) ||
-            pandal.name.bn.toLowerCase().includes(q) ||
-            pandal.name.hi.toLowerCase().includes(q);
-          const metroMatch =
-            pandal.nearestMetro.toLowerCase().includes(q) ||
-            pandal.nearestMetroEn.toLowerCase().includes(q);
-          const zoneMatch = pandal.zone.toLowerCase().includes(q);
-          if (!nameMatch && !metroMatch && !zoneMatch) return;
-        }
+      // Invariant 2: When ANY Utility Filter is active, ALL 724+ pandals are completely cleared/unmounted.
+      // Pandal markers only render when no utility filter is active.
+      if (!isUtilityActive) {
+        PANDALS_DATA.forEach((pandal) => {
+          // Top filter chips check
+          if (mapFilter === 'featured' && !pandal.isFeatured) return;
+          if (mapFilter === 'saved' && !visitedSet.has(pandal.id)) return;
+          if (mapFilter === 'heritage') {
+            const text = (pandal.theme.en + ' ' + pandal.name.en + ' ' + pandal.description.en).toLowerCase();
+            const isHeritage =
+              text.includes('heritage') ||
+              text.includes('traditional') ||
+              text.includes('rajbari') ||
+              text.includes('bagbazar') ||
+              text.includes('kumartuli') ||
+              text.includes('sovabazar');
+            if (!isHeritage) return;
+          }
 
-        // Bottom Category Rail Filter Check
-        const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter);
-        if (!isMatchedByFilter) return;
+          // Search Query filter check
+          if (mapSearchQuery.trim()) {
+            const q = mapSearchQuery.toLowerCase();
+            const nameMatch =
+              pandal.name.en.toLowerCase().includes(q) ||
+              pandal.name.bn.toLowerCase().includes(q) ||
+              pandal.name.hi.toLowerCase().includes(q);
+            const metroMatch =
+              pandal.nearestMetro.toLowerCase().includes(q) ||
+              pandal.nearestMetroEn.toLowerCase().includes(q);
+            const zoneMatch = pandal.zone.toLowerCase().includes(q);
+            if (!nameMatch && !metroMatch && !zoneMatch) return;
+          }
 
-        // In 'all' view with no search, show featured first when zoomed out
-        if (
-          currentZoom < 14 &&
-          !pandal.isFeatured &&
-          activeFilter === 'all' &&
-          mapFilter === 'all' &&
-          !mapSearchQuery.trim()
-        ) {
-          return;
-        }
+          // Bottom Category Rail Filter Check
+          const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter);
+          if (!isMatchedByFilter) return;
 
-        const isVisited = visitedSet.has(pandal.id);
-        const marker = L.marker([pandal.lat, pandal.lng], {
-          icon: createDynamicMarkerIcon('pandal', currentZoom, {
-            isVisited,
-            isFeatured: pandal.isFeatured,
-          }),
-          title: pandal.name[language] || pandal.name.en,
-          zIndexOffset: isVisited ? 100 : pandal.isFeatured ? 300 : 200,
-        });
+          // In 'all' view with no search, show featured first when zoomed out
+          if (
+            currentZoom < 14 &&
+            !pandal.isFeatured &&
+            activeFilter === 'all' &&
+            mapFilter === 'all' &&
+            !mapSearchQuery.trim()
+          ) {
+            return;
+          }
 
-        marker.bindTooltip(pandal.name[language] || pandal.name.en, {
-          direction: 'top',
-          offset: tooltipOffset,
-          className: 'hopper-metro-station-tooltip',
-        });
+          const isVisited = visitedSet.has(pandal.id);
+          const consensus = crowdConsensusMap.get(pandal.id);
+          const effectiveCrowd = consensus?.dominantLevel || pandal.crowdLevel;
+          const crowdEmoji = effectiveCrowd === 'Low' ? '🟢' : effectiveCrowd === 'Moderate' ? '🟡' : effectiveCrowd === 'Heavy' ? '🔴' : '🟣';
 
-        marker.on('click', () => {
-          onSelectPandal(pandal);
-        });
-
-        batchMarkers.push(marker);
-      });
-
-      // 1b. Add Suggested Community Pandals
-      if (suggestedPandals && suggestedPandals.length > 0) {
-        suggestedPandals.forEach((sp) => {
-          if (!matchesPandalFilter(sp as unknown as Pandal, activeFilter)) return;
-
-          const marker = L.marker([sp.lat, sp.lng], {
+          const marker = L.marker([pandal.lat, pandal.lng], {
             icon: createDynamicMarkerIcon('pandal', currentZoom, {
-              isCommunity: true,
-              isFeatured: true,
+              isVisited,
+              isFeatured: pandal.isFeatured,
             }),
-            title: `[Community] ${sp.name[language] || sp.name.en}`,
-            zIndexOffset: 350,
+            title: pandal.name[language] || pandal.name.en,
+            zIndexOffset: isVisited ? 100 : pandal.isFeatured ? 300 : 200,
           });
 
-          marker.bindTooltip(`[Community] ${sp.name[language] || sp.name.en}`, {
+          const tooltipContent = `
+            <div style="font-family: system-ui, sans-serif; font-size: 11px; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 4px;">
+              <span>${pandal.name[language] || pandal.name.en}</span>
+              <span style="font-size: 10px; font-weight: 600; opacity: 0.9;">· ${crowdEmoji} ${effectiveCrowd}</span>
+            </div>
+          `;
+
+          marker.bindTooltip(tooltipContent, {
             direction: 'top',
             offset: tooltipOffset,
             className: 'hopper-metro-station-tooltip',
           });
 
           marker.on('click', () => {
-            onSelectPandal(sp as unknown as Pandal);
+            onSelectPandal(pandal);
           });
 
           batchMarkers.push(marker);
         });
-      }
 
-      // 2. Add POIs (Police, Toilets, Food, Railway, Ferry)
-      if (activeFilter === 'police' || activeFilter === 'toilets' || activeFilter === 'food' || activeFilter === 'ferry' || activeFilter === 'railway') {
-        CRITICAL_FACILITIES.forEach((facility) => {
-          let shouldShow = false;
-          let iconType: MarkerCategory = 'police';
+        // Add Suggested Community Pandals
+        if (suggestedPandals && suggestedPandals.length > 0) {
+          suggestedPandals.forEach((sp) => {
+            if (!matchesPandalFilter(sp as unknown as Pandal, activeFilter)) return;
 
-          if (facility.category === 'police' && activeFilter === 'police') {
-            shouldShow = true;
-            iconType = 'police';
-          } else if (facility.category === 'toilets' && activeFilter === 'toilets') {
-            shouldShow = true;
-            iconType = 'toilet';
-          } else if (facility.category === 'food' && activeFilter === 'food') {
-            shouldShow = true;
-            iconType = 'food';
-          } else if (facility.category === 'ferry' && activeFilter === 'ferry') {
-            shouldShow = true;
-            iconType = 'ferry';
-          } else if (facility.category === 'railway' && activeFilter === 'railway') {
-            shouldShow = true;
-            iconType = 'railway';
-          }
-
-          if (shouldShow) {
-            const marker = L.marker([facility.lat, facility.lng], {
-              icon: createDynamicMarkerIcon(iconType, currentZoom),
-              title: facility.name[language] || facility.name.en,
-              zIndexOffset: 250,
+            const marker = L.marker([sp.lat, sp.lng], {
+              icon: createDynamicMarkerIcon('pandal', currentZoom, {
+                isCommunity: true,
+                isFeatured: true,
+              }),
+              title: `[Community] ${sp.name[language] || sp.name.en}`,
+              zIndexOffset: 350,
             });
 
-            marker.bindTooltip(facility.name[language] || facility.name.en, {
+            marker.bindTooltip(`[Community] ${sp.name[language] || sp.name.en}`, {
               direction: 'top',
               offset: tooltipOffset,
               className: 'hopper-metro-station-tooltip',
             });
 
             marker.on('click', () => {
-              onSelectFacility(facility);
+              onSelectPandal(sp as unknown as Pandal);
             });
 
             batchMarkers.push(marker);
-          }
+          });
+        }
+      }
+
+      // Proximity-Sorted Utility POIs (Only rendered when a utility category is actively selected)
+      if (isUtilityActive) {
+        const matchingFacilities = CRITICAL_FACILITIES.filter((facility) => {
+          if (activeFilter === 'police') return facility.category === 'police';
+          if (activeFilter === 'toilets') return facility.category === 'toilets';
+          if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
+          if (activeFilter === 'ferry') return facility.category === 'ferry';
+          if (activeFilter === 'railway') return facility.category === 'railway';
+          if ((activeFilter as string) === 'hospital') return facility.category === 'hospital' || facility.category === 'medical';
+          return false;
+        }).map((facility) => {
+          const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
+          const distM = distKm * 1000;
+          return { facility, distKm, distM };
+        });
+
+        // Sort ascending by distance from reference point
+        matchingFacilities.sort((a, b) => a.distKm - b.distKm);
+
+        // Limit to 15 closest nodes or nodes within 1.5km
+        const displayedFacilities =
+          matchingFacilities.length <= 15
+            ? matchingFacilities
+            : matchingFacilities.filter((item) => item.distM <= 1500).length >= 15
+            ? matchingFacilities.filter((item) => item.distM <= 1500)
+            : matchingFacilities.slice(0, 15);
+
+        displayedFacilities.forEach(({ facility, distM, distKm }) => {
+          let iconType: MarkerCategory = 'police';
+          if (facility.category === 'police') iconType = 'police';
+          else if (facility.category === 'toilets') iconType = 'toilet';
+          else if (facility.category === 'food' || facility.category === 'restaurant') iconType = 'food';
+          else if (facility.category === 'ferry') iconType = 'ferry';
+          else if (facility.category === 'railway') iconType = 'railway';
+
+          const eta = calculateCrowdWalkingEta(distM);
+          const distanceBadgeText =
+            distM < 1000 ? `${Math.round(distM)}m • ${eta.text}` : `${distKm.toFixed(1)} km • ${eta.text}`;
+          const distanceShort = distM < 1000 ? `${Math.round(distM)}m` : `${distKm.toFixed(1)} km`;
+          const displayName = facility.name[language] || facility.name.en;
+          const displayAddress = facility.address ? (facility.address[language] || facility.address.en) : '';
+
+          const marker = L.marker([facility.lat, facility.lng], {
+            icon: createDynamicMarkerIcon(iconType, currentZoom),
+            title: `${displayName} (${distanceShort})`,
+            zIndexOffset: 400,
+          });
+
+          // Proximity Tooltip
+          marker.bindTooltip(
+            `<div class="font-sans text-xs font-bold text-white flex items-center gap-1.5">
+              <span>${displayName}</span>
+              <span class="px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 text-[10px] font-black">${distanceShort}</span>
+            </div>`,
+            {
+              direction: 'top',
+              offset: tooltipOffset,
+              className: 'hopper-metro-station-tooltip',
+            }
+          );
+
+          // Rich Proximity Popup with Direct Google Maps Navigation
+          const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${facility.lat},${facility.lng}`;
+          const popupContent = `
+            <div style="font-family: inherit; min-width: 200px; padding: 4px; color: #f8fafc;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #fbbf24; background: rgba(251, 191, 36, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                  ${facility.category.toUpperCase()}
+                </span>
+                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, 0.15); padding: 2px 6px; border-radius: 4px;">
+                  📍 ${distanceBadgeText}
+                </span>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 2px; line-height: 1.3;">
+                ${displayName}
+              </div>
+              ${
+                displayAddress
+                  ? `<div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      ${displayAddress}
+                    </div>`
+                  : ''
+              }
+              <div style="padding-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #2563eb; color: #ffffff; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none;">
+                  🗺️ Directions
+                </a>
+              </div>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent, {
+            className: 'hopper-leaflet-popup',
+            maxWidth: 280,
+          });
+
+          marker.on('click', () => {
+            onSelectFacility(facility);
+          });
+
+          batchMarkers.push(marker);
         });
       }
 
@@ -708,7 +873,19 @@ export const MapView: React.FC<Props> = ({
         cancelAnimationFrame(rafId);
       }
     };
-  }, [isMetroActive, activeFilter, mapFilter, mapSearchQuery, currentZoom, language, visitedList, suggestedPandals]);
+  }, [
+    isMetroActive,
+    isUtilityActive,
+    activeFilter,
+    mapFilter,
+    mapSearchQuery,
+    currentZoom,
+    language,
+    visitedList,
+    suggestedPandals,
+    effectiveCoords,
+    crowdConsensusMap,
+  ]);
 
   // Handle Active Walking Route Polyline
   useEffect(() => {
@@ -933,10 +1110,6 @@ export const MapView: React.FC<Props> = ({
     }
   };
 
-  const handleResetIsolation = () => {
-    handleToggleLineIsolation(null);
-  };
-
   // GPS "Find My Location"
   const handleFindLocation = () => {
     if (!navigator.geolocation) {
@@ -952,17 +1125,17 @@ export const MapView: React.FC<Props> = ({
       (position) => {
         setGpsLoading(false);
         const { latitude, longitude, accuracy } = position.coords;
-        const coords = { lat: latitude, lng: longitude };
-        onUserCoordsChange(coords);
+        const clamped = clampToKolkata(latitude, longitude);
+        onUserCoordsChange(clamped);
         setGpsStatusMsg(t.gpsFound);
         setTimeout(() => setGpsStatusMsg(null), 3000);
 
         const map = mapInstanceRef.current;
         if (map) {
-          map.setView([latitude, longitude], 15, { animate: true });
+          map.setView([clamped.lat, clamped.lng], 15, { animate: true });
 
           if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
+            userMarkerRef.current.setLatLng([clamped.lat, clamped.lng]);
           } else {
             const userIcon = L.divIcon({
               className: 'gps-user-marker',
@@ -976,7 +1149,7 @@ export const MapView: React.FC<Props> = ({
               iconAnchor: [14, 14],
             });
 
-            const marker = L.marker([latitude, longitude], {
+            const marker = L.marker([clamped.lat, clamped.lng], {
               icon: userIcon,
               zIndexOffset: 1000,
             }).addTo(map);
@@ -986,10 +1159,10 @@ export const MapView: React.FC<Props> = ({
           }
 
           if (userCircleRef.current) {
-            userCircleRef.current.setLatLng([latitude, longitude]);
+            userCircleRef.current.setLatLng([clamped.lat, clamped.lng]);
             userCircleRef.current.setRadius(Math.max(50, accuracy));
           } else {
-            const circle = L.circle([latitude, longitude], {
+            const circle = L.circle([clamped.lat, clamped.lng], {
               radius: Math.max(50, accuracy),
               color: '#3B82F6',
               fillColor: '#3B82F6',
@@ -1053,10 +1226,10 @@ export const MapView: React.FC<Props> = ({
         className="w-full h-full bg-[#0B0F19] z-0"
       />
 
-      {/* Floating Top Search Bar & Quick Filter Chips */}
-      <div className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
+      {/* Floating Top Search Bar & Sleek Quick Filter Controls */}
+      <div className="absolute top-2.5 inset-x-2.5 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
         <div className="relative pointer-events-auto">
-          <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-xl shadow-black/60">
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-750/90 rounded-2xl shadow-xl shadow-black/50 focus-within:border-amber-400/80 transition-colors">
             <Search className="w-4 h-4 text-amber-400 shrink-0" />
             <input
               type="text"
@@ -1075,7 +1248,8 @@ export const MapView: React.FC<Props> = ({
                   setMapSearchQuery('');
                   setIsSearchDropdownOpen(false);
                 }}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-white transition active:scale-95"
+                aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -1104,7 +1278,7 @@ export const MapView: React.FC<Props> = ({
                         {pandal.zone} Kolkata · Near {pandal.nearestMetro}
                       </p>
                     </div>
-                    <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md shrink-0">
                       View
                     </span>
                   </button>
@@ -1114,48 +1288,50 @@ export const MapView: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Filter Chips immediately below Search Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar pointer-events-auto px-0.5">
+        {/* Minimalist Segmented Filter Row */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar pointer-events-auto px-0.5">
           <button
             onClick={() => setMapFilter('all')}
-            className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition shadow-sm ${
+            className={`px-2.5 py-1 rounded-xl text-xs font-semibold shrink-0 transition-all ${
               mapFilter === 'all'
-                ? 'bg-red-600 text-white shadow-red-600/30'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+                ? 'bg-amber-400 text-slate-950 shadow-xs'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
             }`}
           >
             All ({PANDALS_DATA.length})
           </button>
           <button
             onClick={() => setMapFilter('featured')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
               mapFilter === 'featured'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
             }`}
           >
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            {t.filterFeatured} ({PANDALS_DATA.filter((p) => p.isFeatured).length})
+            <Sparkles className={`w-3 h-3 ${mapFilter === 'featured' ? 'text-slate-950' : 'text-amber-400'}`} />
+            <span>{t.filterFeatured}</span>
           </button>
           <button
             onClick={() => setMapFilter('heritage')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
               mapFilter === 'heritage'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
             }`}
           >
-            👑 {t.filterHeritage}
+            <span>👑</span>
+            <span>{t.filterHeritage}</span>
           </button>
           <button
             onClick={() => setMapFilter('saved')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
               mapFilter === 'saved'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-amber-500/30'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-700/80 hover:bg-slate-800'
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
             }`}
           >
-            🔖 {t.filterSaved} ({visitedList.length})
+            <span>🔖</span>
+            <span>{t.filterSaved} ({visitedList.length})</span>
           </button>
         </div>
       </div>
@@ -1254,52 +1430,56 @@ export const MapView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Right Controls Stack: METRO Toggle, Zoom (+/-), Lock North, Find My Location */}
-      <div className="absolute top-[96px] right-2.5 z-15 flex flex-col gap-1.5 items-center pointer-events-auto">
+      {/* Right HUD Controls: Compact Glassmorphic Dock */}
+      <div className="absolute top-[108px] right-3 z-20 flex flex-col gap-1 items-center pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-750/90 rounded-2xl p-1 shadow-xl shadow-black/50">
         {/* Dedicated METRO Map Layer Toggle */}
         <button
           id="map-metro-toggle-btn"
           onClick={handleToggleMetro}
-          className={`flex flex-col items-center justify-center w-10 h-10 rounded-xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
+          className={`flex flex-col items-center justify-center w-8.5 h-8.5 rounded-xl transition-all active:scale-95 ${
             isMetroActive
-              ? 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white border-blue-400 shadow-blue-500/30 ring-2 ring-blue-400/30'
-              : 'bg-slate-900/85 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800'
           }`}
           title={isMetroActive ? 'Deactivate Metro Mode & Restore Pandals' : 'Activate Metro Network Mode'}
+          aria-label="Toggle Metro Lines"
         >
-          <Train className={`w-4 h-4 ${isMetroActive ? 'text-white' : 'text-slate-400'}`} />
-          <span className="text-[7px] font-black tracking-wider leading-none mt-0.5">METRO</span>
+          <Train className="w-4 h-4" />
         </button>
 
+        <div className="w-5 h-[1px] bg-slate-800 my-0.5" />
+
         {/* Zoom In & Zoom Out Buttons */}
-        <div className="flex flex-col rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-800 shadow-lg overflow-hidden">
-          <button
-            id="map-zoom-in-btn"
-            onClick={handleZoomIn}
-            className="p-2 hover:bg-slate-800 text-slate-300 hover:text-white transition active:scale-95 border-b border-slate-800/80"
-            title="Zoom In"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-          <button
-            id="map-zoom-out-btn"
-            onClick={handleZoomOut}
-            className="p-2 hover:bg-slate-800 text-slate-300 hover:text-white transition active:scale-95"
-            title="Zoom Out"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          id="map-zoom-in-btn"
+          onClick={handleZoomIn}
+          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
+          title="Zoom In"
+          aria-label="Zoom In"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+        <button
+          id="map-zoom-out-btn"
+          onClick={handleZoomOut}
+          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
+          title="Zoom Out"
+          aria-label="Zoom Out"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+
+        <div className="w-5 h-[1px] bg-slate-800 my-0.5" />
 
         {/* Lock North Button */}
         <button
           id="lock-north-btn"
           onClick={handleLockNorth}
-          className="flex flex-col items-center justify-center w-9 h-9 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white shadow-lg hover:bg-slate-800 active:scale-95 transition"
+          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
           title="Strictly Locked to True North (N 0°)"
+          aria-label="Lock North"
         >
           <Compass className="w-4 h-4 text-amber-400" />
-          <span className="text-[8px] font-semibold leading-none text-slate-400 mt-0.5">N</span>
         </button>
 
         {/* Find My Location */}
@@ -1307,76 +1487,93 @@ export const MapView: React.FC<Props> = ({
           id="gps-locate-btn"
           onClick={handleFindLocation}
           disabled={gpsLoading}
-          className={`flex flex-col items-center justify-center w-9 h-9 rounded-xl shadow-lg border backdrop-blur-md transition-all active:scale-95 ${
+          className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             userCoords
-              ? 'bg-blue-600 text-white border-blue-500 shadow-blue-500/20'
-              : 'bg-slate-900/85 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
           title={gpsLoading ? t.gpsSearching : t.locateMe}
+          aria-label="Find GPS Location"
         >
           <Crosshair
             className={`w-4 h-4 ${
               userCoords ? 'text-white' : 'text-slate-300'
             } ${gpsLoading ? 'animate-spin' : ''}`}
           />
-          <span className="text-[7px] font-bold leading-none mt-0.5">GPS</span>
         </button>
 
         {/* Status Toast */}
         {gpsStatusMsg && (
           <div
             id="gps-status-pill"
-            className="absolute right-11 top-24 px-2.5 py-1 rounded-lg bg-slate-900/95 border border-slate-800 text-slate-200 text-xs font-medium shadow-xl backdrop-blur-md whitespace-nowrap animate-fade-in"
+            className="absolute right-12 top-20 px-2.5 py-1 rounded-lg bg-slate-900/95 border border-slate-800 text-slate-200 text-xs font-medium shadow-xl backdrop-blur-md whitespace-nowrap animate-fade-in"
           >
             {gpsStatusMsg}
           </div>
         )}
       </div>
 
-      {/* Unified Floating Bottom Stage (Strictly anchored above BottomNav dock with zero overlap) */}
+      {/* Floating Active Trail Badge (Non-intrusive when trail is active) */}
+      {trailStops && trailStops.length > 0 && onOpenTrailBuilder && (
+        <div className="absolute top-[108px] left-3 z-20 pointer-events-auto animate-fade-in">
+          <button
+            id="map-floating-route-btn"
+            onClick={onOpenTrailBuilder}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-black/60 border border-amber-300 active:scale-95 transition"
+            title={t.trailBuilderTitle}
+          >
+            <Route className="w-3.5 h-3.5" />
+            <span>{trailStops.length} {trailStops.length === 1 ? 'Stop' : 'Stops'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Unified Floating Bottom Stage */}
       <div
         id="map-floating-bottom-stage"
-        className="absolute bottom-[calc(var(--bottom-dock-height)+var(--safe-bottom)+12px)] inset-x-0 z-20 pointer-events-none flex flex-col gap-2"
+        className="absolute bottom-[calc(var(--bottom-dock-height)+var(--safe-bottom)+8px)] inset-x-0 z-20 pointer-events-none flex flex-col gap-2"
       >
-        {/* Row 1: Action Buttons (+ Add Pandal on Left & Route on Right) */}
-        <div className="flex items-center justify-between px-3 w-full max-w-md mx-auto">
-          {/* Floating Left: + Add Pandal */}
-          {onOpenSuggestPandal && (
-            <button
-              id="map-floating-add-pandal-btn"
-              onClick={onOpenSuggestPandal}
-              className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-black/80 border border-red-400/50 active:scale-95 transition"
-              title={t.suggestPandalTitle}
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>{t.addPandalBtn}</span>
-            </button>
-          )}
+        {/* Proximity Quick-Preview Card for Closest Utility Node */}
+        {closestUtilitySummary && (
+          <div className="w-full max-w-md mx-auto px-3 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-950/95 border border-slate-750/90 backdrop-blur-xl shadow-xl shadow-black/80 gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="p-1.5 rounded-xl bg-amber-400/20 text-amber-300 text-xs shrink-0">
+                  📍
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                    <span className="font-bold text-emerald-400">{closestUtilitySummary.distanceBadge}</span>
+                    <span>•</span>
+                    <span className="truncate">{closestUtilitySummary.totalCount} in area</span>
+                  </div>
+                  <p className="text-xs font-bold text-white truncate">
+                    {closestUtilitySummary.closest.name[language] || closestUtilitySummary.closest.name.en}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <a
+                  href={closestUtilitySummary.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 active:scale-95 transition shadow-xs"
+                >
+                  <Navigation className="w-3 h-3" />
+                  <span>Directions</span>
+                </a>
+                <button
+                  onClick={() => onSelectFacility(closestUtilitySummary.closest)}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs active:scale-95 transition"
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Floating Right: Route Planner */}
-          {onOpenTrailBuilder && (
-            <button
-              id="map-floating-route-btn"
-              onClick={onOpenTrailBuilder}
-              className={`pointer-events-auto ml-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full backdrop-blur-md font-bold text-xs shadow-lg shadow-black/80 border active:scale-95 transition ${
-                trailStops && trailStops.length > 0
-                  ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-amber-400/20'
-                  : 'bg-slate-900/90 text-slate-200 border-slate-700 hover:bg-slate-800'
-              }`}
-              title={t.trailBuilderTitle}
-            >
-              <Route className="w-3.5 h-3.5" />
-              <span>{t.tabTrail || 'Route'}</span>
-              {trailStops && trailStops.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-slate-950 text-amber-400 text-[9px] font-black flex items-center justify-center">
-                  {trailStops.length}
-                </span>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Row 2: Horizontal Nearby Filter Rail */}
+        {/* Horizontal Nearby Filter Rail */}
         <div className="w-full">
           <NearbyFilterBar
             activeFilter={activeFilter}
@@ -1388,4 +1585,3 @@ export const MapView: React.FC<Props> = ({
     </div>
   );
 };
-

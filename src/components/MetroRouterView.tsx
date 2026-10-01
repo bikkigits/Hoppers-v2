@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MetroStation, Language, Pandal, MetroMapRoute, MetroLine } from '../types';
 import { METRO_STATIONS, PANDALS_DATA } from '../data/mockData';
+import { METRO_LINES } from '../data/metroLines';
 import { TRANSLATIONS } from '../data/translations';
 import { calculateMetroRoute, getLineColor } from '../utils/metroRouting';
 import {
@@ -81,7 +82,7 @@ export const MetroRouterView: React.FC<Props> = ({
 
   const getStationLabel = (s: MetroStation) => {
     const name = s.name[language] || s.name.en;
-    if (s.isInterchange) return `${name} (Interchange)`;
+    if (s.isInterchange) return `${name} (${t.interchangeHubBadge || 'Interchange'})`;
     return name;
   };
 
@@ -89,50 +90,36 @@ export const MetroRouterView: React.FC<Props> = ({
     ? 'relative w-full max-w-lg mx-auto bg-slate-900/95 backdrop-blur-2xl border border-slate-800 p-4 rounded-3xl shadow-2xl space-y-3.5 pointer-events-auto max-h-[82dvh] overflow-y-auto animate-fade-in'
     : 'w-full max-w-2xl mx-auto px-4 pt-3 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] h-full overflow-y-auto overscroll-y-contain space-y-4';
 
-  const renderStationOptions = (currentSelectedId: string, prefix: string) => {
-    const blueList = METRO_STATIONS.filter((s) => s.lines.includes('blue'));
-    const greenList = METRO_STATIONS.filter((s) => s.lines.includes('green') && !s.isInterchange);
-    const orangeList = METRO_STATIONS.filter((s) => s.lines.includes('orange') && !s.isInterchange);
-    const purpleList = METRO_STATIONS.filter((s) => s.lines.includes('purple'));
-    const yellowList = METRO_STATIONS.filter((s) => s.lines.includes('yellow') && !s.isInterchange);
+  const lineEmoji: Record<string, string> = {
+    blue: '🔵',
+    green: '🟢',
+    orange: '🟠',
+    purple: '🟣',
+    yellow: '🟡',
+  };
 
+  const renderStationOptions = (currentSelectedId: string, prefix: string) => {
     return (
       <>
-        <optgroup label="🔵 Blue Line 1 (Dakshineswar ↔ Kavi Subhash)">
-          {blueList.map((s) => (
-            <option key={`${prefix}-${s.id}`} value={s.id}>
-              🔵 {getStationLabel(s)}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="🟢 Green Line 2 (Howrah Maidan ↔ Sector V)">
-          {greenList.map((s) => (
-            <option key={`${prefix}-${s.id}`} value={s.id}>
-              🟢 {getStationLabel(s)}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="🟠 Orange Line 6 (Kavi Subhash ↔ Beleghata)">
-          {orangeList.map((s) => (
-            <option key={`${prefix}-${s.id}`} value={s.id}>
-              🟠 {getStationLabel(s)}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="🟣 Purple Line 3 (Joka ↔ Majerhat)">
-          {purpleList.map((s) => (
-            <option key={`${prefix}-${s.id}`} value={s.id}>
-              🟣 {getStationLabel(s)}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="🟡 Yellow Line 4 (Noapara ↔ Jai Hind)">
-          {yellowList.map((s) => (
-            <option key={`${prefix}-${s.id}`} value={s.id}>
-              🟡 {getStationLabel(s)}
-            </option>
-          ))}
-        </optgroup>
+        {METRO_LINES.map((line) => {
+          const stations =
+            line.code === 'blue' || line.code === 'purple'
+              ? METRO_STATIONS.filter((s) => s.lines.includes(line.code))
+              : METRO_STATIONS.filter((s) => s.lines.includes(line.code) && !s.isInterchange);
+          const emoji = lineEmoji[line.code] || '🚇';
+          const lineName = line.name[language] || line.name.en;
+          const terminals = line.terminals[language] || line.terminals.en;
+
+          return (
+            <optgroup key={line.id} label={`${emoji} ${lineName} (${terminals})`}>
+              {stations.map((s) => (
+                <option key={`${prefix}-${s.id}`} value={s.id}>
+                  {emoji} {getStationLabel(s)}
+                </option>
+              ))}
+            </optgroup>
+          );
+        })}
       </>
     );
   };
@@ -150,7 +137,7 @@ export const MetroRouterView: React.FC<Props> = ({
               {t.metroTitle}
             </h2>
             <p className="text-[11px] text-slate-400 truncate">
-              5-Line Kolkata Metro Routing
+              {t.metroSubtitle || t.metroNetworkSubtitle || '5-Line Kolkata Metro Routing'}
             </p>
           </div>
         </div>
@@ -161,8 +148,8 @@ export const MetroRouterView: React.FC<Props> = ({
             id="close-metro-overlay-btn"
             onClick={onCloseOverlay}
             className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
-            title="Close Metro Overlay"
-            aria-label="Close"
+            title={t.closeSheet || 'Close Metro Overlay'}
+            aria-label={t.closeSheet || 'Close'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -389,7 +376,7 @@ export const MetroRouterView: React.FC<Props> = ({
 
       {/* Static Informational Footer Banner */}
       <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-center text-xs text-slate-400 font-medium">
-        <span>🚇 Pujo Special: Night services till 4:00 AM | Base Fare: ₹5</span>
+        <span>🚇 {t.pujoSpecialMetroNotice || 'Pujo Special: Night services till 4:00 AM | Base Fare: ₹5'}</span>
       </div>
     </div>
   );

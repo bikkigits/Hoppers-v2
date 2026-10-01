@@ -109,6 +109,35 @@ export function formatDurationHoursMins(minutes: number): string {
 }
 
 /**
+ * Smart Traveling Salesperson (TSP) heuristic to optimize stop order for shortest total distance.
+ * Keeps the first stop (starting point) fixed, then greedily picks the nearest unvisited stop.
+ */
+export function optimizeTrailOrder(stops: TrailStop[]): TrailStop[] {
+  if (stops.length <= 2) return stops;
+
+  const result: TrailStop[] = [stops[0]];
+  const remaining = stops.slice(1);
+
+  while (remaining.length > 0) {
+    const current = result[result.length - 1];
+    let nearestIdx = 0;
+    let nearestDist = calculateDistanceKm(current.lat, current.lng, remaining[0].lat, remaining[0].lng);
+
+    for (let i = 1; i < remaining.length; i++) {
+      const d = calculateDistanceKm(current.lat, current.lng, remaining[i].lat, remaining[i].lng);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestIdx = i;
+      }
+    }
+
+    result.push(remaining.splice(nearestIdx, 1)[0]);
+  }
+
+  return result;
+}
+
+/**
  * Corridor Detour Detection Algorithm ("Pandals on Your Way"):
  * Identifies pandals located within a buffer corridor along the path
  * between consecutive stops in the user's trail.

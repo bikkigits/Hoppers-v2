@@ -11,6 +11,7 @@ import { PANDALS_DATA, CRITICAL_FACILITIES, METRO_STATIONS } from '../data/mockD
 import { TRANSLATIONS } from '../data/translations';
 import { calculateDistanceKm, formatDistance } from '../utils/geo';
 import { getPandalCrowdSummary } from '../utils/crowdReports';
+import { CrowdStatusBadge, getCrowdBadge } from './CrowdStatusBadge';
 import {
   Search,
   Train,
@@ -164,12 +165,23 @@ export const DirectoryView: React.FC<Props> = ({
       .filter((poi) => {
         // Category filter
         if (selectedPoiCategory !== 'all') {
+          if (
+            selectedPoiCategory === 'hospital' &&
+            poi.category !== 'hospital' &&
+            poi.category !== 'medical'
+          )
+            return false;
+          if (
+            selectedPoiCategory === 'medical' &&
+            poi.category !== 'hospital' &&
+            poi.category !== 'medical'
+          )
+            return false;
           if (selectedPoiCategory === 'police' && poi.category !== 'police') return false;
           if (selectedPoiCategory === 'helpdesk' && poi.category !== 'helpdesk') return false;
           if (selectedPoiCategory === 'metro' && poi.category !== 'metro') return false;
           if (selectedPoiCategory === 'railway' && poi.category !== 'railway') return false;
           if (selectedPoiCategory === 'ferry' && poi.category !== 'ferry') return false;
-          if (selectedPoiCategory === 'medical' && poi.category !== 'medical') return false;
           if (selectedPoiCategory === 'pharmacy' && poi.category !== 'pharmacy') return false;
           if (selectedPoiCategory === 'atm' && poi.category !== 'atm') return false;
           if (selectedPoiCategory === 'parking' && poi.category !== 'parking') return false;
@@ -201,8 +213,10 @@ export const DirectoryView: React.FC<Props> = ({
           poi.address?.bn.toLowerCase().includes(query) ||
           poi.address?.hi.toLowerCase().includes(query);
         const categoryMatch = poi.category.toLowerCase().includes(query);
+        const cuisineMatch = poi.cuisineTags?.some((c) => c.toLowerCase().includes(query)) || false;
+        const operatorMatch = poi.operator?.toLowerCase().includes(query) || false;
 
-        return nameMatch || detailsMatch || addressMatch || categoryMatch;
+        return nameMatch || detailsMatch || addressMatch || categoryMatch || cuisineMatch || operatorMatch;
       })
       .sort((a, b) => {
         if (userCoords) {
@@ -218,44 +232,51 @@ export const DirectoryView: React.FC<Props> = ({
   const poiCategories = useMemo(() => {
     const counts: Record<string, number> = {
       all: allPoiFacilities.length,
+      hospital: allPoiFacilities.filter((p) => p.category === 'hospital' || p.category === 'medical').length,
+      toilets: allPoiFacilities.filter((p) => p.category === 'toilets').length,
+      restaurant: allPoiFacilities.filter((p) => p.category === 'restaurant' || p.category === 'food').length,
       metro: allPoiFacilities.filter((p) => p.category === 'metro').length,
       railway: allPoiFacilities.filter((p) => p.category === 'railway').length,
       ferry: allPoiFacilities.filter((p) => p.category === 'ferry').length,
-      helpdesk: allPoiFacilities.filter((p) => p.category === 'helpdesk').length,
       police: allPoiFacilities.filter((p) => p.category === 'police').length,
-      medical: allPoiFacilities.filter((p) => p.category === 'medical').length,
+      helpdesk: allPoiFacilities.filter((p) => p.category === 'helpdesk').length,
       pharmacy: allPoiFacilities.filter((p) => p.category === 'pharmacy').length,
       atm: allPoiFacilities.filter((p) => p.category === 'atm').length,
       parking: allPoiFacilities.filter((p) => p.category === 'parking').length,
-      restaurant: allPoiFacilities.filter((p) => p.category === 'restaurant' || p.category === 'food')
-        .length,
       hotel: allPoiFacilities.filter((p) => p.category === 'hotel').length,
       landmark: allPoiFacilities.filter((p) => p.category === 'landmark').length,
       petrol: allPoiFacilities.filter((p) => p.category === 'petrol').length,
-      toilets: allPoiFacilities.filter((p) => p.category === 'toilets').length,
     };
 
     return [
       { id: 'all', label: `All (${counts.all})`, icon: '🧭' },
-      { id: 'metro', label: `Metro Station (${counts.metro})`, icon: '🚇' },
-      { id: 'railway', label: `Railway Station (${counts.railway})`, icon: '🚆' },
-      { id: 'ferry', label: `Ferry Ghat (${counts.ferry})`, icon: '⛴️' },
-      { id: 'helpdesk', label: `Puja Help Desk (${counts.helpdesk})`, icon: '🚨' },
-      { id: 'police', label: `Police Station (${counts.police})`, icon: '👮' },
-      { id: 'medical', label: `Hospital (${counts.medical})`, icon: '🏥' },
-      { id: 'pharmacy', label: `Pharmacy (${counts.pharmacy})`, icon: '💊' },
-      { id: 'atm', label: `ATM / Bank (${counts.atm})`, icon: '🏧' },
-      { id: 'parking', label: `Parking (${counts.parking})`, icon: '🅿️' },
-      { id: 'restaurant', label: `Restaurant (${counts.restaurant})`, icon: '🍽️' },
-      { id: 'hotel', label: `Hotel (${counts.hotel})`, icon: '🏨' },
-      { id: 'landmark', label: `Landmark (${counts.landmark})`, icon: '🏛️' },
-      { id: 'petrol', label: `Petrol Pump (${counts.petrol})`, icon: '⛽' },
-      { id: 'toilets', label: `Public Toilet (${counts.toilets})`, icon: '🚻' },
+      { id: 'hospital', label: `24x7 Hospitals (${counts.hospital})`, icon: '🏥' },
+      { id: 'toilets', label: `Public Toilets (${counts.toilets})`, icon: '🚻' },
+      { id: 'restaurant', label: `Food & Dining (${counts.restaurant})`, icon: '🍽️' },
+      { id: 'metro', label: `Metro Stations (${counts.metro})`, icon: '🚇' },
+      { id: 'railway', label: `Railway Terminals (${counts.railway})`, icon: '🚆' },
+      { id: 'ferry', label: `Ferry Ghats (${counts.ferry})`, icon: '⛴️' },
+      { id: 'police', label: `Police Stations (${counts.police})`, icon: '👮' },
+      { id: 'helpdesk', label: `Puja Help Desks (${counts.helpdesk})`, icon: '🚨' },
+      { id: 'pharmacy', label: `Pharmacies (${counts.pharmacy})`, icon: '💊' },
+      { id: 'atm', label: `ATMs & Banks (${counts.atm})`, icon: '🏧' },
+      { id: 'parking', label: `Parking Lots (${counts.parking})`, icon: '🅿️' },
+      { id: 'hotel', label: `Hotels (${counts.hotel})`, icon: '🏨' },
+      { id: 'landmark', label: `Landmarks (${counts.landmark})`, icon: '🏛️' },
+      { id: 'petrol', label: `Petrol Pumps (${counts.petrol})`, icon: '⛽' },
     ];
   }, [allPoiFacilities]);
 
   const getPoiBadgeStyle = (category: FacilityCategory) => {
     switch (category) {
+      case 'hospital':
+      case 'medical':
+        return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+      case 'toilets':
+        return 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40';
+      case 'restaurant':
+      case 'food':
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
       case 'metro':
         return 'bg-blue-500/20 text-blue-300 border-blue-500/40';
       case 'railway':
@@ -263,61 +284,25 @@ export const DirectoryView: React.FC<Props> = ({
       case 'ferry':
         return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
       case 'helpdesk':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold';
+        return 'bg-orange-500/20 text-orange-300 border-orange-500/40 font-bold';
       case 'police':
         return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
-      case 'medical':
-        return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
       case 'pharmacy':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-      case 'atm':
         return 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+      case 'atm':
+        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
       case 'parking':
         return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
-      case 'restaurant':
-      case 'food':
-        return 'bg-orange-500/20 text-orange-300 border-orange-500/40';
       case 'hotel':
-        return 'bg-amber-600/20 text-amber-400 border-amber-600/40';
+        return 'bg-yellow-600/20 text-yellow-400 border-yellow-600/40';
       case 'landmark':
         return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40';
       case 'petrol':
-        return 'bg-red-500/20 text-red-300 border-red-500/40';
-      case 'toilets':
       default:
-        return 'bg-emerald-600/20 text-emerald-400 border-emerald-600/40';
+        return 'bg-red-500/20 text-red-300 border-red-500/40';
     }
   };
 
-  const getCrowdBadge = (crowd: string) => {
-    switch (crowd) {
-      case 'Low':
-        return {
-          bg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-          dot: 'bg-emerald-400',
-          label: t.crowdLow,
-        };
-      case 'Moderate':
-        return {
-          bg: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
-          dot: 'bg-amber-400',
-          label: t.crowdModerate,
-        };
-      case 'Heavy':
-        return {
-          bg: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
-          dot: 'bg-orange-400',
-          label: t.crowdHeavy,
-        };
-      case 'Extreme':
-      default:
-        return {
-          bg: 'bg-rose-500/20 text-rose-400 border-rose-500/40',
-          dot: 'bg-rose-400 animate-pulse',
-          label: t.crowdExtreme,
-        };
-    }
-  };
 
   const handleViewFacility = (facility: FacilityPoint) => {
     if (onViewFacilityOnMap) {
@@ -462,7 +447,6 @@ export const DirectoryView: React.FC<Props> = ({
               const isVisited = visitedSet.has(pandal.id);
               const isInTrail = trailStopIds.has(pandal.id);
               const crowdSummary = getPandalCrowdSummary(pandal.id, pandal.crowdLevel);
-              const crowd = getCrowdBadge(crowdSummary.effectiveLevel);
               const distKm = userCoords
                 ? calculateDistanceKm(userCoords.lat, userCoords.lng, pandal.lat, pandal.lng)
                 : null;
@@ -490,17 +474,11 @@ export const DirectoryView: React.FC<Props> = ({
                             <span>Featured</span>
                           </span>
                         )}
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border flex items-center gap-1 ${crowd.bg}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${crowd.dot}`} />
-                          <span>{crowd.label}</span>
-                          {crowdSummary.isCrowdsourced && (
-                            <span className="text-[8px] font-bold text-amber-300 bg-amber-400/25 px-1 rounded-sm">
-                              Live
-                            </span>
-                          )}
-                        </span>
+                        <CrowdStatusBadge
+                          crowdLevel={crowdSummary.effectiveLevel}
+                          language={language}
+                          isCrowdsourced={crowdSummary.isCrowdsourced}
+                        />
                       </div>
 
                       <h3
@@ -754,16 +732,51 @@ export const DirectoryView: React.FC<Props> = ({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        {/* Category Badge & Puja Timing Badge */}
-                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        {/* Category Badge & Contextual Attribute Badges */}
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}
                           >
-                            {poi.category.toUpperCase()}
+                            {poi.category === 'hospital' || poi.category === 'medical' ? 'HOSPITAL 24x7' : poi.category.toUpperCase()}
                           </span>
+
+                          {/* Dietary Badges for Food */}
+                          {poi.dietaryType === 'pure-veg' && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              🟢 100% Pure Veg
+                            </span>
+                          )}
+                          {poi.dietaryType === 'non-veg' && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                              🍗 Mughlai & Bengali
+                            </span>
+                          )}
+
+                          {/* Operator Badge for Sanitation */}
+                          {poi.operator && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                              🏛️ {poi.operator}
+                            </span>
+                          )}
+
+                          {/* Disabled Access */}
+                          {poi.hasDisabledAccess && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                              ♿ Accessible
+                            </span>
+                          )}
+
+                          {/* Blood Bank for Hospital */}
+                          {poi.hasBloodBank && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">
+                              🩸 Blood Bank
+                            </span>
+                          )}
+
+                          {/* Puja Hours Badge */}
                           {poi.pujaHoursBadge && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                              {poi.pujaHoursBadge}
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 text-amber-300 border border-amber-400/30">
+                              ⏱️ {poi.pujaHoursBadge}
                             </span>
                           )}
                         </div>
@@ -773,9 +786,23 @@ export const DirectoryView: React.FC<Props> = ({
                           {poi.name[language] || poi.name.en}
                         </h3>
 
+                        {/* Cuisine Tags for Food */}
+                        {poi.cuisineTags && poi.cuisineTags.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap mt-1">
+                            {poi.cuisineTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-1.5 py-0.5 rounded-md bg-slate-800/80 text-[9px] font-medium text-slate-300 border border-slate-700/60"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         {/* Address */}
                         {poi.address && (
-                          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1.5">
                             <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                             <span className="truncate">{poi.address[language] || poi.address.en}</span>
                           </div>
@@ -815,8 +842,18 @@ export const DirectoryView: React.FC<Props> = ({
                       </div>
                     </div>
 
-                    {/* Action Buttons: View Map & Add to Trail (Matching Video) */}
-                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end gap-2">
+                    {/* Action Buttons: Emergency Call, View Map & Add to Trail */}
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-end gap-2 flex-wrap">
+                      {(poi.category === 'hospital' || poi.category === 'medical' || poi.category === 'police') && poi.contact && (
+                        <a
+                          href={`tel:${poi.contact.split('/')[0].trim()}`}
+                          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-red-950/40 mr-auto"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" />
+                          <span>Emergency Call</span>
+                        </a>
+                      )}
+
                       {onAddFacilityToTrail && (
                         <button
                           onClick={() => onAddFacilityToTrail(poi)}

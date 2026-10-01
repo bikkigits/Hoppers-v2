@@ -24,6 +24,7 @@ import { EmergencySOSSheet } from './components/EmergencySOSSheet';
 import { SuggestPandalModal } from './components/SuggestPandalModal';
 import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { OnboardingSplash } from './components/OnboardingSplash';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('map');
@@ -111,6 +112,25 @@ export function App() {
     // Clean initial launch state: 0 stops on all devices
     return [];
   });
+
+  // First-Time Onboarding Splash State
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
+    try {
+      const hasSeen = localStorage.getItem('hoppers_intro_seen');
+      return hasSeen !== 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleCompleteOnboarding = () => {
+    setIsOnboardingOpen(false);
+    try {
+      localStorage.setItem('hoppers_intro_seen', 'true');
+    } catch (e) {
+      console.warn('Failed to save onboarding flag:', e);
+    }
+  };
 
   // Persist language
   useEffect(() => {
@@ -231,6 +251,7 @@ export function App() {
         onOpenSOS={() => setIsSOSOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
       />
 
       {/* Offline Status Toast */}
@@ -366,6 +387,14 @@ export function App() {
         onOpenTrailBuilder={() => setIsTrailBuilderOpen(true)}
         onOpenSuggestPandal={() => setIsSuggestModalOpen(true)}
         onLocateUser={handleLocateUser}
+      />
+
+      {/* First-Time Introductory Splash & Feature Showcase */}
+      <OnboardingSplash
+        isOpen={isOnboardingOpen}
+        onComplete={handleCompleteOnboarding}
+        language={language}
+        onLanguageChange={setLanguage}
       />
     </div>
   );

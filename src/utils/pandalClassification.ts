@@ -8,243 +8,119 @@ export type MicroZoneId =
   | 'west'
   | 'behala';
 
-interface ZoneMatchRules {
-  keywords: string[];
-  latMin?: number;
-  latMax?: number;
-  lngMin?: number;
-  lngMax?: number;
+export interface BoundingBox {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
 }
 
-const ZONE_RULES: Record<MicroZoneId, ZoneMatchRules> = {
+/**
+ * Strict Rectangular Coordinate Bounding Boxes (Hard Geofences)
+ * Zero tolerance for coordinate boundary leakage.
+ */
+export const ZONE_BOUNDING_BOXES: Record<
+  'north' | 'central' | 'south' | 'saltlake' | 'rajarhat' | 'dumdum' | 'west' | 'behala',
+  BoundingBox
+> = {
+  // North Kolkata: Shyambazar, Bagbazar, Sovabazar, Kumartuli, Tala, Cossipore, Ultadanga
+  // Strictly east of Hooghly River (lng >= 88.345) and north of lat 22.585
+  north: {
+    minLat: 22.585,
+    maxLat: 22.660,
+    minLng: 88.345,
+    maxLng: 88.395,
+  },
+
+  // Central Kolkata: College Street, Bowbazar, MG Road, Sealdah, Chandni Chowk, Esplanade, BBD Bagh
+  // Strictly bounded between North (lat < 22.585) and South (lat >= 22.555), west of EM Bypass fringe (lng <= 88.382)
   central: {
-    keywords: [
-      'college street',
-      'bowbazar',
-      'bow bazar',
-      'chandni chowk',
-      'chandni',
-      'sealdah',
-      'girish park',
-      'm.g. road',
-      'mg road',
-      'mahatma gandhi road',
-      'mohammad ali park',
-      'college square',
-      'santosh mitra square',
-      'lebutala',
-      'simla street',
-      'simla',
-      'chaltabagan',
-      'kashi bose lane',
-      'amherst street',
-      'hedua',
-      'burrabazar',
-      'bara bazar',
-      'muchipara',
-      'entally',
-      'central kolkata',
-      'taltala',
-      'creek row',
-      'wellington',
-      'ganesh chandra',
-      'bepin behari',
-      'bb ganguly',
-      'lenin sarani',
-      'park circus',
-      'ripon street',
-      'dharmatala',
-      'esplanade',
-      'janbazar',
-      'raja subodh',
-    ],
-    latMin: 22.552,
-    latMax: 22.588,
-    lngMin: 88.345,
-    lngMax: 88.375,
+    minLat: 22.555,
+    maxLat: 22.585,
+    minLng: 88.340,
+    maxLng: 88.382,
   },
+
+  // South Kolkata: Gariahat, Ballygunge, Jodhpur Park, Tollygunge, Kalighat, Rashbehari, Jadavpur, Dhakuria, Alipore
+  // Strictly south of Central (lat < 22.555) and east of West Kolkata/Howrah (lng >= 88.330)
+  south: {
+    minLat: 22.450,
+    maxLat: 22.555,
+    minLng: 88.330,
+    maxLng: 88.410,
+  },
+
+  // Salt Lake: FD, BJ, AJ, EC, AE Blocks, Bidhannagar, Karunamoyee, Central Park, Sector 1-3
+  // Strictly cuts off Lake Town / Baguiati to north (maxLat 22.595) and New Town to east (maxLng 88.435)
   saltlake: {
-    keywords: [
-      'salt lake',
-      'saltlake',
-      'bidhannagar',
-      'karunamoyee',
-      'sector i',
-      'sector ii',
-      'sector iii',
-      'sector iv',
-      'sector v',
-      'sector 1',
-      'sector 2',
-      'sector 3',
-      'sector 4',
-      'sector 5',
-      'block fd',
-      'fd block',
-      'bj block',
-      'block bj',
-      'aj block',
-      'ak block',
-      'ec block',
-      'ae block',
-      'bd block',
-      'cf block',
-      'ah block',
-      'cj block',
-      'al block',
-      'gd block',
-      'hb block',
-      'labony',
-      'city centre salt lake',
-      'salt lake city',
-      'salt lake stadium',
-      'duttabad',
-      'central park salt lake',
-      'swabhumi',
-    ],
-    latMin: 22.565,
-    latMax: 22.615,
-    lngMin: 88.395,
-    lngMax: 88.445,
+    minLat: 22.565,
+    maxLat: 22.595,
+    minLng: 88.395,
+    maxLng: 88.435,
   },
+
+  // Rajarhat & New Town: Action Area 1-3, Chinar Park, Eco Park, City Centre 2
+  // Strictly bounded corridor east of Salt Lake (lng > 88.435) and excludes Barasat (maxLat 22.635)
   rajarhat: {
-    keywords: [
-      'rajarhat',
-      'new town',
-      'newtown',
-      'chinar park',
-      'eco park',
-      'action area',
-      'kaikhali',
-      'teghoria',
-      'baguiati',
-      'major arterial',
-      'rajarhat main',
-      'akankha',
-      'shapoorji',
-      'city centre 2',
-      'unitech',
-      'derozio',
-      'balaka',
-      'atghara',
-      'hatiara',
-      'rajarhat gopalpur',
-    ],
-    latMin: 22.580,
-    latMax: 22.650,
-    lngMin: 88.435,
-    lngMax: 88.520,
+    minLat: 22.560,
+    maxLat: 22.635,
+    minLng: 88.435001,
+    maxLng: 88.490,
   },
+
+  // Dum Dum: Dum Dum Park, Nagerbazar, Motijheel, Cantonment, Lake Town, Sreebhumi, Bangur
+  // Strictly bounded northern-eastern corridor
   dumdum: {
-    keywords: [
-      'dum dum',
-      'dumdum',
-      'dum dum park',
-      'nagerbazar',
-      'motijheel',
-      'cantonment',
-      'dum dum junction',
-      'gorabazar',
-      'jessore road',
-      'lake town',
-      'sreebhumi',
-      'sribhumi',
-      'bangur avenue',
-      'bangur',
-      'belgachia',
-      'belgachhia',
-      'noapara',
-      'clive house',
-      'vip road',
-      'south dum dum',
-      'north dum dum',
-      'seth bagan',
-      'shyamnagar dum dum',
-      'airport 1 no',
-      'tarun sangha dum dum',
-      'bharat chakra',
-    ],
-    latMin: 22.605,
-    latMax: 22.665,
-    lngMin: 88.380,
-    lngMax: 88.430,
+    minLat: 22.595,
+    maxLat: 22.650,
+    minLng: 88.375,
+    maxLng: 88.435,
   },
+
+  // West Kolkata: Kidderpore, Watgunj, Garden Reach, Hastings, Metiabruz, Mominpur
+  // Strictly bounds port corridor; excludes Shibpur / Howrah across the river
   west: {
-    keywords: [
-      'khidderpore',
-      'kidderpore',
-      'alipore',
-      'watgunj',
-      'garden reach',
-      'hastings',
-      'metiabruz',
-      'ekbalpore',
-      'ekbalpur',
-      'taratala rd',
-      'bnr',
-      'circular garden reach',
-      'diamond harbour rd',
-      'fancy market',
-      'st. georges',
-      'karl marx',
-      'babubazar',
-      'munshiganj',
-      'mayurbhanj',
-      'national library',
-      'chetla lock gate',
-    ],
-    latMin: 22.515,
-    latMax: 22.560,
-    lngMin: 88.280,
-    lngMax: 88.340,
+    minLat: 22.520,
+    maxLat: 22.560,
+    minLng: 88.290,
+    maxLng: 88.335,
   },
+
+  // Behala: Behala Chowrasta, Manton, Parnasree, James Long Sarani, Sakher Bazar, Taratala, Thakurpukur
+  // Strictly bounded; excludes Budge Budge and Uluberia to the far west (minLng 88.275)
   behala: {
-    keywords: [
-      'behala',
-      'behala chowrasta',
-      'chowrasta',
-      'manton',
-      'behala manton',
-      'parnasree',
-      'parnasree pally',
-      'sakher bazar',
-      'sakherbazar',
-      'barisha',
-      'barisha club',
-      'behala club',
-      'thakurpukur',
-      'james long sarani',
-      'james long',
-      'diamond harbour road behala',
-      'silpara',
-      'roy bahadur road',
-      'roy bahadur',
-      'biren roy road',
-      'biren roy',
-      'kadamtala behala',
-      'siriti',
-      'haridevpur',
-      'state bank park',
-      'bakultala behala',
-      'blind school behala',
-      'ajeya sanghati',
-      '14 no bus stand',
-      'behala nutan sangha',
-    ],
-    latMin: 22.470,
-    latMax: 22.520,
-    lngMin: 22.470 < 22.520 ? 88.280 : 88.280,
-    lngMax: 88.345,
+    minLat: 22.460,
+    maxLat: 22.520,
+    minLng: 88.275,
+    maxLng: 88.335,
   },
 };
 
 /**
- * Checks if a pandal matches a specific filter type
+ * Hard boundary check: Returns true IF AND ONLY IF (lat, lng) strictly lies within the bounding box.
+ */
+export function isWithinBoundingBox(lat: number, lng: number, box: BoundingBox): boolean {
+  if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
+    return false;
+  }
+  return lat >= box.minLat && lat <= box.maxLat && lng >= box.minLng && lng <= box.maxLng;
+}
+
+/**
+ * Validates whether a pandal strictly satisfies the hard geofenced bounding box of the specified filter.
+ * Under NO circumstance will a pandal pass if its (lat, lng) falls outside the strict numeric range.
+ *
+ * @param pandal - The pandal object to evaluate
+ * @param filter - The active filter key
+ * @returns boolean - True if the pandal is within the geofenced boundary
  */
 export function matchesPandalFilter(pandal: Pandal, filter: FilterType): boolean {
-  if (filter === 'all') return true;
+  // 1. 'all': Return true for all pandals
+  if (filter === 'all') {
+    return true;
+  }
 
-  // Utility POI filters don't match pandals directly
+  // 2. POI / Utility filters do not match pandals directly
   if (
     filter === 'police' ||
     filter === 'toilets' ||
@@ -255,103 +131,43 @@ export function matchesPandalFilter(pandal: Pandal, filter: FilterType): boolean
     return false;
   }
 
-  // Legacy North / South
-  if (filter === 'north') {
-    if (pandal.zone === 'North') return true;
-    const text = `${pandal.name.en} ${pandal.address || ''} ${pandal.nearestMetro || ''} ${pandal.description.en}`.toLowerCase();
-    return (
-      text.includes('north kolkata') ||
-      text.includes('bagbazar') ||
-      text.includes('kumartuli') ||
-      text.includes('shyambazar') ||
-      text.includes('hatibagan') ||
-      text.includes('tala') ||
-      text.includes('ahiritola') ||
-      text.includes('sovabazar') ||
-      (pandal.lat >= 22.585 && pandal.lng <= 88.385 && !matchesPandalFilter(pandal, 'west'))
-    );
+  const lat = pandal.lat;
+  const lng = pandal.lng;
+
+  // 3. Strict rectangular bounding box evaluation (Hard Geofencing)
+  switch (filter) {
+    case 'north':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.north);
+
+    case 'central':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.central);
+
+    case 'south':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.south);
+
+    case 'saltlake':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.saltlake);
+
+    case 'rajarhat':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.rajarhat);
+
+    case 'dumdum':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.dumdum);
+
+    case 'west':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.west);
+
+    case 'behala':
+      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.behala);
+
+    default:
+      return false;
   }
-
-  if (filter === 'south') {
-    if (pandal.zone === 'South') return true;
-    const text = `${pandal.name.en} ${pandal.address || ''} ${pandal.nearestMetro || ''} ${pandal.description.en}`.toLowerCase();
-    return (
-      text.includes('south kolkata') ||
-      text.includes('ballygunge') ||
-      text.includes('gariahat') ||
-      text.includes('ekdalia') ||
-      text.includes('tridhara') ||
-      text.includes('mudiali') ||
-      text.includes('chetla') ||
-      text.includes('naktala') ||
-      text.includes('jodhpur park') ||
-      text.includes('deshapriya') ||
-      text.includes('maddox') ||
-      (pandal.lat <= 22.540 && !matchesPandalFilter(pandal, 'west'))
-    );
-  }
-
-  // Micro-Zones: Central, Salt Lake, Rajarhat, Dum Dum, West, Behala
-  if (filter === 'central') {
-    if (pandal.zone === 'Central') return true;
-    return checkZoneMatch(pandal, ZONE_RULES.central);
-  }
-
-  if (filter === 'saltlake') {
-    return checkZoneMatch(pandal, ZONE_RULES.saltlake);
-  }
-
-  if (filter === 'rajarhat') {
-    return checkZoneMatch(pandal, ZONE_RULES.rajarhat);
-  }
-
-  if (filter === 'dumdum') {
-    return checkZoneMatch(pandal, ZONE_RULES.dumdum);
-  }
-
-  if (filter === 'west') {
-    return checkZoneMatch(pandal, ZONE_RULES.west);
-  }
-
-  if (filter === 'behala') {
-    return checkZoneMatch(pandal, ZONE_RULES.behala);
-  }
-
-  return false;
-}
-
-function checkZoneMatch(pandal: Pandal, rule: ZoneMatchRules): boolean {
-  const searchableText = `${pandal.name.en} ${pandal.name.bn} ${pandal.name.hi} ${pandal.address || ''} ${pandal.nearestMetro || ''} ${pandal.nearestMetroEn || ''} ${pandal.description.en} ${pandal.highlight.en} ${pandal.theme.en}`.toLowerCase();
-
-  // 1. Keyword analysis across address, name, metro, description
-  for (const keyword of rule.keywords) {
-    if (searchableText.includes(keyword)) {
-      return true;
-    }
-  }
-
-  // 2. Geospatial bounding box check
-  if (
-    rule.latMin !== undefined &&
-    rule.latMax !== undefined &&
-    rule.lngMin !== undefined &&
-    rule.lngMax !== undefined
-  ) {
-    if (
-      pandal.lat >= rule.latMin &&
-      pandal.lat <= rule.latMax &&
-      pandal.lng >= rule.lngMin &&
-      pandal.lng <= rule.lngMax
-    ) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**
  * Returns all matched zone tags for a pandal (for badge display & multifaceted search)
+ * strictly verified against hard coordinate geofences.
  */
 export function getPandalMatchedZones(pandal: Pandal): string[] {
   const matched: string[] = [];

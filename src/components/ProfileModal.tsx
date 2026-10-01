@@ -2,6 +2,7 @@ import React from 'react';
 import { Language, VisitedPandal } from '../types';
 import { PANDALS_DATA } from '../data/mockData';
 import { TRANSLATIONS } from '../data/translations';
+import { PWAInstallButton } from './PWAInstallButton';
 import {
   X,
   ShieldCheck,
@@ -12,6 +13,10 @@ import {
   Compass,
   CheckCircle2,
   Share2,
+  Moon,
+  Sun,
+  BatteryLow,
+  Download,
 } from 'lucide-react';
 
 interface Props {
@@ -19,6 +24,9 @@ interface Props {
   onClose: () => void;
   language: Language;
   visitedList: VisitedPandal[];
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 export const ProfileModal: React.FC<Props> = ({
@@ -26,6 +34,9 @@ export const ProfileModal: React.FC<Props> = ({
   onClose,
   language,
   visitedList,
+  theme = 'dark',
+  onToggleTheme,
+  onOpenOnboarding,
 }) => {
   if (!isOpen) return null;
 
@@ -106,6 +117,72 @@ export const ProfileModal: React.FC<Props> = ({
             </span>
             <p className="text-[10px] text-slate-500">Completed</p>
           </div>
+        </div>
+
+        {/* Quick App Preferences & Install */}
+        <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-750 space-y-3">
+          <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            Preferences & App Settings
+          </h4>
+          <div className="grid grid-cols-2 gap-2">
+            {/* Theme Switcher */}
+            {onToggleTheme && (
+              <button
+                id="modal-theme-toggle"
+                onClick={onToggleTheme}
+                className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-900 border border-slate-700/80 flex items-center gap-2 text-left transition active:scale-95"
+              >
+                <div className="p-1.5 rounded-lg bg-amber-400/15 text-amber-400 shrink-0">
+                  <Moon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white">
+                    {theme === 'light' ? 'Light Theme' : 'Dark Theme'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    Tap to switch
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Offline PWA Install Button */}
+            <div className="flex items-center justify-start p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80">
+              <PWAInstallButton language={language} />
+            </div>
+          </div>
+
+          {/* Re-open Feature Tour */}
+          {onOpenOnboarding && (
+            <button
+              id="reopen-onboarding-btn"
+              onClick={() => {
+                onClose();
+                onOpenOnboarding();
+              }}
+              className="w-full p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-900 border border-amber-500/30 flex items-center justify-between text-left transition active:scale-98"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-400 shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">
+                    {language === 'bn' ? 'অ্যাপের প্রধান বৈশিষ্ট্যসমূহ দেখুন' : language === 'hi' ? 'ऐप की मुख्य विशेषताएं देखें' : 'View App Feature Tour'}
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    720+ Pandals · 5 Metro Lines · Offline Trail Planner
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs text-amber-400 font-bold">→</span>
+            </button>
+          )}
+
+          <p className="text-[10px] text-amber-300/80 flex items-center gap-1.5">
+            <BatteryLow className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Battery saver tip: Keep in Dark Mode for longer battery life during night hopping.</span>
+          </p>
         </div>
 
         {/* Privacy Guarantee Box */}

@@ -35,6 +35,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     crowdModerate: 'Moderate Crowd',
     crowdHeavy: 'Heavy Crowd',
     crowdExtreme: 'Extreme Rush',
+    crowdNoUpdates: 'No updates yet',
+    crowdComingSoon: 'Coming soon',
 
     // Pandal card & sheet
     nearestMetroLabel: 'Nearest Metro',
@@ -108,6 +110,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     bowbazarConnectorTag: 'Bowbazar Connector',
     takeMeToStation: 'Directions to Station',
     viewPandalDetails: 'View Pandal',
+    pujoSpecialMetroNotice: 'Pujo Special: Night services till 4:00 AM | Base Fare: ₹5',
 
     // Emergency SOS
     sosTitle: 'Emergency Kolkata Safety Desks',
@@ -272,6 +275,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     crowdModerate: 'মাঝারি ভিড়',
     crowdHeavy: 'প্রচণ্ড ভিড়',
     crowdExtreme: 'অত্যধিক ভিড়',
+    crowdNoUpdates: 'এখনও আপডেট নেই',
+    crowdComingSoon: 'শীঘ্রই আসছে',
 
     // Pandal card & sheet
     nearestMetroLabel: 'নিকটবর্তী মেট্রো',
@@ -345,6 +350,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     bowbazarConnectorTag: 'বউবাজার কানেক্টর',
     takeMeToStation: 'স্টেশনের পথনির্দেশ',
     viewPandalDetails: 'প্যান্ডেল দেখুন',
+    pujoSpecialMetroNotice: 'পুজো স্পেশাল: রাত ৪:০০টা পর্যন্ত মেট্রো পরিষেবা | সর্বনিম্ন ভাড়া: ₹৫',
 
     // Emergency SOS
     sosTitle: 'জরুরি পুলিশ ও সহায়তা হেল্পলাইন',
@@ -509,6 +515,8 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     crowdModerate: 'मध्यम भीड़',
     crowdHeavy: 'भारी भीड़',
     crowdExtreme: 'अत्यधिक भीड़',
+    crowdNoUpdates: 'कोई अपडेट नहीं',
+    crowdComingSoon: 'जल्द आ रहा है',
 
     // Pandal card & sheet
     nearestMetroLabel: 'निकटतम मेट्रो',
@@ -582,6 +590,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     bowbazarConnectorTag: 'बहूबाजार कनेक्टर',
     takeMeToStation: 'स्टेशन दिशा-निर्देश',
     viewPandalDetails: 'पंडाल विवरण देखें',
+    pujoSpecialMetroNotice: 'पूजा स्पेशल: रात 4:00 बजे तक मेट्रो सेवा | न्यूनतम किराया: ₹5',
 
     // Emergency SOS
     sosTitle: 'आपातकालीन सुरक्षा व हेल्पलाइन',

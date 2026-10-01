@@ -1,4 +1,4 @@
-import { Pandal } from '../types';
+import { Pandal } from "../types";
 
 export const IMPORTED_PANDALS: Pandal[] = [
   {
@@ -254,7 +254,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Ramkrishapur Sarbojanin Durgotsab",
       "hi": "Ramkrishapur Sarbojanin Durgotsab"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.727196,
     "lng": 88.49278,
     "nearestMetro": "Howrah Maidan Metro",
@@ -295,7 +295,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Alpha Atheletic Association",
       "hi": "Alpha Atheletic Association"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.584471,
     "lng": 88.372705,
     "nearestMetro": "Girish Park / Mahatma Gandhi Road",
@@ -746,7 +746,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Tekiapara Sarbojanin Durgotsab Committee",
       "hi": "Tekiapara Sarbojanin Durgotsab Committee"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.596982,
     "lng": 88.411832,
     "nearestMetro": "Shyambazar / Shobhabazar Metro",
@@ -787,7 +787,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Jorabagan Chhatra Sanghaati",
       "hi": "Jorabagan Chhatra Sanghaati"
     },
-    "zone": "North",
+    "zone": "Central",
     "lat": 22.589132,
     "lng": 88.354289,
     "nearestMetro": "Girish Park / Shobhabazar Sutanuti",
@@ -828,7 +828,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Udayan Sangha",
       "hi": "Udayan Sangha"
     },
-    "zone": "East",
+    "zone": "Central",
     "lat": 22.557589,
     "lng": 88.368261,
     "nearestMetro": "Sealdah",
@@ -1033,7 +1033,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Bhowanipore Sanatan Dharmautsahini Sobha",
       "hi": "Bhowanipore Sanatan Dharmautsahini Sobha"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.581205,
     "lng": 88.355142,
     "nearestMetro": "Kalighat / Jatin Das Park Metro",
@@ -1115,7 +1115,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Sitala Maitri Sangha",
       "hi": "Sitala Maitri Sangha"
     },
-    "zone": "North",
+    "zone": "South",
     "lat": 22.435126,
     "lng": 88.446445,
     "nearestMetro": "Kavi Subhash / Rabindra Sarobar Metro",
@@ -1443,7 +1443,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Bantra Mohila Sangha",
       "hi": "Bantra Mohila Sangha"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.592909,
     "lng": 88.324449,
     "nearestMetro": "Howrah Maidan",
@@ -1566,7 +1566,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Salkia Bharat Sangha",
       "hi": "Salkia Bharat Sangha"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.606329,
     "lng": 88.3461,
     "nearestMetro": "Shobhabazar Sutanuti",
@@ -1607,7 +1607,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Beadon Row Suchetana Organization",
       "hi": "Beadon Row Suchetana Organization"
     },
-    "zone": "North",
+    "zone": "Central",
     "lat": 22.591409,
     "lng": 88.367174,
     "nearestMetro": "Shobhabazar Sutanuti / Girish Park",
@@ -1648,7 +1648,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Dum Dum Park Sarbojanin Durga Puja Samity",
       "hi": "Dum Dum Park Sarbojanin Durga Puja Samity"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.609454,
     "lng": 88.416446,
     "nearestMetro": "Central Park",
@@ -1689,7 +1689,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Manicktala 14er Pally Sadharan Durga Utsab",
       "hi": "Manicktala 14er Pally Sadharan Durga Utsab"
     },
-    "zone": "North",
+    "zone": "East",
     "lat": 22.586374,
     "lng": 88.376133,
     "nearestMetro": "Salt Lake Sector V / Phoolbagan Metro",
@@ -1730,7 +1730,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Subal Smriti Sangha- Bantra Sarbojonin Durgotsab",
       "hi": "Subal Smriti Sangha- Bantra Sarbojonin Durgotsab"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.592912,
     "lng": 88.324415,
     "nearestMetro": "Howrah Maidan",
@@ -1853,7 +1853,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Jhawtala Sarbojanin",
       "hi": "Jhawtala Sarbojanin"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Jessore Road",
@@ -1894,7 +1894,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Sarbodaya Sammilani",
       "hi": "Sarbodaya Sammilani"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.618929,
     "lng": 88.38917,
     "nearestMetro": "Satyajit Ray",
@@ -1976,7 +1976,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Mechua Bazar Sarbojanik Durgapuja Samity",
       "hi": "Mechua Bazar Sarbojanik Durgapuja Samity"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.581214,
     "lng": 88.357246,
     "nearestMetro": "Shyambazar / Shobhabazar Metro",
@@ -2058,7 +2058,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Krishnabagan Junior Sangha",
       "hi": "Krishnabagan Junior Sangha"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Shyambazar / Shobhabazar Metro",
@@ -2140,7 +2140,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Salkia Sadharan Durga Puja (jatadhari Park)",
       "hi": "Salkia Sadharan Durga Puja (jatadhari Park)"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.60153,
     "lng": 88.348546,
     "nearestMetro": "Shobhabazar Sutanuti / Howrah",
@@ -2263,7 +2263,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Ramakrishna Atheletic Club",
       "hi": "Ramakrishna Atheletic Club"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Howrah Maidan Metro",
@@ -2304,7 +2304,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Golaghata Sammelani",
       "hi": "Golaghata Sammelani"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.597386,
     "lng": 88.399203,
     "nearestMetro": "City Center / Belgachhia",
@@ -2345,7 +2345,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Simla Sporting Club",
       "hi": "Simla Sporting Club"
     },
-    "zone": "North",
+    "zone": "Central",
     "lat": 22.584746,
     "lng": 88.366783,
     "nearestMetro": "Girish Park / Mahatma Gandhi Road",
@@ -2386,7 +2386,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Shastribagan Durgotsob Committee",
       "hi": "Shastribagan Durgotsob Committee"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.615727,
     "lng": 88.429862,
     "nearestMetro": "Salt Lake Sector V / Phoolbagan Metro",
@@ -2427,7 +2427,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Simla Byayam Samity",
       "hi": "Simla Byayam Samity"
     },
-    "zone": "North",
+    "zone": "Central",
     "lat": 22.589321,
     "lng": 88.367486,
     "nearestMetro": "Girish Park",
@@ -2509,7 +2509,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Dakshin Dari Youths",
       "hi": "Dakshin Dari Youths"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.596055,
     "lng": 88.394002,
     "nearestMetro": "Belgachhia",
@@ -2919,7 +2919,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Santragachi South Howrah Vivekananda Foudation",
       "hi": "Santragachi South Howrah Vivekananda Foudation"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.585202,
     "lng": 88.28386,
     "nearestMetro": "Howrah Maidan Metro",
@@ -3001,7 +3001,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Olabibitola Sarbojanin Durgotsab Samity",
       "hi": "Olabibitola Sarbojanin Durgotsab Samity"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.57573,
     "lng": 88.314364,
     "nearestMetro": "Howrah Maidan",
@@ -3206,7 +3206,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Manicktala Chaltabagan Loha Patty",
       "hi": "Manicktala Chaltabagan Loha Patty"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.585603,
     "lng": 88.372483,
     "nearestMetro": "Girish Park / Mahatma Gandhi Road",
@@ -3411,7 +3411,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Shibpur Sastitala Baroary Samity",
       "hi": "Shibpur Sastitala Baroary Samity"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.569583,
     "lng": 88.315004,
     "nearestMetro": "Howrah Maidan",
@@ -3452,7 +3452,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Pallir Yubak Brinda",
       "hi": "Pallir Yubak Brinda"
     },
-    "zone": "East",
+    "zone": "Central",
     "lat": 22.576466,
     "lng": 88.367108,
     "nearestMetro": "Mahatma Gandhi Road / Central",
@@ -3493,7 +3493,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Ultadanga Sangrami Sarbojanin Durgotsab",
       "hi": "Ultadanga Sangrami Sarbojanin Durgotsab"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.595241,
     "lng": 88.384277,
     "nearestMetro": "Salt Lake Sector V / Phoolbagan Metro",
@@ -3575,7 +3575,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Salkia Santi Sangha",
       "hi": "Salkia Santi Sangha"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.597235,
     "lng": 88.340115,
     "nearestMetro": "Howrah",
@@ -3616,7 +3616,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Sammilita Malapara Sarbojanin Durgotsab",
       "hi": "Sammilita Malapara Sarbojanin Durgotsab"
     },
-    "zone": "North",
+    "zone": "Central",
     "lat": 22.587757,
     "lng": 88.355002,
     "nearestMetro": "Girish Park / Mahatma Gandhi Road",
@@ -3657,7 +3657,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Shyama Palli Shyama Sangha",
       "hi": "Shyama Palli Shyama Sangha"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Kavi Subhash / Rabindra Sarobar Metro",
@@ -3944,7 +3944,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Ekush Pally Sarbojanin Durgotsab Samiti",
       "hi": "Ekush Pally Sarbojanin Durgotsab Samiti"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Kalighat / Jatin Das Park Metro",
@@ -4272,7 +4272,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Bantra Nabin Sangha",
       "hi": "Bantra Nabin Sangha"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.587035,
     "lng": 88.318621,
     "nearestMetro": "Howrah Maidan",
@@ -4395,7 +4395,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Beliaghata 33 No Palli Bashi Brinda",
       "hi": "Beliaghata 33 No Palli Bashi Brinda"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.568569,
     "lng": 88.391128,
     "nearestMetro": "Salt Lake Sector V / Phoolbagan Metro",
@@ -4518,7 +4518,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Lake Town Adhibashi Brinda",
       "hi": "Lake Town Adhibashi Brinda"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.605138,
     "lng": 88.403608,
     "nearestMetro": "Belgachhia / Central Park / City Center",
@@ -4846,7 +4846,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Rammohan Sammilani",
       "hi": "Rammohan Sammilani"
     },
-    "zone": "East",
+    "zone": "Central",
     "lat": 22.581637,
     "lng": 88.375185,
     "nearestMetro": "Girish Park / Mahatma Gandhi Road",
@@ -4928,7 +4928,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Naba Jagrata Sangha",
       "hi": "Naba Jagrata Sangha"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.569338,
     "lng": 88.39513,
     "nearestMetro": "Salt Lake Sector V/Phoolbagan Metro",
@@ -4969,7 +4969,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Durbar Mahila Samanyay Committee",
       "hi": "Durbar Mahila Samanyay Committee"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.591808,
     "lng": 88.363649,
     "nearestMetro": "Shyambazar / Shobhabazar Metro",
@@ -5051,7 +5051,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Sarbojanin Durgoutsav Committee",
       "hi": "Sarbojanin Durgoutsav Committee"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.488641,
     "lng": 88.396333,
     "nearestMetro": "Satyajit Ray / Jyotirindra Nandi",
@@ -5297,7 +5297,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Dakshin Rabindrapally Sarbojanin Durgapuja Committee",
       "hi": "Dakshin Rabindrapally Sarbojanin Durgapuja Committee"
     },
-    "zone": "South",
+    "zone": "East",
     "lat": 22.478461,
     "lng": 88.384018,
     "nearestMetro": "Salt Lake Sector V / Phoolbagan Metro",
@@ -5584,7 +5584,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Tagore Park Sporting Club",
       "hi": "Tagore Park Sporting Club"
     },
-    "zone": "East",
+    "zone": "South",
     "lat": 22.521937,
     "lng": 88.395719,
     "nearestMetro": "VIP Bazar",
@@ -5748,7 +5748,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Dum Dum Park Bharat Chakra",
       "hi": "Dum Dum Park Bharat Chakra"
     },
-    "zone": "East",
+    "zone": "North",
     "lat": 22.610318,
     "lng": 88.41547,
     "nearestMetro": "Central Park / Dum Dum",
@@ -6035,7 +6035,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Netajigarh Nagarik Brinda",
       "hi": "Netajigarh Nagarik Brinda"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.606465,
     "lng": 88.316684,
     "nearestMetro": "Howrah Maidan",
@@ -6076,7 +6076,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Seventy Six Pally Sarbojanin Durgotsab",
       "hi": "Seventy Six Pally Sarbojanin Durgotsab"
     },
-    "zone": "South",
+    "zone": "Central",
     "lat": 22.574354,
     "lng": 88.362873,
     "nearestMetro": "Kalighat/Jatin Das Park Metro",
@@ -6445,7 +6445,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Howrah Seva Sangha",
       "hi": "Howrah Seva Sangha"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.586478,
     "lng": 88.320195,
     "nearestMetro": "Howrah Maidan",
@@ -6486,7 +6486,7 @@ export const IMPORTED_PANDALS: Pandal[] = [
       "bn": "Sobhabazar Sarbojanin Durgotsab",
       "hi": "Sobhabazar Sarbojanin Durgotsab"
     },
-    "zone": "South",
+    "zone": "North",
     "lat": 22.592537,
     "lng": 88.368003,
     "nearestMetro": "Shyambazar / Shobhabazar Metro",

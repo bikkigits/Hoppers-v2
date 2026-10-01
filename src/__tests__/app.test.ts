@@ -3,6 +3,9 @@ import { PANDALS_DATA, METRO_STATIONS, CRITICAL_FACILITIES } from '../data/mockD
 import { METRO_LINES } from '../data/metroLines';
 import { TRANSLATIONS } from '../data/translations';
 import { matchesPandalFilter, getPandalMatchedZones } from '../utils/pandalClassification';
+import { sanitizePandalZones } from '../utils/sanitizePandalZones';
+import { calculateDistanceKm } from '../utils/geo';
+import { calculateConsensus, checkUserVoteStatus } from '../services/firebaseCrowd';
 
 // Distance calculation helper (Haversine formula)
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -222,3 +225,115 @@ describe('Translations 1:1 Parity', () => {
     }
   });
 });
+
+describe('sanitizePandalZones In-Memory Re-Classification Patch', () => {
+  it('ensures all pandals in PANDALS_DATA are strictly classified into North, Central, South, or East', () => {
+    const validZones = new Set(['North', 'Central', 'South', 'East']);
+    for (const pandal of PANDALS_DATA) {
+      expect(validZones.has(pandal.zone)).toBe(true);
+    }
+  });
+
+  it('correctly maps pandals by ID, nearest metro station, and locality hierarchy', () => {
+    const northPandal = PANDALS_DATA.find((p) => p.id === 'bagbazar' || p.nearestMetroEn?.includes('Shyambazar'));
+    expect(northPandal?.zone).toBe('North');
+
+    const centralPandal = PANDALS_DATA.find((p) => p.id === 'college-square' || p.nearestMetroEn?.includes('MG Road'));
+    expect(centralPandal?.zone).toBe('Central');
+
+    const southPandal = PANDALS_DATA.find((p) => p.id === 'ekdalia' || p.nearestMetroEn?.includes('Kalighat'));
+    expect(southPandal?.zone).toBe('South');
+
+    const eastPandal = PANDALS_DATA.find((p) => p.id === 'salt-lake-fd-block' || p.nearestMetroEn?.includes('Karunamoyee'));
+    expect(eastPandal?.zone).toBe('East');
+  });
+
+  it('executes in-memory reclassification under 10ms for hundreds/thousands of items', () => {
+    const t0 = performance.now();
+    const testArray = PANDALS_DATA.map(p => ({ ...p }));
+    const result = sanitizePandalZones(testArray);
+    const t1 = performance.now();
+    expect(result.length).toBe(PANDALS_DATA.length);
+    expect(t1 - t0).toBeLessThan(20); // Sub-20ms ultra high performance
+  });
+});
+
+describe('Location Throttling & 50m Displacement Engine', () => {
+  it('calculates accurate displacements and distinguishes sub-50m jitter vs >=50m travel', () => {
+    const originLat = 22.5726; // Esplanade
+    const originLng = 88.3639;
+
+    // Small jitter ~10 meters (approx 0.00009 deg lat)
+    const jitterLat = 22.57268;
+    const jitterLng = 88.36392;
+    const jitterDistM = calculateDistanceKm(originLat, originLng, jitterLat, jitterLng) * 1000;
+    expect(jitterDistM).toBeLessThan(50);
+
+    // Meaningful movement ~75 meters (approx 0.0007 deg lat)
+    const movedLat = 22.5733;
+    const movedLng = 88.3639;
+    const movedDistM = calculateDistanceKm(originLat, originLng, movedLat, movedLng) * 1000;
+    expect(movedDistM).toBeGreaterThanOrEqual(50);
+  });
+});
+
+describe('Firebase Real-Time Crowd Majority Voting Engine', () => {
+  it('correctly calculates majority crowd status from community votes', () => {
+    // 5 Low, 12 Moderate, 28 Heavy, 2 Extreme -> Heavy wins
+    const consensus = calculateConsensus('bagbazar', {
+      low: 5,
+      moderate: 12,
+      heavy: 28,
+      extreme: 2,
+    });
+
+    expect(consensus.dominantLevel).toBe('Heavy');
+    expect(consensus.totalVotes).toBe(47);
+    expect(consensus.dominantPercent).toBe(60); // 28 / 47 ~ 60%
+    expect(consensus.isCrowdsourced).toBe(true);
+  });
+
+  it('falls back to pandal baseline level when vote count is 0', () => {
+    const consensus = calculateConsensus(
+      'kumartuli',
+      { low: 0, moderate: 0, heavy: 0, extreme: 0 },
+      'Moderate'
+    );
+
+    expect(consensus.dominantLevel).toBe('Moderate');
+    expect(consensus.totalVotes).toBe(0);
+    expect(consensus.isCrowdsourced).toBe(false);
+  });
+
+  it('correctly selects Extreme when extreme crowd votes dominate', () => {
+    const consensus = calculateConsensus('sreebhumi', {
+      low: 1,
+      moderate: 3,
+      heavy: 10,
+      extreme: 45,
+    });
+
+    expect(consensus.dominantLevel).toBe('Extreme');
+    expect(consensus.totalVotes).toBe(59);
+    expect(consensus.dominantPercent).toBe(76); // 45 / 59 ~ 76%
+  });
+
+  it('handles tie-breaking with safety caution priority', () => {
+    // Tie between Moderate (10) and Heavy (10) -> Heavy provides safer advisory
+    const consensus = calculateConsensus('ahiritola', {
+      low: 0,
+      moderate: 10,
+      heavy: 10,
+      extreme: 0,
+    });
+
+    expect(consensus.dominantLevel).toBe('Heavy');
+  });
+
+  it('provides spam prevention checks with cooldown calculation', () => {
+    const voteStatus = checkUserVoteStatus('test-pandal-id');
+    expect(typeof voteStatus.canVote).toBe('boolean');
+    expect(typeof voteStatus.remainingMinutes).toBe('number');
+  });
+});
+

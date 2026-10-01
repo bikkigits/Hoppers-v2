@@ -4,6 +4,16 @@ export type CrowdLevel = 'Low' | 'Moderate' | 'Heavy' | 'Extreme';
 
 export type Zone = 'North' | 'Central' | 'South' | 'East';
 
+export type KolkataZone =
+  | 'North'
+  | 'South'
+  | 'Central'
+  | 'East'
+  | 'West'
+  | 'Behala'
+  | 'Jadavpur'
+  | 'Salt Lake';
+
 export interface LocalizedString {
   en: string;
   bn: string;
@@ -39,6 +49,7 @@ export type FacilityCategory =
   | 'railway'
   | 'food'
   | 'restaurant'
+  | 'hospital'
   | 'ferry'
   | 'medical'
   | 'pharmacy'
@@ -48,6 +59,60 @@ export type FacilityCategory =
   | 'landmark'
   | 'petrol'
   | 'entry-exit';
+
+export type CivicPOICategory =
+  | 'hospital'
+  | 'toilet'
+  | 'pure_veg'
+  | 'iconic_food'
+  | 'police'
+  | 'ferry'
+  | 'railway';
+
+export interface BasePOI {
+  id: string;
+  name: string;
+  category: CivicPOICategory;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  zone: KolkataZone;
+  address: string;
+  landmark?: string;
+}
+
+export interface HospitalPOI extends BasePOI {
+  category: 'hospital';
+  emergencyPhone: string; // Direct E.164 / Indian telephone string for tel: dialing
+  bloodBank: boolean;
+  is24x7: true;
+  totalBeds?: number;
+}
+
+export interface SanitationPOI extends BasePOI {
+  category: 'toilet';
+  operator: 'KMC' | 'Sulabh' | 'Metro' | 'Private';
+  hasDifferentlyAbledAccess: boolean;
+  fee: number; // 0 if free of charge
+}
+
+export interface DiningPOI extends BasePOI {
+  category: 'pure_veg' | 'iconic_food';
+  cuisine: string[];
+  isLateNight: boolean;
+  pureVeg: boolean; // Strictly true for 'pure_veg', strictly false for 'iconic_food'
+  avgCostForTwo: number;
+}
+
+export type UnifiedPOI = HospitalPOI | SanitationPOI | DiningPOI | BasePOI;
+
+export interface GeoBoundingBox {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
 
 export interface FacilityPoint {
   id: string;
@@ -61,6 +126,15 @@ export interface FacilityPoint {
   hours?: LocalizedString;
   pujaHoursBadge?: string;
   nearPandalId?: string;
+  zone?: Zone | string;
+  is24x7?: boolean;
+  hasBloodBank?: boolean;
+  isPaid?: boolean;
+  hasDisabledAccess?: boolean;
+  operator?: 'KMC' | 'Sulabh' | 'Metro Railway' | string;
+  dietaryType?: 'pure-veg' | 'veg-friendly' | 'non-veg';
+  cuisineTags?: string[];
+  googleMapsUrl?: string;
 }
 
 export type MetroLine = 'blue' | 'green' | 'orange' | 'purple' | 'yellow';
@@ -105,11 +179,13 @@ export type FilterType =
   | 'north'
   | 'south'
   | 'central'
+  | 'east'
   | 'saltlake'
   | 'rajarhat'
   | 'dumdum'
   | 'west'
   | 'behala'
+  | 'jadavpur'
   | 'police'
   | 'toilets'
   | 'food'
@@ -208,4 +284,3 @@ export interface CrowdReport {
   timestamp: number;
   reportCount?: number;
 }
-

@@ -29,11 +29,19 @@ import {
   Compass,
 } from 'lucide-react';
 import {
+  subscribePandalCrowd,
+  submitCrowdVote,
+  checkUserVoteStatus,
+  PandalCrowdRecord,
+  VoteCategory,
+} from '../services/firebaseCrowd';
+import {
   getPandalCrowdSummary,
   submitCrowdReport,
   CrowdIntensity,
   PandalCrowdSummary,
 } from '../utils/crowdReports';
+import { CrowdStatusBadge, getCrowdBadge } from './CrowdStatusBadge';
 
 interface Props {
   selectedItem: SelectedMapItem | null;
@@ -76,27 +84,30 @@ export const PandalBottomSheet: React.FC<Props> = ({
     ? visitedList.find((v) => v.pandalId === pandal.id)
     : null;
 
-  // Live Crowdsourced Crowd Summary State for Pandals
-  const [crowdSummary, setCrowdSummary] = useState<PandalCrowdSummary | null>(() =>
-    pandal ? getPandalCrowdSummary(pandal.id, pandal.crowdLevel) : null
+  // Live Crowdsourced Crowd Consensus State for Pandals via Firebase Firestore
+  const [crowdRecord, setCrowdRecord] = useState<PandalCrowdRecord | null>(null);
+  const [voteStatus, setVoteStatus] = useState(() =>
+    pandal ? checkUserVoteStatus(pandal.id) : { canVote: true, remainingMinutes: 0 }
   );
-  const [, setReportingStatus] = useState<string | null>(null);
-  const [, setIsSubmittingCrowd] = useState(false);
+  const [reportingStatus, setReportingStatus] = useState<string | null>(null);
+  const [isSubmittingCrowd, setIsSubmittingCrowd] = useState(false);
 
   useEffect(() => {
     if (!pandal) return;
-    setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+    setVoteStatus(checkUserVoteStatus(pandal.id));
 
-    const onCrowdUpdated = (e: Event) => {
-      const customEv = e as CustomEvent<{ pandalId: string }>;
-      if (!customEv.detail || customEv.detail.pandalId === pandal.id) {
-        setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+    // Subscribe to real-time Firestore crowd majority voting
+    const unsubscribe = subscribePandalCrowd(
+      pandal.id,
+      pandal.crowdLevel,
+      (record) => {
+        setCrowdRecord(record);
+        setVoteStatus(checkUserVoteStatus(pandal.id));
       }
-    };
+    );
 
-    window.addEventListener('hoppers_crowd_updated', onCrowdUpdated);
     return () => {
-      window.removeEventListener('hoppers_crowd_updated', onCrowdUpdated);
+      unsubscribe();
     };
   }, [pandal?.id, pandal?.crowdLevel]);
 
@@ -121,18 +132,15 @@ export const PandalBottomSheet: React.FC<Props> = ({
   // Early return only after all hooks are unconditionally initialized
   if (!selectedItem) return null;
 
-  const handleVoteCrowd = (intensity: CrowdIntensity) => {
-    if (!pandal) return;
+  const handleVoteCrowdCategory = async (category: VoteCategory) => {
+    if (!pandal || isSubmittingCrowd) return;
     setIsSubmittingCrowd(true);
-    const result = submitCrowdReport(
-      pandal.id,
-      intensity,
-      userCoords,
-      { lat: pandal.lat, lng: pandal.lng }
-    );
+
+    const result = await submitCrowdVote(pandal.id, category, pandal.crowdLevel);
     setReportingStatus(result.message);
-    setCrowdSummary(getPandalCrowdSummary(pandal.id, pandal.crowdLevel));
+    setVoteStatus(checkUserVoteStatus(pandal.id));
     setIsSubmittingCrowd(false);
+
     setTimeout(() => {
       setReportingStatus(null);
     }, 6000);
@@ -199,36 +207,6 @@ export const PandalBottomSheet: React.FC<Props> = ({
     }
   };
 
-  const getCrowdBadge = (crowd: string) => {
-    switch (crowd) {
-      case 'Low':
-        return {
-          bg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-          dot: 'bg-emerald-400',
-          label: t.crowdLow,
-        };
-      case 'Moderate':
-        return {
-          bg: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
-          dot: 'bg-amber-400',
-          label: t.crowdModerate,
-        };
-      case 'Heavy':
-        return {
-          bg: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
-          dot: 'bg-orange-400',
-          label: t.crowdHeavy,
-        };
-      case 'Extreme':
-      default:
-        return {
-          bg: 'bg-rose-500/20 text-rose-400 border-rose-500/40',
-          dot: 'bg-rose-400 animate-ping',
-          label: t.crowdExtreme,
-        };
-    }
-  };
-
   const openGoogleMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}&travelmode=walking`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -277,21 +255,11 @@ export const PandalBottomSheet: React.FC<Props> = ({
                     : t.zoneCentral}
                 </span>
                 <span>·</span>
-                {(() => {
-                  const effective = crowdSummary?.effectiveLevel || pandal.crowdLevel;
-                  const badge = getCrowdBadge(effective);
-                  return (
-                    <span className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                      <span>{badge.label}</span>
-                      {crowdSummary?.isCrowdsourced && (
-                        <span className="text-[9px] font-bold text-amber-300 bg-amber-400/20 px-1.5 py-0.5 rounded-full border border-amber-400/30">
-                          ⚡ Live
-                        </span>
-                      )}
-                    </span>
-                  );
-                })()}
+                <CrowdStatusBadge
+                  crowdLevel={crowdRecord?.dominantLevel || pandal.crowdLevel}
+                  language={language}
+                  isCrowdsourced={crowdRecord?.isCrowdsourced}
+                />
               </div>
 
               <h2 className="text-xl font-bold text-white tracking-tight leading-snug">
@@ -340,33 +308,114 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Live Crowd Voting Section */}
-            <div className="mt-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800/80 space-y-2">
+            {/* Live Crowd Majority Voting Section (Firebase Firestore + Spam Prevention) */}
+            <div className="mt-3 p-3 rounded-2xl bg-slate-850/90 border border-slate-750/90 shadow-sm space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-300">Live Crowd Condition</span>
-                <span className="text-[11px] text-slate-400">Vote condition:</span>
+                <div className="flex items-center gap-1.5 font-bold text-white">
+                  <span>📊</span>
+                  <span>Live Crowd Voting</span>
+                  {crowdRecord && crowdRecord.totalVotes > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-400/15 text-amber-300 text-[10px] font-bold border border-amber-400/20">
+                      {crowdRecord.dominantPercent}% {crowdRecord.dominantLevel} ({crowdRecord.totalVotes} votes)
+                    </span>
+                  )}
+                </div>
+
+                {!voteStatus.canVote ? (
+                  <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <span>✓ Voted</span>
+                    <span className="text-slate-400">({voteStatus.remainingMinutes}m cooldown)</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400">1-tap report</span>
+                )}
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5">
+              {/* 4-Option Voting Buttons: Low | Moderate | Heavy | Extreme */}
+              <div className="grid grid-cols-4 gap-1.5">
                 <button
-                  onClick={() => handleVoteCrowd('low')}
-                  className="py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition text-center"
+                  id="vote-crowd-low"
+                  onClick={() => handleVoteCrowdCategory('low')}
+                  disabled={!voteStatus.canVote || isSubmittingCrowd}
+                  className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                    voteStatus.lastVote?.category === 'low'
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+                      : voteStatus.canVote
+                      ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
+                      : 'bg-slate-800/40 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                  }`}
                 >
-                  🟢 Low
+                  <span className="text-xs">🟢</span>
+                  <span>Low</span>
+                  {crowdRecord && crowdRecord.totalVotes > 0 && (
+                    <span className="text-[9px] opacity-75 font-normal">{crowdRecord.low}</span>
+                  )}
                 </button>
+
                 <button
-                  onClick={() => handleVoteCrowd('medium')}
-                  className="py-1.5 px-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold transition text-center"
+                  id="vote-crowd-moderate"
+                  onClick={() => handleVoteCrowdCategory('moderate')}
+                  disabled={!voteStatus.canVote || isSubmittingCrowd}
+                  className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                    voteStatus.lastVote?.category === 'moderate'
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm'
+                      : voteStatus.canVote
+                      ? 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-300'
+                      : 'bg-slate-800/40 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                  }`}
                 >
-                  🟡 Moderate
+                  <span className="text-xs">🟡</span>
+                  <span>Moderate</span>
+                  {crowdRecord && crowdRecord.totalVotes > 0 && (
+                    <span className="text-[9px] opacity-75 font-normal">{crowdRecord.moderate}</span>
+                  )}
                 </button>
+
                 <button
-                  onClick={() => handleVoteCrowd('heavy')}
-                  className="py-1.5 px-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition text-center"
+                  id="vote-crowd-heavy"
+                  onClick={() => handleVoteCrowdCategory('heavy')}
+                  disabled={!voteStatus.canVote || isSubmittingCrowd}
+                  className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                    voteStatus.lastVote?.category === 'heavy'
+                      ? 'bg-rose-500 text-white border-rose-400 shadow-sm'
+                      : voteStatus.canVote
+                      ? 'bg-rose-500/15 hover:bg-rose-500/25 border-rose-500/30 text-rose-300'
+                      : 'bg-slate-800/40 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                  }`}
                 >
-                  🔴 Heavy
+                  <span className="text-xs">🔴</span>
+                  <span>Heavy</span>
+                  {crowdRecord && crowdRecord.totalVotes > 0 && (
+                    <span className="text-[9px] opacity-75 font-normal">{crowdRecord.heavy}</span>
+                  )}
+                </button>
+
+                <button
+                  id="vote-crowd-extreme"
+                  onClick={() => handleVoteCrowdCategory('extreme')}
+                  disabled={!voteStatus.canVote || isSubmittingCrowd}
+                  className={`py-2 px-1 rounded-xl border text-[11px] font-bold transition-all text-center flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                    voteStatus.lastVote?.category === 'extreme'
+                      ? 'bg-purple-600 text-white border-purple-400 shadow-sm'
+                      : voteStatus.canVote
+                      ? 'bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/30 text-purple-300'
+                      : 'bg-slate-800/40 border-slate-800 text-slate-500 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <span className="text-xs">🟣</span>
+                  <span>Extreme</span>
+                  {crowdRecord && crowdRecord.totalVotes > 0 && (
+                    <span className="text-[9px] opacity-75 font-normal">{crowdRecord.extreme}</span>
+                  )}
                 </button>
               </div>
+
+              {/* Reporting Status Toast / Message */}
+              {reportingStatus && (
+                <p className="text-[11px] text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1.5 rounded-xl font-medium animate-fade-in">
+                  {reportingStatus}
+                </p>
+              )}
             </div>
 
             {/* Theme Description */}
@@ -610,20 +659,20 @@ export const PandalBottomSheet: React.FC<Props> = ({
               ) : (
                 <div className="space-y-2">
                   {feederPandals.map((p) => {
-                    const crowdBadge = getCrowdBadge(p.crowdLevel);
                     return (
                       <div
                         key={p.id}
                         className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-750 transition flex items-center justify-between gap-2.5"
                       >
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span className="text-xs font-bold text-white truncate">
                               {p.name[language] || p.name.en}
                             </span>
-                            <span className={`text-[9px] px-1.5 py-0.2 rounded-full border font-semibold shrink-0 ${crowdBadge.bg}`}>
-                              {crowdBadge.label}
-                            </span>
+                            <CrowdStatusBadge
+                              crowdLevel={p.crowdLevel}
+                              language={language}
+                            />
                           </div>
                           <p className="text-[10px] text-slate-400 truncate">
                             {p.theme[language] || p.theme.en}

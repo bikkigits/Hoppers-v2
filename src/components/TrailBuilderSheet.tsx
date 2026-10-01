@@ -11,13 +11,15 @@ import { TRANSLATIONS } from '../data/translations';
 import {
   calculateTrailMetrics,
   detectPandalsOnWay,
+  optimizeTrailOrder,
   batchInsertAllDetours,
   buildGoogleMapsMultiStopUrl,
   buildWhatsAppItineraryText,
   formatDurationHoursMins,
   CURATED_TRAILS,
 } from '../utils/trailRouting';
-import { formatDistance } from '../utils/geo';
+import { formatDistance, calculateDistanceKm } from '../utils/geo';
+import { CrowdStatusBadge } from './CrowdStatusBadge';
 import {
   Route,
   X,
@@ -40,6 +42,8 @@ import {
   AlertCircle,
   Copy,
   ExternalLink,
+  Map as MapIcon,
+  Zap,
 } from 'lucide-react';
 
 interface Props {
@@ -68,25 +72,25 @@ export const TrailBuilderSheet: React.FC<Props> = ({
   const [travelMode, setTravelMode] = useState<TravelMode>('walking');
   const [isAddingStop, setIsAddingStop] = useState(false);
   const [searchPandalQuery, setSearchPandalQuery] = useState('');
-  const [copiedToast, setCopiedToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [modalCopied, setModalCopied] = useState(false);
 
   const t = TRANSLATIONS[language];
 
-  // Calculate metrics for current mode and comparison across all modes
+  // Calculate metrics for current mode
   const metrics = calculateTrailMetrics(trailStops, travelMode);
-  const walkMetrics = calculateTrailMetrics(trailStops, 'walking');
-  const driveMetrics = calculateTrailMetrics(trailStops, 'driving');
-  const cycleMetrics = calculateTrailMetrics(trailStops, 'cycling');
-  const transitMetrics = calculateTrailMetrics(trailStops, 'transit');
-
   const suggestions: CorridorDetourSuggestion[] = detectPandalsOnWay(trailStops, allPandals);
   const googleMapsUrl = buildGoogleMapsMultiStopUrl(trailStops, travelMode);
   const itineraryText = buildWhatsAppItineraryText(trailStops, language, metrics, travelMode);
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(itineraryText)}`;
 
   if (!isOpen) return null;
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
 
   // Handlers for stop management
   const handleRemoveStop = (index: number) => {
@@ -114,11 +118,31 @@ export const TrailBuilderSheet: React.FC<Props> = ({
   };
 
   const handleReverseTrail = () => {
+    if (trailStops.length < 2) return;
     onUpdateTrailStops([...trailStops].reverse());
+    showToast('Trail order reversed');
+  };
+
+  const handleSmartOptimize = () => {
+    if (trailStops.length <= 2) {
+      showToast('Add 3 or more stops to optimize');
+      return;
+    }
+    const beforeDist = metrics.totalDistanceKm;
+    const optimized = optimizeTrailOrder(trailStops);
+    onUpdateTrailStops(optimized);
+    const afterMetrics = calculateTrailMetrics(optimized, travelMode);
+    const saved = beforeDist - afterMetrics.totalDistanceKm;
+    if (saved > 0.05) {
+      showToast(`✨ Optimized! Saved ~${saved.toFixed(1)} km walking`);
+    } else {
+      showToast('✨ Trail is already optimally ordered!');
+    }
   };
 
   const handleClearAll = () => {
     onUpdateTrailStops([]);
+    showToast('Trail cleared');
   };
 
   const handleAddUserLocationStart = () => {
@@ -133,9 +157,9 @@ export const TrailBuilderSheet: React.FC<Props> = ({
       lat: userCoords.lat,
       lng: userCoords.lng,
     };
-
     if (trailStops.length === 0 || trailStops[0].id !== 'user_location') {
       onUpdateTrailStops([currentLocStop, ...trailStops]);
+      showToast('Current location added as start');
     }
   };
 
@@ -170,14 +194,14 @@ export const TrailBuilderSheet: React.FC<Props> = ({
     };
     updated.splice(suggestion.insertIndex, 0, newStop);
     onUpdateTrailStops(updated);
+    showToast(`Added ${suggestion.pandal.name[language] || suggestion.pandal.name.en} to trail`);
   };
 
   const handleInsertAllDetours = () => {
     if (suggestions.length === 0) return;
     const updated = batchInsertAllDetours(trailStops, suggestions);
     onUpdateTrailStops(updated);
-    setCopiedToast(true);
-    setTimeout(() => setCopiedToast(false), 2000);
+    showToast(`Added ${suggestions.length} nearby detours`);
   };
 
   const handleLoadCuratedTrail = (preset: CuratedTrailPreset) => {
@@ -199,6 +223,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
     }
     if (newStops.length > 0) {
       onUpdateTrailStops(newStops);
+      showToast(`Loaded "${preset.title[language] || preset.title.en}"`);
       if (onFocusMapOnTrail) onFocusMapOnTrail();
     }
   };
@@ -206,11 +231,9 @@ export const TrailBuilderSheet: React.FC<Props> = ({
   const handleCopyItinerary = async () => {
     try {
       await navigator.clipboard.writeText(itineraryText);
-      setCopiedToast(true);
-      setTimeout(() => setCopiedToast(false), 2500);
+      showToast(t.copiedWhatsapp || 'Itinerary copied to clipboard!');
     } catch {
-      setCopiedToast(true);
-      setTimeout(() => setCopiedToast(false), 2500);
+      showToast(t.copiedWhatsapp || 'Itinerary copied to clipboard!');
     }
   };
 
@@ -234,7 +257,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
           url: googleMapsUrl,
         });
       } catch {
-        // User cancelled or unsupported
+        // Dismiss
       }
     } else {
       handleCopyItinerary();
@@ -245,7 +268,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
   const firstStopName =
     trailStops.length > 0
       ? trailStops[0].id === 'user_location'
-        ? t.startLocation
+        ? t.startLocation || 'My Location'
         : trailStops[0].name[language] || trailStops[0].name.en
       : '';
   const lastStopName =
@@ -254,573 +277,445 @@ export const TrailBuilderSheet: React.FC<Props> = ({
       : '';
   const shareRouteSubtitle =
     trailStops.length > 1
-      ? `${firstStopName} to ${lastStopName} Durga Puja Trail`
+      ? `${firstStopName} → ${lastStopName} Durga Puja Trail`
       : trailStops.length === 1
       ? `${firstStopName} Trail`
       : 'Durga Puja Kolkata Trail';
 
+  // Last stop coords for proximity calculation in search
+  const refCoords = trailStops.length > 0 
+    ? { lat: trailStops[trailStops.length - 1].lat, lng: trailStops[trailStops.length - 1].lng }
+    : userCoords;
+
   // Search filtered pandals for stop addition
-  const unselectedPandals = allPandals.filter(
-    (p) =>
-      !trailStops.some((s) => s.id === p.id) &&
-      (searchPandalQuery.trim() === '' ||
-        p.name.en.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
-        p.name.bn.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
-        p.nearestMetro.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
-        p.zone.toLowerCase().includes(searchPandalQuery.toLowerCase()))
-  );
+  const unselectedPandals = allPandals
+    .filter(
+      (p) =>
+        !trailStops.some((s) => s.id === p.id) &&
+        (searchPandalQuery.trim() === '' ||
+          p.name.en.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
+          p.name.bn.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
+          p.nearestMetro.toLowerCase().includes(searchPandalQuery.toLowerCase()) ||
+          p.zone.toLowerCase().includes(searchPandalQuery.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (!refCoords) return 0;
+      const distA = calculateDistanceKm(refCoords.lat, refCoords.lng, a.lat, a.lng);
+      const distB = calculateDistanceKm(refCoords.lat, refCoords.lng, b.lat, b.lng);
+      return distA - distB;
+    });
 
   return (
     <>
       <div
         id="trail-builder-backdrop"
-        className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 z-50 flex flex-col justify-end bg-black/65 backdrop-blur-xs transition-opacity duration-200"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
         <div
           id="trail-builder-sheet"
-          className="w-full max-w-xl mx-auto bg-[#090D16] border-t border-amber-500/30 rounded-t-3xl shadow-2xl flex flex-col max-h-[88dvh] overflow-hidden animate-slide-up"
+          className="relative w-full max-w-lg mx-auto bg-[#0A0E18] border-t border-slate-750 rounded-t-3xl shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-slide-up"
         >
-          {/* Sheet Handle */}
-          <div className="pt-2.5 pb-1 flex justify-center shrink-0">
-            <div className="w-12 h-1.5 rounded-full bg-slate-700/80" />
+          {/* Top Drag Handle */}
+          <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-2.5 shrink-0" />
+
+          {/* Sheet Header */}
+          <div className="px-4 py-2.5 flex items-center justify-between border-b border-slate-800/80 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-amber-400/15 text-amber-400 shrink-0">
+                <Route className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-white tracking-tight">
+                    {t.trailBuilderTitle || 'Pujo Trail Planner'}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950">
+                    {trailStops.length} {trailStops.length === 1 ? 'Stop' : 'Stops'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 truncate">
+                  {trailStops.length === 0
+                    ? 'Pick pandals to calculate optimal hopping sequence'
+                    : `${metrics.totalDistanceKm.toFixed(1)} km · ~${formatDurationHoursMins(metrics.totalDurationMin)} total`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {trailStops.length > 0 && (
+                <button
+                  id="clear-trail-btn"
+                  onClick={handleClearAll}
+                  className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 text-xs font-semibold transition"
+                  title={t.clearTrail}
+                >
+                  {t.clearTrail || 'Clear'}
+                </button>
+              )}
+              <button
+                id="close-trail-sheet-btn"
+                onClick={onClose}
+                className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Header */}
-          <div className="px-4 py-2 border-b border-slate-800/80 shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20">
-                  <Route className="w-4 h-4 text-slate-950" />
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5 overscroll-contain">
+            {/* Top Metric & Transport Mode Deck */}
+            <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md">
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/60">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block">
+                    Distance
+                  </span>
+                  <span className="text-sm font-extrabold text-white tabular-nums">
+                    {metrics.totalDistanceKm.toFixed(1)} km
+                  </span>
+                </div>
+                <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/60">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block">
+                    Est. Duration
+                  </span>
+                  <span className="text-sm font-extrabold text-amber-400 tabular-nums">
+                    ~{formatDurationHoursMins(metrics.totalDurationMin)}
+                  </span>
+                </div>
+                <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800/60">
+                  <span className="text-[10px] uppercase font-semibold text-slate-400 block">
+                    Queue Buffer
+                  </span>
+                  <span className="text-sm font-extrabold text-emerald-400 tabular-nums">
+                    ~{metrics.queueTimeMin} mins
+                  </span>
+                </div>
+              </div>
+
+              {/* Mode Switcher */}
+              <div className="flex items-center p-1 rounded-xl bg-slate-950/90 border border-slate-800 gap-1">
+                <button
+                  onClick={() => setTravelMode('walking')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    travelMode === 'walking'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Footprints className="w-3.5 h-3.5" />
+                  <span>Walk</span>
+                </button>
+                <button
+                  onClick={() => setTravelMode('cycling')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    travelMode === 'cycling'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Bike className="w-3.5 h-3.5" />
+                  <span>Cycle</span>
+                </button>
+                <button
+                  onClick={() => setTravelMode('transit')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    travelMode === 'transit'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Train className="w-3.5 h-3.5" />
+                  <span>Metro</span>
+                </button>
+                <button
+                  onClick={() => setTravelMode('driving')}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    travelMode === 'driving'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Car className="w-3.5 h-3.5" />
+                  <span>Taxi</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Action Toolbar */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+              {/* Smart TSP Optimization Button */}
+              {trailStops.length >= 3 && (
+                <button
+                  id="smart-optimize-btn"
+                  onClick={handleSmartOptimize}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-extrabold text-xs shadow-md shadow-amber-950/40 active:scale-95 transition shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{t.optimizeRoute || 'Smart Optimize Order'}</span>
+                </button>
+              )}
+
+              {/* Reverse Order */}
+              {trailStops.length >= 2 && (
+                <button
+                  onClick={handleReverseTrail}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-750 text-slate-200 hover:text-white font-semibold text-xs active:scale-95 transition shrink-0"
+                >
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                  <span>{t.reverseRoute || 'Reverse'}</span>
+                </button>
+              )}
+
+              {/* Start from GPS */}
+              {userCoords && (!trailStops.length || trailStops[0].id !== 'user_location') && (
+                <button
+                  onClick={handleAddUserLocationStart}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-300 hover:bg-blue-600/30 font-semibold text-xs active:scale-95 transition shrink-0"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>{t.useCurrentLocationStart || '+ Start from My GPS'}</span>
+                </button>
+              )}
+
+              {/* Add Stop Button */}
+              <button
+                id="open-add-stop-search-btn"
+                onClick={() => setIsAddingStop(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-750 hover:border-amber-400 text-amber-400 font-bold text-xs active:scale-95 transition shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t.addStopBtn || '+ Add Pandal'}</span>
+              </button>
+            </div>
+
+            {/* Empty Trail Callout */}
+            {trailStops.length === 0 && (
+              <div className="p-6 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-3 my-2">
+                <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-2xl mx-auto shadow-inner">
+                  🚶
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-white tracking-tight">
-                      {t.trailBuilderTitle}
-                    </h2>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold border border-amber-400/30">
-                      {trailStops.length} {t.stopsCount}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    {t.trailBuilderSubtitle}
+                  <h3 className="text-sm font-bold text-white">Your Trail is Empty</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                    Select a curated Kolkata circuit below or search pandals to generate your customized walking route.
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {trailStops.length > 0 && (
-                  <button
-                    onClick={() => setIsShareModalOpen(true)}
-                    className="p-1.5 rounded-lg text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 border border-amber-400/30 transition flex items-center gap-1"
-                    title={t.shareRouteTitle}
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span className="text-xs font-semibold hidden sm:inline">Share</span>
-                  </button>
-                )}
                 <button
-                  onClick={onClose}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                  title={t.closeSheet}
+                  onClick={() => setIsAddingStop(true)}
+                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md active:scale-95 transition"
                 >
-                  <X className="w-5 h-5" />
+                  {t.addStopBtn || '+ Add First Pandal'}
                 </button>
-              </div>
-            </div>
-
-            {/* Travel Mode Comparison Matrix (Matching Reference Video) */}
-            <div className="mt-3">
-              <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-900/90 rounded-2xl border border-slate-800">
-                {/* Walk */}
-                <button
-                  type="button"
-                  onClick={() => setTravelMode('walking')}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition ${
-                    travelMode === 'walking'
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <Footprints className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold">{t.travelModeWalk}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] mt-0.5 ${
-                      travelMode === 'walking' ? 'text-slate-900 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {trailStops.length > 1
-                      ? formatDurationHoursMins(walkMetrics.travelTimeMin)
-                      : '—'}
-                  </span>
-                </button>
-
-                {/* Drive */}
-                <button
-                  type="button"
-                  onClick={() => setTravelMode('driving')}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition ${
-                    travelMode === 'driving'
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <Car className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold">{t.travelModeDrive}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] mt-0.5 ${
-                      travelMode === 'driving' ? 'text-slate-900 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {trailStops.length > 1
-                      ? formatDurationHoursMins(driveMetrics.travelTimeMin)
-                      : '—'}
-                  </span>
-                </button>
-
-                {/* Cycle */}
-                <button
-                  type="button"
-                  onClick={() => setTravelMode('cycling')}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition ${
-                    travelMode === 'cycling'
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <Bike className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold">{t.travelModeCycle}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] mt-0.5 ${
-                      travelMode === 'cycling' ? 'text-slate-900 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {trailStops.length > 1
-                      ? formatDurationHoursMins(cycleMetrics.travelTimeMin)
-                      : '—'}
-                  </span>
-                </button>
-
-                {/* Transit */}
-                <button
-                  type="button"
-                  onClick={() => setTravelMode('transit')}
-                  className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition ${
-                    travelMode === 'transit'
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <Train className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold">{t.travelModeTransit}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] mt-0.5 ${
-                      travelMode === 'transit' ? 'text-slate-900 font-bold' : 'text-slate-400'
-                    }`}
-                  >
-                    {trailStops.length > 1
-                      ? formatDurationHoursMins(transitMetrics.travelTimeMin)
-                      : '—'}
-                  </span>
-                </button>
-              </div>
-
-              {/* Trail Controls Row */}
-              {trailStops.length > 0 && (
-                <div className="mt-2 flex items-center justify-between text-xs px-1">
-                  <span className="text-[11px] text-slate-400">
-                    {trailStops.length} stops sequenced
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={handleReverseTrail}
-                      className="px-2 py-1 rounded-lg bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/80 transition flex items-center gap-1 text-[11px]"
-                      title={t.reverseTrail}
-                    >
-                      <ArrowUpDown className="w-3 h-3 text-amber-400" />
-                      <span>{t.reverseTrail}</span>
-                    </button>
-                    <button
-                      onClick={handleClearAll}
-                      className="px-2 py-1 rounded-lg bg-slate-800/90 text-slate-400 hover:text-rose-400 border border-slate-700/80 transition flex items-center gap-1 text-[11px]"
-                      title={t.clearTrail}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>{t.clearTrail}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-            {/* Live Metrics Summary Bar */}
-            {trailStops.length > 1 && (
-              <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-800/80 to-slate-900/90 border border-amber-500/30">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      {t.totalTrailDistance}
-                    </p>
-                    <p className="text-base font-extrabold text-amber-400">
-                      {metrics.totalDistanceKm > 0
-                        ? `${metrics.totalDistanceKm.toFixed(1)} km`
-                        : '0 km'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      {t.estHoppingDuration}
-                    </p>
-                    <p className="text-base font-extrabold text-white">
-                      ~{formatDurationHoursMins(metrics.totalDurationMin)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      {t.inclQueuing}
-                    </p>
-                    <p className="text-xs font-semibold text-emerald-400 mt-0.5">
-                      +{metrics.queueTimeMin}m queues
-                    </p>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* "Pandals on the Way" Corridor Detour Banner with "+ Add All (N)" */}
-            {suggestions.length > 0 && (
-              <div className="p-3 rounded-2xl bg-gradient-to-b from-amber-950/40 to-slate-900 border border-amber-500/40 space-y-2.5 shadow-lg">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
-                    <div>
-                      <h3 className="text-xs font-bold text-amber-300">
-                        {t.pandalsOnWayTitle} ({suggestions.length})
-                      </h3>
-                      <p className="text-[10px] text-amber-200/80">
-                        Along your corridor (≤800m detour)
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleInsertAllDetours}
-                    className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-md active:scale-95 transition shrink-0 flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>
-                      {t.addAllDetours} ({suggestions.length})
-                    </span>
-                  </button>
+            {/* Interactive Connected Visual Timeline */}
+            {trailStops.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1 text-[11px] font-semibold text-slate-400">
+                  <span>Itinerary Stops ({trailStops.length})</span>
+                  <span>Drag or use arrows to reorder</span>
                 </div>
 
-                <div className="space-y-1.5">
-                  {suggestions.slice(0, 4).map((sug) => {
-                    const p = sug.pandal;
+                <div className="relative pl-3 space-y-2">
+                  {/* Vertical Glowing Connector Line */}
+                  <div className="absolute left-[23px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-amber-400 via-rose-500 to-blue-500 opacity-40 rounded-full" />
+
+                  {trailStops.map((stop, index) => {
+                    const isUserLoc = stop.id === 'user_location';
+                    const isFirst = index === 0;
+                    const isLast = index === trailStops.length - 1;
+                    const legDist = index > 0 ? metrics.legDistancesKm[index - 1] : 0;
+                    const legTime = index > 0 ? metrics.legTimesMin[index - 1] : 0;
+
                     return (
-                      <div
-                        key={p.id}
-                        className="p-2.5 rounded-xl bg-slate-900/90 border border-amber-500/25 flex items-center justify-between gap-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-white truncate">
-                              {p.name[language] || p.name.en}
-                            </span>
-                            {p.isFeatured && (
-                              <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                                Featured
-                              </span>
-                            )}
-                            <span
-                              className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                                p.crowdLevel === 'Extreme'
-                                  ? 'bg-rose-500/20 text-rose-300'
-                                  : p.crowdLevel === 'Heavy'
-                                  ? 'bg-amber-500/20 text-amber-300'
-                                  : 'bg-emerald-500/20 text-emerald-300'
-                              }`}
-                            >
-                              {p.crowdLevel}
+                      <React.Fragment key={`${stop.id}-${index}`}>
+                        {/* Leg Transit Badge Between Consecutive Stops */}
+                        {index > 0 && (
+                          <div className="flex items-center gap-2 py-0.5 pl-6">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 border border-slate-800 text-slate-300 flex items-center gap-1 shadow-xs">
+                              <Footprints className="w-3 h-3 text-amber-400" />
+                              <span>{formatDistance(legDist)}</span>
+                              <span>·</span>
+                              <span>~{legTime} min walk</span>
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            Near <span className="text-slate-300 font-medium">{sug.betweenStopA}</span> • +
-                            {formatDistance(sug.extraDetourKm)} detour
-                          </p>
-                        </div>
+                        )}
 
-                        <button
-                          onClick={() => handleInsertDetour(sug)}
-                          className="px-2.5 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400 hover:text-slate-950 text-amber-300 border border-amber-400/40 font-bold text-xs flex items-center gap-1 shrink-0 active:scale-95 transition"
+                        {/* Stop Card */}
+                        <div
+                          className={`relative flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                            isFirst
+                              ? 'bg-slate-900/95 border-amber-500/50 shadow-md shadow-amber-950/20'
+                              : isLast
+                              ? 'bg-slate-900/95 border-blue-500/50 shadow-md shadow-blue-950/20'
+                              : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                          }`}
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>{t.insertInTrail}</span>
-                        </button>
-                      </div>
+                          {/* Node Icon */}
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div
+                              className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 shadow-md ${
+                                isFirst
+                                  ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-amber-400/40'
+                                  : isLast
+                                  ? 'bg-blue-600 text-white font-black ring-2 ring-blue-500/40'
+                                  : 'bg-slate-800 text-slate-200 border border-slate-700'
+                              }`}
+                            >
+                              {isUserLoc ? <Compass className="w-4 h-4" /> : index + 1}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-xs font-bold text-white truncate">
+                                  {stop.name[language] || stop.name.en}
+                                </p>
+                                {isFirst && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-400/20 text-amber-300">
+                                    Start
+                                  </span>
+                                )}
+                                {isLast && trailStops.length > 1 && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300">
+                                    Destination
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5 truncate">
+                                {stop.nearestMetro && (
+                                  <span className="flex items-center gap-1 text-blue-300">
+                                    <Train className="w-3 h-3" />
+                                    <span>{stop.nearestMetro}</span>
+                                  </span>
+                                )}
+                                {stop.crowdLevel && (
+                                  <CrowdStatusBadge crowdLevel={stop.crowdLevel} language={language} size="sm" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Reordering & Delete Controls */}
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <button
+                              onClick={() => handleMoveUp(index)}
+                              disabled={isFirst}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white disabled:opacity-20 hover:bg-slate-800 transition active:scale-95"
+                              title="Move Stop Up"
+                              aria-label="Move Up"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveDown(index)}
+                              disabled={isLast}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white disabled:opacity-20 hover:bg-slate-800 transition active:scale-95"
+                              title="Move Stop Down"
+                              aria-label="Move Down"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveStop(index)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition active:scale-95 ml-0.5"
+                              title="Remove Stop"
+                              aria-label="Remove"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {/* Stops List */}
-            {trailStops.length === 0 ? (
-              <div className="text-center py-10 px-5 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-inner space-y-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center mx-auto shadow-md shadow-amber-500/10">
-                  <Compass className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-white tracking-tight">
-                    No stops added yet
-                  </h4>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                    {t.emptyTrailPrompt}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                  <button
-                    onClick={() => setIsAddingStop(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 active:scale-95 transition"
-                  >
-                    <Plus className="w-4 h-4 stroke-[3]" />
-                    <span>Add First Stop</span>
-                  </button>
-                  {userCoords && (
-                    <button
-                      onClick={handleAddUserLocationStart}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 text-xs font-semibold shadow-xs active:scale-95 transition"
-                    >
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{t.startLocation}</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                {trailStops.map((stop, idx) => {
-                  const isUserLoc = stop.id === 'user_location';
-                  const legDist = idx > 0 ? metrics.legDistancesKm[idx - 1] : null;
-                  const legTime = idx > 0 ? metrics.legTimesMin[idx - 1] : null;
-
-                  return (
-                    <React.Fragment key={`${stop.id}-${idx}`}>
-                      {/* Inter-stop leg connector */}
-                      {idx > 0 && (
-                        <div className="flex items-center gap-2 pl-4 py-0.5 text-[10px] text-slate-400 font-medium">
-                          <div className="w-0.5 h-4 bg-amber-400/40 ml-1.5 rounded-full" />
-                          <span className="text-amber-400/90">
-                            {travelMode === 'walking'
-                              ? '🚶'
-                              : travelMode === 'cycling'
-                              ? '🚲'
-                              : travelMode === 'transit'
-                              ? '🚇'
-                              : '🚗'}{' '}
-                            {formatDistance(legDist || 0)} (~{legTime}m)
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Stop Card */}
-                      <div className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 flex items-center justify-between gap-2 transition shadow-xs">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {/* Number Badge */}
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                              isUserLoc
-                                ? 'bg-blue-500 text-white'
-                                : idx === 0
-                                ? 'bg-emerald-500 text-slate-950'
-                                : idx === trailStops.length - 1
-                                ? 'bg-rose-500 text-white'
-                                : 'bg-amber-400 text-slate-950'
-                            }`}
-                          >
-                            {isUserLoc ? <MapPin className="w-3.5 h-3.5" /> : idx + 1}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-white truncate">
-                              {stop.name[language] || stop.name.en}
-                            </p>
-                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 truncate">
-                              {stop.nearestMetro && (
-                                <span className="text-blue-300">🚇 {stop.nearestMetro}</span>
-                              )}
-                              {stop.crowdLevel && (
-                                <span className="text-amber-300 font-medium">
-                                  • {stop.crowdLevel} (
-                                  ~{stop.crowdLevel === 'Extreme' ? '60' : stop.crowdLevel === 'Heavy' ? '35' : '15'}
-                                  m queue)
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Reorder and Delete actions */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => handleMoveUp(idx)}
-                            disabled={idx === 0}
-                            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400"
-                            title={t.reorderUp}
-                          >
-                            <ChevronUp className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleMoveDown(idx)}
-                            disabled={idx === trailStops.length - 1}
-                            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400"
-                            title={t.reorderDown}
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleRemoveStop(idx)}
-                            className="p-1 rounded text-slate-400 hover:text-rose-400 transition"
-                            title={t.removeFromTrail}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Add Stop Drawer Toggle & Selector */}
-            {!isAddingStop ? (
-              <div className="flex items-center gap-2">
-                <button
-                  id="add-stop-btn"
-                  onClick={() => setIsAddingStop(true)}
-                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 border border-dashed border-amber-400/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-98"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>+ Add a stop...</span>
-                </button>
-                {userCoords && !trailStops.some((s) => s.id === 'user_location') && (
-                  <button
-                    onClick={handleAddUserLocationStart}
-                    className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 text-xs font-semibold flex items-center gap-1.5 shrink-0"
-                    title={t.startLocation}
-                  >
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">GPS Start</span>
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="p-3 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-2.5">
+            {/* En-Route Corridor Detour Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">Select Pandal to Add</span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span>{t.pandalsOnWayTitle || 'Pandals on Your Way'} ({suggestions.length})</span>
+                  </div>
                   <button
-                    onClick={() => setIsAddingStop(false)}
-                    className="text-xs text-slate-400 hover:text-white"
+                    onClick={handleInsertAllDetours}
+                    className="px-2 py-1 rounded-lg bg-amber-400 text-slate-950 font-bold text-[10px] active:scale-95 transition"
                   >
-                    Cancel
+                    + Add All
                   </button>
                 </div>
 
-                <input
-                  type="text"
-                  value={searchPandalQuery}
-                  onChange={(e) => setSearchPandalQuery(e.target.value)}
-                  placeholder="Filter pandals by name, zone, or metro..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-400"
-                  autoFocus
-                />
-
-                <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                  {unselectedPandals.length === 0 ? (
-                    <p className="text-xs text-slate-500 py-3 text-center">
-                      No matching pandals available
-                    </p>
-                  ) : (
-                    unselectedPandals.map((pandal) => (
-                      <div
-                        key={pandal.id}
-                        className="p-2 rounded-lg bg-slate-950 hover:bg-slate-800 flex items-center justify-between gap-2 border border-slate-850"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-white truncate">
-                            {pandal.name[language] || pandal.name.en}
-                          </p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {pandal.zone} • 🚇 {pandal.nearestMetro}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => onSelectPandalPreview(pandal)}
-                            className="px-2 py-1 rounded bg-slate-800 text-[10px] text-slate-300 hover:text-white"
-                          >
-                            Preview
-                          </button>
-                          <button
-                            onClick={() => handleAddPandalStop(pandal)}
-                            className="px-2.5 py-1 rounded bg-amber-400 text-[10px] text-slate-950 font-bold hover:bg-amber-300"
-                          >
-                            + Add
-                          </button>
-                        </div>
+                <div className="space-y-1.5">
+                  {suggestions.slice(0, 3).map((sugg) => (
+                    <div
+                      key={sugg.pandal.id}
+                      className="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800 gap-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-white truncate">
+                          {sugg.pandal.name[language] || sugg.pandal.name.en}
+                        </p>
+                        <p className="text-[10px] text-amber-300/90 truncate">
+                          +{formatDistance(sugg.extraDetourKm)} detour between stops {sugg.insertIndex} & {sugg.insertIndex + 1}
+                        </p>
                       </div>
-                    ))
-                  )}
+                      <button
+                        onClick={() => handleInsertDetour(sugg)}
+                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-200 font-bold text-xs transition active:scale-95 shrink-0"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Curated Pre-made Trails Carousel */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <div className="flex items-center justify-between mb-2">
+            {/* Curated Preset Trails Carousel */}
+            <div className="pt-2 border-t border-slate-800/80 space-y-2.5">
+              <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{t.curatedTrailsTitle}</span>
+                  <span>{t.curatedTrailsTitle || 'Popular Curated Circuits'}</span>
                 </h3>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {CURATED_TRAILS.map((preset) => (
                   <div
                     key={preset.id}
-                    className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition flex flex-col justify-between"
+                    className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <span className="text-xs font-bold text-amber-300 truncate">
                           {preset.title[language] || preset.title.en}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-amber-400/20 text-amber-300 shrink-0">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-400/20 text-amber-300 shrink-0">
                           {preset.badge}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 line-clamp-2 leading-tight mb-2">
+                      <p className="text-[10px] text-slate-400 line-clamp-2 leading-tight mb-2.5">
                         {preset.subtitle[language] || preset.subtitle.en}
                       </p>
                     </div>
                     <button
                       onClick={() => handleLoadCuratedTrail(preset)}
-                      className="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-200 text-[11px] font-bold transition flex items-center justify-center gap-1"
+                      className="w-full py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-95"
                     >
-                      <Plus className="w-3 h-3" />
-                      <span>{t.loadTrail}</span>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{t.loadTrail || 'Load Circuit'}</span>
                     </button>
                   </div>
                 ))}
@@ -829,22 +724,22 @@ export const TrailBuilderSheet: React.FC<Props> = ({
           </div>
 
           {/* Sticky Bottom Actions Bar */}
-          <div className="p-3 pb-[calc(0.75rem+var(--safe-bottom))] bg-[#080C14] border-t border-slate-800/90 shrink-0">
+          <div className="p-3.5 pb-[calc(0.75rem+var(--safe-bottom))] bg-[#070A12] border-t border-slate-800 shrink-0">
             <div className="flex items-center gap-2">
-              {/* Google Maps Turn-by-Turn Export Button */}
+              {/* Google Maps Turn-by-Turn Multi-Stop Export */}
               <a
                 id="export-google-maps-btn"
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-xs transition active:scale-98 shadow-md ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-bold text-xs transition active:scale-98 shadow-lg ${
                   trailStops.length > 0
-                    ? 'bg-rose-700 hover:bg-rose-600 text-white shadow-rose-900/30'
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50'
                     : 'bg-slate-800 text-slate-500 pointer-events-none'
                 }`}
               >
                 <Navigation className="w-4 h-4" />
-                <span className="truncate">Open in Google Maps Turn-by-Turn</span>
+                <span className="truncate">{t.openInGoogleMaps || 'Start Turn-by-Turn Navigation'}</span>
               </a>
 
               {/* Share Route Dialog Trigger */}
@@ -852,42 +747,111 @@ export const TrailBuilderSheet: React.FC<Props> = ({
                 id="open-share-modal-btn"
                 onClick={() => setIsShareModalOpen(true)}
                 disabled={trailStops.length === 0}
-                className="py-3 px-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold text-xs transition active:scale-98 shadow-md flex items-center gap-1.5 shrink-0"
+                className="py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-extrabold text-xs transition active:scale-98 shadow-lg flex items-center gap-1.5 shrink-0"
                 title={t.shareRouteTitle}
               >
                 <Share2 className="w-4 h-4 text-slate-950" />
-                <span className="hidden sm:inline">Share</span>
+                <span>Share</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* "Share Your Pujo Route" Modal (Replicating 00:00 in Reference Video) */}
+      {/* Add Stop Search Popover / Sheet */}
+      {isAddingStop && (
+        <div
+          id="add-stop-modal"
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsAddingStop(false);
+          }}
+        >
+          <div className="w-full max-w-md rounded-3xl bg-[#0F1422] border border-slate-750 p-4 shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-scale-up">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Plus className="w-4 h-4 text-amber-400" />
+                <span>Add Pandal to Trail</span>
+              </h3>
+              <button
+                onClick={() => setIsAddingStop(false)}
+                className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="mt-3">
+              <input
+                type="text"
+                value={searchPandalQuery}
+                onChange={(e) => setSearchPandalQuery(e.target.value)}
+                placeholder="Search pandal name, metro, zone..."
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-750 text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:border-amber-400"
+                autoFocus
+              />
+            </div>
+
+            {/* Results List */}
+            <div className="flex-1 overflow-y-auto mt-3 space-y-1.5 max-h-72 pr-1">
+              {unselectedPandals.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">
+                  No matching pandals found
+                </div>
+              ) : (
+                unselectedPandals.slice(0, 20).map((pandal) => {
+                  const dist = refCoords ? calculateDistanceKm(refCoords.lat, refCoords.lng, pandal.lat, pandal.lng) : null;
+                  return (
+                    <button
+                      key={pandal.id}
+                      onClick={() => handleAddPandalStop(pandal)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 text-left transition active:scale-98 group"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="text-xs font-bold text-white truncate group-hover:text-amber-300">
+                          {pandal.name[language] || pandal.name.en}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {pandal.zone} Kolkata · Near {pandal.nearestMetro}
+                          {dist !== null && ` · ${formatDistance(dist)} away`}
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow-xs">
+                        + Add
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Itinerary Dialog */}
       {isShareModalOpen && (
         <div
           id="share-pujo-route-modal"
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsShareModalOpen(false);
           }}
         >
-          <div className="w-full max-w-sm rounded-3xl bg-[#0F1420] border border-amber-500/40 p-5 shadow-2xl flex flex-col items-center text-center animate-scale-up">
-            {/* Glowing circular icon */}
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/30 mb-3">
+          <div className="w-full max-w-sm rounded-3xl bg-[#0F1422] border border-amber-500/40 p-5 shadow-2xl flex flex-col items-center text-center animate-scale-up">
+            <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/30 mb-3">
               <Share2 className="w-6 h-6 stroke-[2.5]" />
             </div>
 
-            {/* Title & Subtitle */}
-            <h3 className="text-lg font-bold text-white tracking-tight">
-              {t.shareRouteTitle}
+            <h3 className="text-base font-bold text-white tracking-tight">
+              {t.shareRouteTitle || 'Share Your Pujo Route'}
             </h3>
             <p className="text-xs text-slate-300 mt-1 max-w-[260px] line-clamp-2">
               {shareRouteSubtitle}
             </p>
 
-            {/* Copyable Route Link Bar */}
-            <div className="mt-4 w-full flex items-center p-1.5 pl-3 rounded-xl bg-slate-950 border border-slate-700/80 text-xs">
+            {/* Multi-Stop Google Maps Link Bar */}
+            <div className="mt-4 w-full flex items-center p-1.5 pl-3 rounded-xl bg-slate-950 border border-slate-750 text-xs">
               <input
                 type="text"
                 readOnly
@@ -905,20 +869,19 @@ export const TrailBuilderSheet: React.FC<Props> = ({
                 {modalCopied ? (
                   <>
                     <Check className="w-3.5 h-3.5" />
-                    <span>{t.copiedRouteLink}</span>
+                    <span>{t.copiedRouteLink || 'Copied'}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{t.copyRouteLink}</span>
+                    <span>{t.copyRouteLink || 'Copy'}</span>
                   </>
                 )}
               </button>
             </div>
 
-            {/* Actions Grid */}
+            {/* Action Buttons */}
             <div className="mt-4 w-full space-y-2">
-              {/* WhatsApp Share Button */}
               <a
                 href={whatsappUrl}
                 target="_blank"
@@ -926,30 +889,25 @@ export const TrailBuilderSheet: React.FC<Props> = ({
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs transition shadow-md active:scale-98"
               >
                 <Share2 className="w-4 h-4" />
-                <span>WhatsApp Share</span>
+                <span>Share via WhatsApp</span>
               </a>
-
-              {/* Open in Google Maps Button */}
               <a
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs transition shadow-md active:scale-98"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-md active:scale-98"
               >
                 <Navigation className="w-4 h-4" />
                 <span>Open in Google Maps</span>
               </a>
-
-              {/* Native Device Share / Copy Itinerary */}
               <button
                 onClick={handleNativeShare}
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-xs transition active:scale-98"
               >
-                {t.moreShareOptions}
+                {t.moreShareOptions || 'Copy Text Itinerary'}
               </button>
             </div>
 
-            {/* Done Dismiss */}
             <button
               onClick={() => setIsShareModalOpen(false)}
               className="mt-4 text-xs font-semibold text-slate-400 hover:text-white transition"
@@ -960,11 +918,11 @@ export const TrailBuilderSheet: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Floating Copied Toast */}
-      {copiedToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-60 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-xl flex items-center gap-2 animate-bounce">
+      {/* Floating Animated Toast */}
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-70 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
           <Check className="w-4 h-4 stroke-[3]" />
-          <span>{t.copiedWhatsapp}</span>
+          <span>{toastMessage}</span>
         </div>
       )}
     </>

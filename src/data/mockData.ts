@@ -1,5 +1,6 @@
 import { Pandal, FacilityPoint, MetroStation } from '../types';
 import { IMPORTED_PANDALS } from './importedPandals';
+import { sanitizePandalZones } from '../utils/sanitizePandalZones';
 
 const CURATED_PANDALS: Pandal[] = [
   {
@@ -736,9 +737,15 @@ const filteredImported = IMPORTED_PANDALS.filter(
   (p) => !curatedNames.has(p.name.en.toLowerCase().replace(/[^a-z0-9]/g, ''))
 );
 
-export const PANDALS_DATA: Pandal[] = [...CURATED_PANDALS, ...filteredImported];
+// High-performance in-memory re-classification patch executed at startup
+export const PANDALS_DATA: Pandal[] = sanitizePandalZones([...CURATED_PANDALS, ...filteredImported]);
+export { sanitizePandalZones };
+import { UNIFIED_POI_FACILITIES } from './poiData';
 
-export const CRITICAL_FACILITIES: FacilityPoint[] = [
+export const CRITICAL_FACILITIES: FacilityPoint[] = UNIFIED_POI_FACILITIES;
+export { UNIFIED_POI_FACILITIES };
+
+const _OLD_FACILITIES_UNUSED: FacilityPoint[] = [
   // Police & Medical Assistance
   {
     id: 'pol-kolkata-hq',

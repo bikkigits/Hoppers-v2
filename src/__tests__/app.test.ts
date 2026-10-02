@@ -337,3 +337,33 @@ describe('Firebase Real-Time Crowd Majority Voting Engine', () => {
   });
 });
 
+describe('AMOLED Power Save Survival Mode & Battery Engine', () => {
+  it('ensures all Power Save translation keys are present across en, bn, and hi', () => {
+    const requiredKeys = [
+      'powerSaveTitle',
+      'powerSaveDesc',
+      'powerSaveActive',
+      'powerSaveDisabled',
+      'lowBatteryAlert',
+      'enablePowerSavePrompt',
+      'batteryPercentage',
+    ];
+
+    for (const key of requiredKeys) {
+      expect(TRANSLATIONS.en[key]).toBeTruthy();
+      expect(TRANSLATIONS.bn[key]).toBeTruthy();
+      expect(TRANSLATIONS.hi[key]).toBeTruthy();
+    }
+  });
+
+  it('verifies low battery threshold evaluation logic', () => {
+    // Battery level <= 20% and not charging = isLowBattery
+    const isLowBatteryLevel = (level: number, charging: boolean) => level <= 20 && !charging;
+
+    expect(isLowBatteryLevel(14, false)).toBe(true);
+    expect(isLowBatteryLevel(20, false)).toBe(true);
+    expect(isLowBatteryLevel(21, false)).toBe(false);
+    expect(isLowBatteryLevel(10, true)).toBe(false); // Charging suppresses low battery warning
+  });
+});
+

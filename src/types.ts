@@ -4,16 +4,6 @@ export type CrowdLevel = 'Low' | 'Moderate' | 'Heavy' | 'Extreme';
 
 export type Zone = 'North' | 'Central' | 'South' | 'East';
 
-export type KolkataZone =
-  | 'North'
-  | 'South'
-  | 'Central'
-  | 'East'
-  | 'West'
-  | 'Behala'
-  | 'Jadavpur'
-  | 'Salt Lake';
-
 export interface LocalizedString {
   en: string;
   bn: string;
@@ -59,60 +49,6 @@ export type FacilityCategory =
   | 'landmark'
   | 'petrol'
   | 'entry-exit';
-
-export type CivicPOICategory =
-  | 'hospital'
-  | 'toilet'
-  | 'pure_veg'
-  | 'iconic_food'
-  | 'police'
-  | 'ferry'
-  | 'railway';
-
-export interface BasePOI {
-  id: string;
-  name: string;
-  category: CivicPOICategory;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  zone: KolkataZone;
-  address: string;
-  landmark?: string;
-}
-
-export interface HospitalPOI extends BasePOI {
-  category: 'hospital';
-  emergencyPhone: string; // Direct E.164 / Indian telephone string for tel: dialing
-  bloodBank: boolean;
-  is24x7: true;
-  totalBeds?: number;
-}
-
-export interface SanitationPOI extends BasePOI {
-  category: 'toilet';
-  operator: 'KMC' | 'Sulabh' | 'Metro' | 'Private';
-  hasDifferentlyAbledAccess: boolean;
-  fee: number; // 0 if free of charge
-}
-
-export interface DiningPOI extends BasePOI {
-  category: 'pure_veg' | 'iconic_food';
-  cuisine: string[];
-  isLateNight: boolean;
-  pureVeg: boolean; // Strictly true for 'pure_veg', strictly false for 'iconic_food'
-  avgCostForTwo: number;
-}
-
-export type UnifiedPOI = HospitalPOI | SanitationPOI | DiningPOI | BasePOI;
-
-export interface GeoBoundingBox {
-  minLat: number;
-  maxLat: number;
-  minLng: number;
-  maxLng: number;
-}
 
 export interface FacilityPoint {
   id: string;
@@ -176,16 +112,17 @@ export interface VisitedPandal {
 
 export type FilterType =
   | 'all'
+  | 'featured'
+  | 'heritage'
+  | 'saved'
   | 'north'
   | 'south'
   | 'central'
-  | 'east'
   | 'saltlake'
   | 'rajarhat'
   | 'dumdum'
   | 'west'
   | 'behala'
-  | 'jadavpur'
   | 'police'
   | 'toilets'
   | 'food'
@@ -284,3 +221,60 @@ export interface CrowdReport {
   timestamp: number;
   reportCount?: number;
 }
+
+export type CivicPOICategory =
+  | 'hospital'
+  | 'toilet'
+  | 'police'
+  | 'ferry'
+  | 'railway'
+  | 'pure_veg'
+  | 'iconic_food';
+
+export interface GeoBoundingBox {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+export interface BasePOI {
+  id: string;
+  name: string;
+  category: CivicPOICategory;
+  coordinates: { lat: number; lng: number };
+  zone: Zone | string;
+  address: string;
+  landmark?: string;
+}
+
+export interface HospitalPOI extends BasePOI {
+  category: 'hospital';
+  emergencyPhone: string;
+  bloodBank: boolean;
+  is24x7: boolean;
+  totalBeds?: number;
+}
+
+export interface SanitationPOI extends BasePOI {
+  category: 'toilet';
+  operator: 'KMC' | 'Sulabh' | 'Metro' | 'Metro Railway' | string;
+  fee: number;
+  hasDifferentlyAbledAccess: boolean;
+  hours?: string;
+}
+
+export interface DiningPOI extends BasePOI {
+  category: 'pure_veg' | 'iconic_food';
+  pureVeg: boolean;
+  isLateNight?: boolean;
+  cuisine?: string[];
+  specialty?: string;
+  avgCostForTwo?: number;
+  rating?: number;
+  priceRange?: 'Budget' | 'Mid' | 'Fine Dining' | string;
+}
+
+export type UnifiedPOI = HospitalPOI | SanitationPOI | DiningPOI | (BasePOI & { [key: string]: any });
+
+

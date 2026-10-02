@@ -33,6 +33,7 @@ import {
   subscribeAllPandalCrowds,
   PandalCrowdRecord,
 } from '../services/firebaseCrowd';
+import { usePowerSave } from '../context/PowerSaveContext';
 import { createDynamicMarkerIcon, MarkerCategory } from '../utils/markerStyles';
 import { MapMarkerSizeHelper } from '../utils/MapMarkerSizeHelper';
 import { NearbyFilterBar } from './NearbyFilterBar';
@@ -103,7 +104,7 @@ export const MapView: React.FC<Props> = ({
 
   const prevNonMetroFilterRef = useRef<FilterType>('all');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const [mapFilter, setMapFilter] = useState<'all' | 'featured' | 'heritage' | 'saved'>('all');
+  const { isPowerSaveMode, batteryLevel } = usePowerSave();
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(13);
@@ -247,7 +248,13 @@ export const MapView: React.FC<Props> = ({
 
   // Initialize Leaflet Map
   useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
+
+    // Remove any lingering Leaflet internal ID from DOM node if hot reloaded
+    if ((mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id) {
+      delete (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id;
+    }
 
     // Central Kolkata default
     const map = L.map(mapContainerRef.current, {
@@ -263,13 +270,17 @@ export const MapView: React.FC<Props> = ({
       scrollWheelZoom: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
       keepBuffer: 12,
       crossOrigin: true,
     }).addTo(map);
+
+    tileLayer.on('tileerror', (e) => {
+      console.warn('Map tile failed to load (offline or slow network):', e);
+    });
 
     map.on('zoomend', () => {
       setCurrentZoom(map.getZoom());
@@ -308,8 +319,15 @@ export const MapView: React.FC<Props> = ({
 
     return () => {
       resizeObserver.disconnect();
-      map.remove();
+      try {
+        map.remove();
+      } catch (err) {
+        console.warn('Error during Leaflet cleanup:', err);
+      }
       mapInstanceRef.current = null;
+      if (mapContainerRef.current && (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id) {
+        delete (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id;
+      }
     };
   }, []);
 
@@ -653,21 +671,6 @@ export const MapView: React.FC<Props> = ({
       // Pandal markers only render when no utility filter is active.
       if (!isUtilityActive) {
         PANDALS_DATA.forEach((pandal) => {
-          // Top filter chips check
-          if (mapFilter === 'featured' && !pandal.isFeatured) return;
-          if (mapFilter === 'saved' && !visitedSet.has(pandal.id)) return;
-          if (mapFilter === 'heritage') {
-            const text = (pandal.theme.en + ' ' + pandal.name.en + ' ' + pandal.description.en).toLowerCase();
-            const isHeritage =
-              text.includes('heritage') ||
-              text.includes('traditional') ||
-              text.includes('rajbari') ||
-              text.includes('bagbazar') ||
-              text.includes('kumartuli') ||
-              text.includes('sovabazar');
-            if (!isHeritage) return;
-          }
-
           // Search Query filter check
           if (mapSearchQuery.trim()) {
             const q = mapSearchQuery.toLowerCase();
@@ -682,16 +685,15 @@ export const MapView: React.FC<Props> = ({
             if (!nameMatch && !metroMatch && !zoneMatch) return;
           }
 
-          // Bottom Category Rail Filter Check
-          const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter);
+          // Single Source of Truth: Unified Capsule Rail Filter Check
+          const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter, visitedList);
           if (!isMatchedByFilter) return;
 
-          // In 'all' view with no search, show featured first when zoomed out
+          // In 'all' view with no search, prioritize featured first when zoomed out
           if (
             currentZoom < 14 &&
             !pandal.isFeatured &&
             activeFilter === 'all' &&
-            mapFilter === 'all' &&
             !mapSearchQuery.trim()
           ) {
             return;
@@ -877,7 +879,6 @@ export const MapView: React.FC<Props> = ({
     isMetroActive,
     isUtilityActive,
     activeFilter,
-    mapFilter,
     mapSearchQuery,
     currentZoom,
     language,
@@ -1226,7 +1227,7 @@ export const MapView: React.FC<Props> = ({
         className="w-full h-full bg-[#0B0F19] z-0"
       />
 
-      {/* Floating Top Search Bar & Sleek Quick Filter Controls */}
+      {/* Floating Top Search Bar */}
       <div className="absolute top-2.5 inset-x-2.5 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
         <div className="relative pointer-events-auto">
           <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-750/90 rounded-2xl shadow-xl shadow-black/50 focus-within:border-amber-400/80 transition-colors">
@@ -1286,53 +1287,6 @@ export const MapView: React.FC<Props> = ({
               )}
             </div>
           )}
-        </div>
-
-        {/* Minimalist Segmented Filter Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar pointer-events-auto px-0.5">
-          <button
-            onClick={() => setMapFilter('all')}
-            className={`px-2.5 py-1 rounded-xl text-xs font-semibold shrink-0 transition-all ${
-              mapFilter === 'all'
-                ? 'bg-amber-400 text-slate-950 shadow-xs'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
-            }`}
-          >
-            All ({PANDALS_DATA.length})
-          </button>
-          <button
-            onClick={() => setMapFilter('featured')}
-            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
-              mapFilter === 'featured'
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
-            }`}
-          >
-            <Sparkles className={`w-3 h-3 ${mapFilter === 'featured' ? 'text-slate-950' : 'text-amber-400'}`} />
-            <span>{t.filterFeatured}</span>
-          </button>
-          <button
-            onClick={() => setMapFilter('heritage')}
-            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
-              mapFilter === 'heritage'
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
-            }`}
-          >
-            <span>👑</span>
-            <span>{t.filterHeritage}</span>
-          </button>
-          <button
-            onClick={() => setMapFilter('saved')}
-            className={`px-2.5 py-1 rounded-xl text-xs font-medium shrink-0 transition-all flex items-center gap-1.5 ${
-              mapFilter === 'saved'
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                : 'bg-slate-900/90 backdrop-blur-md text-slate-300 border border-slate-800 hover:bg-slate-800'
-            }`}
-          >
-            <span>🔖</span>
-            <span>{t.filterSaved} ({visitedList.length})</span>
-          </button>
         </div>
       </div>
 
@@ -1509,6 +1463,17 @@ export const MapView: React.FC<Props> = ({
             className="absolute right-12 top-20 px-2.5 py-1 rounded-lg bg-slate-900/95 border border-slate-800 text-slate-200 text-xs font-medium shadow-xl backdrop-blur-md whitespace-nowrap animate-fade-in"
           >
             {gpsStatusMsg}
+          </div>
+        )}
+
+        {/* AMOLED Power Save Active Indicator */}
+        {isPowerSaveMode && (
+          <div
+            id="hud-power-save-badge"
+            className="absolute right-12 bottom-1 px-2 py-0.5 rounded-md bg-black border border-amber-400 text-amber-300 text-[10px] font-bold shadow-md shadow-black flex items-center gap-1 whitespace-nowrap"
+          >
+            <span>⚡</span>
+            <span>AMOLED ECO</span>
           </div>
         )}
       </div>

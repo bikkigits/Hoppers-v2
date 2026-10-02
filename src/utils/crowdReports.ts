@@ -39,8 +39,11 @@ try {
         const incoming: CrowdReportItem = ev.data.payload;
         const all = getAllCrowdReports();
         if (!all.some((r) => r.id === incoming.id)) {
-          const updated = [incoming, ...all].slice(0, 1000);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          } catch (e) {
+            console.warn('Failed to save updated crowd reports to localStorage:', e);
+          }
           window.dispatchEvent(
             new CustomEvent('hoppers_crowd_updated', {
               detail: { pandalId: incoming.pandalId, intensity: incoming.intensity, isVerifiedOnSite: incoming.isVerifiedOnSite },
@@ -167,7 +170,11 @@ export function submitCrowdReport(
   };
 
   const updatedList = [newReport, ...all].slice(0, 1000); // keep at most 1000 recent reports
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+  } catch (e) {
+    console.warn('Failed to persist crowd report to localStorage:', e);
+  }
 
   // Broadcast to other tabs
   try {

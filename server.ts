@@ -57,9 +57,10 @@ async function startServer() {
   });
 
   const distPath = path.resolve(process.cwd(), "dist");
-  const isProduction = process.env.NODE_ENV === "production" || fs.existsSync(path.join(distPath, "index.html"));
+  const hasDist = fs.existsSync(path.join(distPath, "index.html"));
+  const isProduction = process.env.NODE_ENV === "production" && hasDist;
 
-  // Vite middleware for local development ONLY when dist build is absent and not in production
+  // Vite middleware for local development
   if (!isProduction) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({

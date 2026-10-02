@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Language, VisitedPandal } from '../types';
 import { TRANSLATIONS } from '../data/translations';
+import { usePowerSave } from '../context/PowerSaveContext';
 import { PWAInstallButton } from './PWAInstallButton';
 import { ProfileModal } from './ProfileModal';
-import { Sparkles, Menu, ShieldAlert, Moon, Sun, BatteryLow, X } from 'lucide-react';
+import { Sparkles, Menu, ShieldAlert, Moon, Sun, Battery, BatteryCharging, Zap, X } from 'lucide-react';
 
 interface Props {
   language: Language;
@@ -31,6 +32,7 @@ export const TopBar: React.FC<Props> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showDiya, setShowDiya] = useState(false);
   const [showBatteryTip, setShowBatteryTip] = useState(false);
+  const { isPowerSaveMode, togglePowerSave, batteryLevel, isCharging, isLowBattery } = usePowerSave();
   const t = TRANSLATIONS[language];
 
   const handleThemeToggle = () => {
@@ -90,8 +92,40 @@ export const TopBar: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Zone 3: Right - Compact Language Switcher & Emergency SOS */}
+          {/* Zone 3: Right - Battery/Power Save, Trilingual Selector & Emergency SOS */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* 1-Tap AMOLED Power Saver Survival Toggle */}
+            <button
+              id="topbar-powersave-btn"
+              onClick={togglePowerSave}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 ${
+                isPowerSaveMode
+                  ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md shadow-amber-400/20'
+                  : isLowBattery
+                  ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
+                  : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800'
+              }`}
+              title={
+                isPowerSaveMode
+                  ? `${t.powerSaveActive} · ${batteryLevel !== null ? `${batteryLevel}%` : 'AMOLED 100%'}`
+                  : `${t.powerSaveTitle} · ${batteryLevel !== null ? `${batteryLevel}% ${isCharging ? '(Charging)' : ''}` : 'Conserve Battery'}`
+              }
+              aria-label="Toggle AMOLED Power Saver Mode"
+            >
+              {isPowerSaveMode ? (
+                <Zap className="w-3.5 h-3.5 fill-current text-slate-950" />
+              ) : isCharging ? (
+                <BatteryCharging className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Battery className={`w-3.5 h-3.5 ${isLowBattery ? 'text-red-400' : 'text-slate-400'}`} />
+              )}
+              {batteryLevel !== null && (
+                <span className="text-[11px] font-bold">
+                  {batteryLevel}%
+                </span>
+              )}
+            </button>
+
             {/* Trilingual Segmented Control: EN | বা | हि */}
             <div
               id="language-selector"

@@ -1,3 +1,4 @@
+// cache-bust-v2 - forced module graph invalidation
 import React, { useState, useEffect } from 'react';
 import {
   NavigationTab,
@@ -25,30 +26,51 @@ import { SuggestPandalModal } from './components/SuggestPandalModal';
 import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OnboardingSplash } from './components/OnboardingSplash';
+import { PowerSaveProvider } from './context/PowerSaveContext';
+import { PowerSaveToast } from './components/PowerSaveToast';
 
-export function App() {
+function AppContent() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('map');
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('hoppers_language');
-    if (saved === 'en' || saved === 'bn' || saved === 'hi') {
-      return saved;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = localStorage.getItem('hoppers_language');
+        if (saved === 'en' || saved === 'bn' || saved === 'hi') {
+          return saved;
+        }
+      }
+    } catch (e) {
+      console.warn('localStorage not accessible for language preference:', e);
     }
     return 'en';
   });
 
   // App Theme: 'dark' (default battery saver) | 'light'
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const saved = localStorage.getItem('hoppers_theme');
-    return saved === 'light' ? 'light' : 'dark';
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = localStorage.getItem('hoppers_theme');
+        return saved === 'light' ? 'light' : 'dark';
+      }
+    } catch (e) {
+      console.warn('localStorage not accessible for theme preference:', e);
+    }
+    return 'dark';
   });
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else {
-      document.documentElement.classList.remove('theme-light');
+    try {
+      if (theme === 'light') {
+        document.documentElement.classList.add('theme-light');
+      } else {
+        document.documentElement.classList.remove('theme-light');
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('hoppers_theme', theme);
+      }
+    } catch (e) {
+      console.warn('Failed to save theme preference:', e);
     }
-    localStorage.setItem('hoppers_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -134,7 +156,13 @@ export function App() {
 
   // Persist language
   useEffect(() => {
-    localStorage.setItem('hoppers_language', language);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('hoppers_language', language);
+      }
+    } catch (e) {
+      console.warn('Failed to save language preference:', e);
+    }
   }, [language]);
 
   // Persist visited pandals in passport
@@ -396,7 +424,18 @@ export function App() {
         language={language}
         onLanguageChange={setLanguage}
       />
+
+      {/* Low Battery Emergency Toast / AMOLED Power Save Prompt */}
+      <PowerSaveToast language={language} />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <PowerSaveProvider>
+      <AppContent />
+    </PowerSaveProvider>
   );
 }
 

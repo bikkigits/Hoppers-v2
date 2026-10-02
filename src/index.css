@@ -256,3 +256,54 @@ html.theme-light .leaflet-control-attribution {
   padding: 4px 8px !important;
 }
 
+/* ==========================================================================
+   AMOLED Ultra-Low Battery 'Power Save' Survival Mode Engine
+   ========================================================================== */
+html.power-save-mode,
+html.power-save-mode body,
+html.power-save-mode #root {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* 1. Stop all non-essential GPU rendering, infinite radar sweeps, and continuous keyframes */
+html.power-save-mode *,
+html.power-save-mode *::before,
+html.power-save-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Preserve minimal active tap feedback */
+html.power-save-mode button:active {
+  opacity: 0.8 !important;
+}
+
+/* 2. Pure AMOLED Surfaces & Borders (Physically turns off OLED subpixels) */
+html.power-save-mode .bg-slate-900,
+html.power-save-mode .bg-slate-950,
+html.power-save-mode .bg-\[\#080B11\],
+html.power-save-mode .bg-\[\#0B0F19\] {
+  background-color: #000000 !important;
+  border-color: #334155 !important;
+}
+
+/* 3. Ultra High-Contrast Grayscale Leaflet Map Tiles */
+html.power-save-mode .leaflet-container {
+  background-color: #000000 !important;
+}
+
+html.power-save-mode .dark-tiles .leaflet-tile {
+  filter: grayscale(100%) contrast(160%) brightness(55%) invert(100%) hue-rotate(180deg) !important;
+}
+
+/* 4. High-Contrast Monochromatic Marker Outlines */
+html.power-save-mode .leaflet-popup-content-wrapper {
+  background: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+

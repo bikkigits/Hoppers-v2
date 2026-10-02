@@ -13,15 +13,19 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function incoming() {
-      return request.resource.data;
+    function isSafeVotePayload(data) {
+      return data.keys().hasOnly(['low', 'moderate', 'heavy', 'extreme', 'lastUpdated']) &&
+             (!('low' in data) || (data.low is number && data.low >= 0)) &&
+             (!('moderate' in data) || (data.moderate is number && data.moderate >= 0)) &&
+             (!('heavy' in data) || (data.heavy is number && data.heavy >= 0)) &&
+             (!('extreme' in data) || (data.extreme is number && data.extreme >= 0));
     }
 
-    function isValidCrowdData(data) {
-      return data.low is number && data.low >= 0 &&
-             data.moderate is number && data.moderate >= 0 &&
-             data.heavy is number && data.heavy >= 0 &&
-             data.extreme is number && data.extreme >= 0;
+    function isReasonableIncrement(incoming, existing) {
+      return (!('low' in incoming) || (incoming.low <= (('low' in existing) ? existing.low : 0) + 5)) &&
+             (!('moderate' in incoming) || (incoming.moderate <= (('moderate' in existing) ? existing.moderate : 0) + 5)) &&
+             (!('heavy' in incoming) || (incoming.heavy <= (('heavy' in existing) ? existing.heavy : 0) + 5)) &&
+             (!('extreme' in incoming) || (incoming.extreme <= (('extreme' in existing) ? existing.extreme : 0) + 5));
     }
 
     // Pandal Crowd Real-Time Voting Collection
@@ -29,8 +33,15 @@ service cloud.firestore {
       // Allow public read for real-time map crowd status
       allow read: if isValidId(pandalId);
 
-      // Allow public crowd voting increments
-      allow create, update: if isValidId(pandalId) && isValidCrowdData(incoming());
+      // Enforce strict creation schema
+      allow create: if isValidId(pandalId) && isSafeVotePayload(request.resource.data);
+
+      // Enforce increment verification and safe fields on updates
+      allow update: if isValidId(pandalId) &&
+                       isSafeVotePayload(request.resource.data) &&
+                       isReasonableIncrement(request.resource.data, resource.data);
+
+      // Deletion is strictly prohibited
       allow delete: if false;
     }
   }

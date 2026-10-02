@@ -114,13 +114,37 @@ export function isWithinBoundingBox(lat: number, lng: number, box: BoundingBox):
  * @param filter - The active filter key
  * @returns boolean - True if the pandal is within the geofenced boundary
  */
-export function matchesPandalFilter(pandal: Pandal, filter: FilterType): boolean {
+export function matchesPandalFilter(
+  pandal: Pandal,
+  filter: FilterType,
+  visitedList?: { pandalId: string }[]
+): boolean {
   // 1. 'all': Return true for all pandals
   if (filter === 'all') {
     return true;
   }
 
-  // 2. POI / Utility filters do not match pandals directly
+  // 2. Curated Filters
+  if (filter === 'featured') {
+    return Boolean(pandal.isFeatured);
+  }
+
+  if (filter === 'heritage') {
+    return Boolean(
+      pandal.category?.toLowerCase().includes('heritage') ||
+      pandal.theme?.en?.toLowerCase().includes('traditional') ||
+      pandal.theme?.en?.toLowerCase().includes('sabeki') ||
+      pandal.theme?.en?.toLowerCase().includes('heritage') ||
+      pandal.description?.en?.toLowerCase().includes('bonedi') ||
+      pandal.highlight?.en?.toLowerCase().includes('heritage')
+    );
+  }
+
+  if (filter === 'saved') {
+    return visitedList ? visitedList.some((v) => v.pandalId === pandal.id) : false;
+  }
+
+  // 3. POI / Utility filters do not match pandals directly
   if (
     filter === 'police' ||
     filter === 'toilets' ||
@@ -134,7 +158,7 @@ export function matchesPandalFilter(pandal: Pandal, filter: FilterType): boolean
   const lat = pandal.lat;
   const lng = pandal.lng;
 
-  // 3. Strict rectangular bounding box evaluation (Hard Geofencing)
+  // 4. Strict rectangular bounding box evaluation (Hard Geofencing)
   switch (filter) {
     case 'north':
       return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.north);

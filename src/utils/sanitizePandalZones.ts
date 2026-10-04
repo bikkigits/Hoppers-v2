@@ -315,6 +315,26 @@ const LOCALITY_RULES: { zone: Zone; keywords: string[] }[] = [
  * 4. Geospatial coordinate bounding box
  */
 export function resolvePandalZone(pandal: Pandal): Zone {
+  // 0. High-priority check for Action Area / Newtown
+  const address = (pandal.address || '').toLowerCase();
+  const nameEn = (pandal.name?.en || '').toLowerCase();
+  if (
+    address.includes('action area') ||
+    address.includes('newtown') ||
+    address.includes('new town') ||
+    nameEn.includes('action area') ||
+    nameEn.includes('newtown') ||
+    nameEn.includes('new town') ||
+    (typeof pandal.lat === 'number' &&
+      typeof pandal.lng === 'number' &&
+      pandal.lat >= 22.555 &&
+      pandal.lat <= 22.620 &&
+      pandal.lng >= 88.455 &&
+      pandal.lng <= 88.525)
+  ) {
+    return 'Newtown';
+  }
+
   // 1. Direct ID match
   const idNormalized = (pandal.id || '').toLowerCase().trim();
   if (DIRECT_ID_ZONE_MAP[idNormalized]) {

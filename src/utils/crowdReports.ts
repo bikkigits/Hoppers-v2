@@ -39,6 +39,7 @@ try {
         const incoming: CrowdReportItem = ev.data.payload;
         const all = getAllCrowdReports();
         if (!all.some((r) => r.id === incoming.id)) {
+          const updated = [incoming, ...all];
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
           } catch (e) {

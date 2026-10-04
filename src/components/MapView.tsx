@@ -176,6 +176,8 @@ export const MapView: React.FC<Props> = ({
         central: { lat: 22.5680, lng: 88.3620, zoom: 14 },
         saltlake: { lat: 22.5850, lng: 88.4150, zoom: 14 },
         rajarhat: { lat: 22.6100, lng: 88.4550, zoom: 14 },
+        saltlake_rajarhat: { lat: 22.5920, lng: 88.4350, zoom: 13.5 },
+        newtown: { lat: 22.5780, lng: 88.4800, zoom: 14.2 },
         dumdum: { lat: 22.6250, lng: 88.4000, zoom: 14 },
         west: { lat: 22.5350, lng: 88.3150, zoom: 14 },
         behala: { lat: 22.4950, lng: 88.3150, zoom: 14 },

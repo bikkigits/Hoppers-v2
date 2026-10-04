@@ -189,6 +189,15 @@ export function resolveZoneHeuristic(pandal: Partial<Pandal>): Zone {
   const addr = (pandal.address || '').toLowerCase();
   const fullText = `${nameEn} ${addr} ${pandal.id || ''}`.toLowerCase();
 
+  // Newtown / Action Area hierarchy
+  if (
+    fullText.includes('action area') ||
+    fullText.includes('new town') ||
+    fullText.includes('newtown')
+  ) {
+    return 'Newtown';
+  }
+
   // East hierarchy
   if (
     fullText.includes('salt lake') ||

@@ -57,8 +57,8 @@ export const TopBar: React.FC<Props> = ({
         className="sticky top-0 z-30 w-full shrink-0 bg-[#080B11]/95 backdrop-blur-xl border-b border-slate-800/80 px-4 py-2.5 pt-[calc(0.5rem+var(--safe-top))] transition-all duration-200 shadow-md shadow-black/40"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          {/* Zone 1: Left - Menu Button with Subtle Diya Accent */}
-          <div className="flex items-center gap-3">
+          {/* Zone 1: Left - Menu Button & Brand Identity */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               id="profile-hamburger-btn"
               onClick={() => setIsProfileOpen(true)}
@@ -69,8 +69,8 @@ export const TopBar: React.FC<Props> = ({
               <Menu className="w-4.5 h-4.5 text-slate-200" />
             </button>
 
-            {/* Zone 2: Center - Clean Brand Wordmark & Icon */}
-            <div className="flex items-center gap-2 select-none">
+            {/* Brand Wordmark & Icon */}
+            <div className="flex items-center gap-2 select-none min-w-0">
               <img
                 src="/favicon.png"
                 alt="Hoppers Logo"
@@ -79,26 +79,22 @@ export const TopBar: React.FC<Props> = ({
                   (e.target as HTMLImageElement).src = '/icon.svg';
                 }}
               />
-              <h1 className="text-base font-extrabold tracking-tight text-white cursor-default">
+              <h1 className="text-base font-extrabold tracking-tight text-white cursor-default truncate">
                 Hoppers
               </h1>
-              <span className="hidden sm:inline-flex text-[11px] font-medium text-slate-400">
+              <span className="hidden sm:inline-flex text-[11px] font-medium text-slate-400 truncate">
                 · Kolkata Pujo 2026
-              </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Offline
               </span>
             </div>
           </div>
 
-          {/* Zone 3: Right - Battery/Power Save, Trilingual Selector & Emergency SOS */}
+          {/* Zone 2: Right - Battery/Power Save & Emergency SOS */}
           <div className="flex items-center gap-2 shrink-0">
             {/* 1-Tap AMOLED Power Saver Survival Toggle */}
             <button
               id="topbar-powersave-btn"
               onClick={togglePowerSave}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 ${
                 isPowerSaveMode
                   ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md shadow-amber-400/20'
                   : isLowBattery
@@ -126,46 +122,6 @@ export const TopBar: React.FC<Props> = ({
               )}
             </button>
 
-            {/* Trilingual Segmented Control: EN | বা | हि */}
-            <div
-              id="language-selector"
-              className="flex items-center p-0.5 rounded-xl bg-slate-900/90 border border-slate-800 shadow-xs"
-            >
-              <button
-                id="lang-btn-en"
-                onClick={() => onLanguageChange('en')}
-                className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
-                  language === 'en'
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-white font-medium'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                id="lang-btn-bn"
-                onClick={() => onLanguageChange('bn')}
-                className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
-                  language === 'bn'
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-white font-medium'
-                }`}
-              >
-                বাং
-              </button>
-              <button
-                id="lang-btn-hi"
-                onClick={() => onLanguageChange('hi')}
-                className={`px-2.5 py-1 text-xs rounded-lg transition-colors ${
-                  language === 'hi'
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'text-slate-400 hover:text-white font-medium'
-                }`}
-              >
-                हिं
-              </button>
-            </div>
-
             {/* Emergency SOS Button */}
             {onOpenSOS && (
               <button
@@ -175,7 +131,7 @@ export const TopBar: React.FC<Props> = ({
                 title="Emergency SOS & Kolkata Police/Medical Helplines"
                 aria-label="Emergency SOS"
               >
-                <ShieldAlert className="w-3.5 h-3.5 text-red-200" />
+                <ShieldAlert className="w-3.5 h-3.5 text-red-100" />
                 <span className="tracking-wide">SOS</span>
               </button>
             )}
@@ -188,6 +144,7 @@ export const TopBar: React.FC<Props> = ({
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         language={language}
+        onLanguageChange={onLanguageChange}
         visitedList={visitedList}
         theme={theme}
         onToggleTheme={onToggleTheme}

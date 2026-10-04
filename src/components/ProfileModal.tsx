@@ -17,12 +17,14 @@ import {
   Sun,
   BatteryLow,
   Download,
+  Globe,
 } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   language: Language;
+  onLanguageChange?: (lang: Language) => void;
   visitedList: VisitedPandal[];
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
@@ -33,6 +35,7 @@ export const ProfileModal: React.FC<Props> = ({
   isOpen,
   onClose,
   language,
+  onLanguageChange,
   visitedList,
   theme = 'dark',
   onToggleTheme,
@@ -146,11 +149,56 @@ export const ProfileModal: React.FC<Props> = ({
               </button>
             )}
 
-            {/* Offline PWA Install Button */}
-            <div className="flex items-center justify-start p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80">
-              <PWAInstallButton language={language} />
+            {/* Language Switcher Card (Right slot of 2-col grid) */}
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 flex flex-col justify-between">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="p-1 rounded-md bg-amber-400/15 text-amber-400 shrink-0">
+                  <Globe className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-semibold text-white">
+                  {language === 'bn' ? 'ভাষা নির্বাচন' : language === 'hi' ? 'भाषा चुनें' : 'Language'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => onLanguageChange?.('en')}
+                  className={`flex-1 py-1 text-[11px] rounded-md transition font-bold ${
+                    language === 'en'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLanguageChange?.('bn')}
+                  className={`flex-1 py-1 text-[11px] rounded-md transition font-bold ${
+                    language === 'bn'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  বাং
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLanguageChange?.('hi')}
+                  className={`flex-1 py-1 text-[11px] rounded-md transition font-bold ${
+                    language === 'hi'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  हिं
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Offline PWA Install Button (if available) */}
+          <PWAInstallButton language={language} />
 
           {/* Re-open Feature Tour */}
           {onOpenOnboarding && (

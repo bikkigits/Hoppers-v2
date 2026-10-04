@@ -52,7 +52,7 @@ describe('Data Integrity & Geographic Bounds', () => {
       expect(pandal.lng).toBeLessThan(89.0);
 
       // Zone validity
-      expect(['North', 'Central', 'South', 'East']).toContain(pandal.zone);
+      expect(['North', 'Central', 'South', 'East', 'Salt Lake & Rajarhat', 'Newtown']).toContain(pandal.zone);
     }
   });
 
@@ -101,8 +101,8 @@ describe('Geospatial Zone Classification & Filtering', () => {
     const northCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'north')).length;
     const southCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'south')).length;
     const centralCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'central')).length;
-    const saltlakeCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'saltlake')).length;
-    const rajarhatCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'rajarhat')).length;
+    const saltlakeRajarhatCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'saltlake_rajarhat')).length;
+    const newtownCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'newtown')).length;
     const dumdumCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'dumdum')).length;
     const westCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'west')).length;
     const behalaCount = PANDALS_DATA.filter((p) => matchesPandalFilter(p, 'behala')).length;
@@ -111,7 +111,8 @@ describe('Geospatial Zone Classification & Filtering', () => {
     expect(northCount).toBeGreaterThan(15);
     expect(southCount).toBeGreaterThan(15);
     expect(centralCount).toBeGreaterThan(5);
-    expect(saltlakeCount).toBeGreaterThan(0);
+    expect(saltlakeRajarhatCount).toBeGreaterThan(0);
+    expect(newtownCount).toBeGreaterThan(0);
     expect(dumdumCount).toBeGreaterThan(2);
     expect(behalaCount).toBeGreaterThan(3);
     expect(westCount).toBeGreaterThan(0);
@@ -227,8 +228,8 @@ describe('Translations 1:1 Parity', () => {
 });
 
 describe('sanitizePandalZones In-Memory Re-Classification Patch', () => {
-  it('ensures all pandals in PANDALS_DATA are strictly classified into North, Central, South, or East', () => {
-    const validZones = new Set(['North', 'Central', 'South', 'East']);
+  it('ensures all pandals in PANDALS_DATA are strictly classified into valid designated zones', () => {
+    const validZones = new Set(['North', 'Central', 'South', 'East', 'Salt Lake & Rajarhat', 'Newtown']);
     for (const pandal of PANDALS_DATA) {
       expect(validZones.has(pandal.zone)).toBe(true);
     }

@@ -4,6 +4,8 @@ export type MicroZoneId =
   | 'central'
   | 'saltlake'
   | 'rajarhat'
+  | 'saltlake_rajarhat'
+  | 'newtown'
   | 'dumdum'
   | 'west'
   | 'behala';
@@ -20,7 +22,7 @@ export interface BoundingBox {
  * Zero tolerance for coordinate boundary leakage.
  */
 export const ZONE_BOUNDING_BOXES: Record<
-  'north' | 'central' | 'south' | 'saltlake' | 'rajarhat' | 'dumdum' | 'west' | 'behala',
+  'north' | 'central' | 'south' | 'saltlake' | 'rajarhat' | 'saltlake_rajarhat' | 'newtown' | 'dumdum' | 'west' | 'behala',
   BoundingBox
 > = {
   // North Kolkata: Shyambazar, Bagbazar, Sovabazar, Kumartuli, Tala, Cossipore, Ultadanga
@@ -51,7 +53,6 @@ export const ZONE_BOUNDING_BOXES: Record<
   },
 
   // Salt Lake: FD, BJ, AJ, EC, AE Blocks, Bidhannagar, Karunamoyee, Central Park, Sector 1-3
-  // Strictly cuts off Lake Town / Baguiati to north (maxLat 22.595) and New Town to east (maxLng 88.435)
   saltlake: {
     minLat: 22.565,
     maxLat: 22.595,
@@ -59,13 +60,28 @@ export const ZONE_BOUNDING_BOXES: Record<
     maxLng: 88.435,
   },
 
-  // Rajarhat & New Town: Action Area 1-3, Chinar Park, Eco Park, City Centre 2
-  // Strictly bounded corridor east of Salt Lake (lng > 88.435) and excludes Barasat (maxLat 22.635)
+  // Rajarhat: Chinar Park, Eco Park north, City Centre 2, Rajarhat Main Road, Tegharia
   rajarhat: {
     minLat: 22.560,
     maxLat: 22.635,
     minLng: 88.435001,
     maxLng: 88.490,
+  },
+
+  // Unified Salt Lake & Rajarhat: Comprehensive urban belt
+  saltlake_rajarhat: {
+    minLat: 22.565,
+    maxLat: 22.645,
+    minLng: 88.395,
+    maxLng: 88.475,
+  },
+
+  // Newtown: Action Area I, II, III, Major Arterial Road, Biswa Bangla Sarani east
+  newtown: {
+    minLat: 22.555,
+    maxLat: 22.620,
+    minLng: 88.455,
+    maxLng: 88.525,
   },
 
   // Dum Dum: Dum Dum Park, Nagerbazar, Motijheel, Cantonment, Lake Town, Sreebhumi, Bangur
@@ -104,6 +120,39 @@ export function isWithinBoundingBox(lat: number, lng: number, box: BoundingBox):
     return false;
   }
   return lat >= box.minLat && lat <= box.maxLat && lng >= box.minLng && lng <= box.maxLng;
+}
+
+/**
+ * Determines whether a pandal belongs strictly to the Newtown / Action Area zone.
+ * Evaluates semantic tokens in address/name (Action Area I, II, III, Newtown) or spatial coordinates.
+ */
+export function isNewtownPandal(pandal: Pandal): boolean {
+  const address = (pandal.address || '').toLowerCase();
+  const nameEn = (pandal.name?.en || '').toLowerCase();
+  const isSemanticNewtown =
+    address.includes('action area') ||
+    address.includes('newtown') ||
+    address.includes('new town') ||
+    nameEn.includes('action area') ||
+    nameEn.includes('newtown') ||
+    nameEn.includes('new town');
+
+  if (isSemanticNewtown) return true;
+
+  return isWithinBoundingBox(pandal.lat, pandal.lng, ZONE_BOUNDING_BOXES.newtown);
+}
+
+/**
+ * Determines whether a pandal belongs to the unified Salt Lake & Rajarhat zone.
+ * Excludes pandals categorized under Newtown.
+ */
+export function isSaltLakeRajarhatPandal(pandal: Pandal): boolean {
+  if (isNewtownPandal(pandal)) return false;
+  return (
+    isWithinBoundingBox(pandal.lat, pandal.lng, ZONE_BOUNDING_BOXES.saltlake_rajarhat) ||
+    isWithinBoundingBox(pandal.lat, pandal.lng, ZONE_BOUNDING_BOXES.saltlake) ||
+    isWithinBoundingBox(pandal.lat, pandal.lng, ZONE_BOUNDING_BOXES.rajarhat)
+  );
 }
 
 /**
@@ -169,11 +218,13 @@ export function matchesPandalFilter(
     case 'south':
       return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.south);
 
+    case 'saltlake_rajarhat':
     case 'saltlake':
-      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.saltlake);
-
     case 'rajarhat':
-      return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.rajarhat);
+      return isSaltLakeRajarhatPandal(pandal);
+
+    case 'newtown':
+      return isNewtownPandal(pandal);
 
     case 'dumdum':
       return isWithinBoundingBox(lat, lng, ZONE_BOUNDING_BOXES.dumdum);
@@ -198,8 +249,8 @@ export function getPandalMatchedZones(pandal: Pandal): string[] {
   if (matchesPandalFilter(pandal, 'north')) matched.push('North');
   if (matchesPandalFilter(pandal, 'south')) matched.push('South');
   if (matchesPandalFilter(pandal, 'central')) matched.push('Central');
-  if (matchesPandalFilter(pandal, 'saltlake')) matched.push('Salt Lake');
-  if (matchesPandalFilter(pandal, 'rajarhat')) matched.push('Rajarhat');
+  if (isSaltLakeRajarhatPandal(pandal)) matched.push('Salt Lake & Rajarhat');
+  if (isNewtownPandal(pandal)) matched.push('Newtown');
   if (matchesPandalFilter(pandal, 'dumdum')) matched.push('Dum Dum');
   if (matchesPandalFilter(pandal, 'west')) matched.push('West Kolkata');
   if (matchesPandalFilter(pandal, 'behala')) matched.push('Behala');

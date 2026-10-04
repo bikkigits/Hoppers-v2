@@ -2,7 +2,7 @@ export type Language = 'en' | 'bn' | 'hi';
 
 export type CrowdLevel = 'Low' | 'Moderate' | 'Heavy' | 'Extreme';
 
-export type Zone = 'North' | 'Central' | 'South' | 'East';
+export type Zone = 'North' | 'Central' | 'South' | 'East' | 'Salt Lake & Rajarhat' | 'Newtown';
 
 export interface LocalizedString {
   en: string;
@@ -120,6 +120,8 @@ export type FilterType =
   | 'central'
   | 'saltlake'
   | 'rajarhat'
+  | 'saltlake_rajarhat'
+  | 'newtown'
   | 'dumdum'
   | 'west'
   | 'behala'

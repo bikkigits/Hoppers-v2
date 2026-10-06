@@ -2,7 +2,7 @@ export type Language = 'en' | 'bn' | 'hi';
 
 export type CrowdLevel = 'Low' | 'Moderate' | 'Heavy' | 'Extreme';
 
-export type Zone = 'North' | 'Central' | 'South' | 'East' | 'Salt Lake & Rajarhat' | 'Newtown';
+export type Zone = 'North' | 'Central' | 'South' | 'East' | 'Salt Lake & Rajarhat' | 'Newtown' | 'Howrah' | 'Behala';
 
 export interface LocalizedString {
   en: string;
@@ -171,7 +171,7 @@ export interface TransitHub {
   id: string;
   name: string;
   type: string;
-  category: 'ferry' | 'circular_rail' | 'suburban_rail';
+  category: 'ferry' | 'circular_rail' | 'suburban_rail' | 'railway';
   operator: string;
   lat: number;
   lng: number;
@@ -311,40 +311,8 @@ export interface DiningPOI extends BasePOI {
 
 export type UnifiedPOI = HospitalPOI | SanitationPOI | DiningPOI | (BasePOI & { [key: string]: any });
 
-export interface TransitHub {
-  id: string;
-  name: string;
-  type: string;
-  category: 'ferry' | 'railway';
-  operator: string;
-  lat: number;
-  lng: number;
-  connectingZones: string;
-  keyNearbyPandals: string;
-  travelTip: string;
-}
-
-export interface BusDiversion {
-  routeId: string;
-  routeNo: string;
-  title: string;
-  normalOrigin: string;
-  normalDestination: string;
-  totalStops: number;
-  operationalStatus: string;
-  terminusOrEntry: string;
-  restrictedStops: string;
-  divertedPath: string;
-  applicableHours: string;
-  connectingZones: string;
-  policeNotificationRef: string;
-}
-
 export interface BusRoutePolyline {
   route: BusDiversion;
   originCoords: { lat: number; lng: number };
   destCoords: { lat: number; lng: number };
 }
-
-
-

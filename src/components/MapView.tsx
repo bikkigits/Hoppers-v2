@@ -13,6 +13,7 @@ import {
   TrailStop,
   SuggestedPandal,
   SelectedMapItem,
+  BusDiversion,
 } from '../types';
 import {
   PANDALS_DATA,

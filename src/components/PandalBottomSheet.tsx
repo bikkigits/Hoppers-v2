@@ -7,6 +7,7 @@ import {
   VisitedPandal,
   TrailStop,
   SelectedMapItem,
+  TransitHub,
 } from '../types';
 import { PANDALS_DATA } from '../data/mockData';
 import { TRANSIT_HUBS } from '../data/transitHubsData';
@@ -131,9 +132,9 @@ export const PandalBottomSheet: React.FC<Props> = ({
   }, [station]);
 
   // Find nearest transit hub / ferry within 1.5 km (Transit Companion 2026)
-  const nearestTransitHub = React.useMemo(() => {
+  const nearestTransitHub = React.useMemo<{ hub: TransitHub; distKm: number; distM: number } | null>(() => {
     if (!pandal) return null;
-    let closestHub: { hub: (typeof TRANSIT_HUBS)[0]; distKm: number; distM: number } | null = null;
+    let closestHub: { hub: TransitHub; distKm: number; distM: number } | null = null;
     TRANSIT_HUBS.forEach((hub) => {
       const distKm = calculateDistanceKm(pandal.lat, pandal.lng, hub.lat, hub.lng);
       if (distKm <= 1.5) {

@@ -111,6 +111,7 @@ export interface VisitedPandal {
 }
 
 export type FilterType =
+  | 'nearby'
   | 'all'
   | 'featured'
   | 'heritage'
@@ -118,11 +119,13 @@ export type FilterType =
   | 'north'
   | 'south'
   | 'central'
+  | 'east'
   | 'saltlake'
   | 'rajarhat'
   | 'saltlake_rajarhat'
   | 'newtown'
   | 'dumdum'
+  | 'howrah'
   | 'west'
   | 'behala'
   | 'police'
@@ -162,6 +165,35 @@ export interface RouteResult {
   exitGateAdvice?: { gate: string; destination: LocalizedString }[];
   destinationPandals: Pandal[];
   stationsList?: MetroStation[];
+}
+
+export interface TransitHub {
+  id: string;
+  name: string;
+  type: string;
+  category: 'ferry' | 'circular_rail' | 'suburban_rail';
+  operator: string;
+  lat: number;
+  lng: number;
+  connectingZones: string;
+  keyNearbyPandals: string;
+  travelTip: string;
+}
+
+export interface BusDiversion {
+  routeId: string;
+  routeNo: string;
+  title: string;
+  normalOrigin: string;
+  normalDestination: string;
+  totalStops: number;
+  operationalStatus: string;
+  terminusOrEntry: string;
+  restrictedStops: string;
+  divertedPath: string;
+  applicableHours: string;
+  connectingZones: string;
+  policeNotificationRef: string;
 }
 
 export type TravelMode = 'walking' | 'driving' | 'cycling' | 'transit';
@@ -278,5 +310,41 @@ export interface DiningPOI extends BasePOI {
 }
 
 export type UnifiedPOI = HospitalPOI | SanitationPOI | DiningPOI | (BasePOI & { [key: string]: any });
+
+export interface TransitHub {
+  id: string;
+  name: string;
+  type: string;
+  category: 'ferry' | 'railway';
+  operator: string;
+  lat: number;
+  lng: number;
+  connectingZones: string;
+  keyNearbyPandals: string;
+  travelTip: string;
+}
+
+export interface BusDiversion {
+  routeId: string;
+  routeNo: string;
+  title: string;
+  normalOrigin: string;
+  normalDestination: string;
+  totalStops: number;
+  operationalStatus: string;
+  terminusOrEntry: string;
+  restrictedStops: string;
+  divertedPath: string;
+  applicableHours: string;
+  connectingZones: string;
+  policeNotificationRef: string;
+}
+
+export interface BusRoutePolyline {
+  route: BusDiversion;
+  originCoords: { lat: number; lng: number };
+  destCoords: { lat: number; lng: number };
+}
+
 
 

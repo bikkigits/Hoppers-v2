@@ -12,15 +12,25 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
+        includeAssets: [
+          'favicon.ico',
+          'favicon.png',
+          'apple-touch-icon.png',
+          'icon.svg',
+          'hoppers_master.db',
+          'Hoppers_Transit_Hubs.csv',
+          'Hoppers_Puja_Bus_Diversions_2026.csv',
+          'batch1_reclassified.json',
+        ],
         manifest: {
           id: '/',
-          name: 'Hoppers – Durga Puja Companion',
-          short_name: 'Hoppers',
+          name: 'Hoppers (হপার্স / हॉपर्स)',
+          short_name: 'Hoppers (হপার্স / हॉपर्स)',
           description: 'Offline Durga Puja navigation, crowd tracker, Kolkata metro router, and survival companion.',
-          theme_color: '#0B0F19',
-          background_color: '#0B0F19',
+          theme_color: '#080B11',
+          background_color: '#080B11',
           display: 'standalone',
+          orientation: 'portrait',
           start_url: '/',
           scope: '/',
           icons: [
@@ -48,17 +58,17 @@ export default defineConfig(() => {
           clientsClaim: true,
           skipWaiting: true,
           cleanupOutdatedCaches: true,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json}'],
-          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json,csv,db}'],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
           runtimeCaching: [
             {
-              // OpenStreetMap Map Tiles (abc subdomain wildcard)
+              // OpenStreetMap Map Tiles (abc subdomains)
               urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'osm-map-tiles-cache',
                 expiration: {
-                  maxEntries: 3000,
+                  maxEntries: 4000,
                   maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
                   purgeOnQuotaError: true,
                 },
@@ -68,14 +78,14 @@ export default defineConfig(() => {
               },
             },
             {
-              // General OpenStreetMap fallback pattern
-              urlPattern: /^https:\/\/.*\.tile\.openstreetmap\.org\/.*/i,
+              // CARTO Dark / Positron Base Map Tiles
+              urlPattern: /^https:\/\/.*\.basemaps\.cartocdn\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
-                cacheName: 'osm-map-tiles-cache',
+                cacheName: 'carto-map-tiles-cache',
                 expiration: {
                   maxEntries: 3000,
-                  maxAgeSeconds: 30 * 24 * 60 * 60,
+                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
                   purgeOnQuotaError: true,
                 },
                 cacheableResponse: {
@@ -100,13 +110,28 @@ export default defineConfig(() => {
               },
             },
             {
-              // Pandal Location & Live Sync API Routes
-              urlPattern: /^\/api\/(pandals|crowd-reports|health).*/i,
+              // Static Datasets, Database and CSV Files
+              urlPattern: /\.(db|csv|json)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'static-datasets-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              // Live Crowd Status, Crowd Reports & Sync API Routes
+              urlPattern: /^\/api\/(crowd-status|crowd-reports|pandals|health).*/i,
               handler: 'StaleWhileRevalidate',
               options: {
-                cacheName: 'api-data-cache',
+                cacheName: 'api-crowd-data-cache',
                 expiration: {
-                  maxEntries: 100,
+                  maxEntries: 200,
                   maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
                 },
                 cacheableResponse: {
@@ -147,7 +172,8 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: false,
+          enabled: true,
+          type: 'module',
         },
       }),
     ],

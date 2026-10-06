@@ -9,8 +9,9 @@ import {
   SelectedMapItem,
 } from '../types';
 import { PANDALS_DATA } from '../data/mockData';
+import { TRANSIT_HUBS } from '../data/transitHubsData';
 import { TRANSLATIONS } from '../data/translations';
-import { formatDistance, estimateWalkingMinutes } from '../utils/geo';
+import { formatDistance, estimateWalkingMinutes, calculateDistanceKm } from '../utils/geo';
 import confetti from 'canvas-confetti';
 import {
   X,
@@ -128,6 +129,21 @@ export const PandalBottomSheet: React.FC<Props> = ({
       );
     });
   }, [station]);
+
+  // Find nearest transit hub / ferry within 1.5 km (Transit Companion 2026)
+  const nearestTransitHub = React.useMemo(() => {
+    if (!pandal) return null;
+    let closestHub: { hub: (typeof TRANSIT_HUBS)[0]; distKm: number; distM: number } | null = null;
+    TRANSIT_HUBS.forEach((hub) => {
+      const distKm = calculateDistanceKm(pandal.lat, pandal.lng, hub.lat, hub.lng);
+      if (distKm <= 1.5) {
+        if (!closestHub || distKm < closestHub.distKm) {
+          closestHub = { hub, distKm, distM: distKm * 1000 };
+        }
+      }
+    });
+    return closestHub;
+  }, [pandal]);
 
   // Early return only after all hooks are unconditionally initialized
   if (!selectedItem) return null;
@@ -305,6 +321,51 @@ export const PandalBottomSheet: React.FC<Props> = ({
                     {walkMin ? `~${walkMin}m walk` : 'Zone ' + pandal.zone}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Quick Transit Hub / Ferry Companion Chip (<1.5km) */}
+            {nearestTransitHub && (
+              <div className="mt-2.5 px-3 py-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-base">{nearestTransitHub.hub.category === 'ferry' ? '🚢' : '🚉'}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">
+                      Nearest {nearestTransitHub.hub.category === 'ferry' ? 'Ferry Ghat' : 'Rail Hub'} ({Math.round(nearestTransitHub.distM)}m)
+                    </p>
+                    <p className="text-xs font-semibold text-white truncate">{nearestTransitHub.hub.name}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] text-cyan-300 font-medium px-2 py-0.5 rounded-md bg-cyan-900/60 shrink-0">
+                  ~{Math.round(nearestTransitHub.distM / 75)}m walk
+                </span>
+              </div>
+            )}
+
+            {/* Survival Snapshot Row (@Sub-ProximityEngine) */}
+            <div className="mt-3 px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-between text-xs shadow-inner">
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <span>🚻</span>
+                <span className="font-semibold text-white">80m</span>
+                <span className="text-[10px] text-slate-400 hidden sm:inline">Toilet</span>
+              </div>
+              <span className="text-slate-600">|</span>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <span>💳</span>
+                <span className="font-semibold text-white">120m</span>
+                <span className="text-[10px] text-slate-400 hidden sm:inline">ATM</span>
+              </div>
+              <span className="text-slate-600">|</span>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <span>🏥</span>
+                <span className="font-semibold text-white">350m</span>
+                <span className="text-[10px] text-slate-400 hidden sm:inline">Medical</span>
+              </div>
+              <span className="text-slate-600">|</span>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <span>🅿️</span>
+                <span className="font-semibold text-white">210m</span>
+                <span className="text-[10px] text-slate-400 hidden sm:inline">Parking</span>
               </div>
             </div>
 

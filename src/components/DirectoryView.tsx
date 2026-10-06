@@ -6,8 +6,10 @@ import {
   Language,
   VisitedPandal,
   TrailStop,
+  BusDiversion,
 } from '../types';
 import { PANDALS_DATA, CRITICAL_FACILITIES, METRO_STATIONS } from '../data/mockData';
+import { BUS_DIVERSIONS } from '../data/busDiversionsData';
 import { TRANSLATIONS } from '../data/translations';
 import { calculateDistanceKm, formatDistance } from '../utils/geo';
 import { getPandalCrowdSummary } from '../utils/crowdReports';
@@ -31,6 +33,7 @@ import {
   Plus,
   Check,
   RotateCcw,
+  Bus,
 } from 'lucide-react';
 
 interface Props {
@@ -45,9 +48,10 @@ interface Props {
   onAddFacilityToTrail?: (facility: FacilityPoint) => void;
   onOpenTrailBuilder?: () => void;
   onViewFacilityOnMap?: (facility: FacilityPoint) => void;
+  onSelectBusDiversion?: (route: BusDiversion) => void;
 }
 
-type DirectorySection = 'pandals' | 'poi';
+type DirectorySection = 'pandals' | 'poi' | 'buses';
 
 export const DirectoryView: React.FC<Props> = ({
   language,
@@ -61,16 +65,20 @@ export const DirectoryView: React.FC<Props> = ({
   onAddFacilityToTrail,
   onOpenTrailBuilder,
   onViewFacilityOnMap,
+  onSelectBusDiversion,
 }) => {
   const t = TRANSLATIONS[language];
 
-  // Directory section switcher: Pandals vs POI & Transit
+  // Directory section switcher: Pandals vs POI vs Bus Diversions
   const [section, setSection] = useState<DirectorySection>('pandals');
+
+  // Bus section state
+  const [busSearch, setBusSearch] = useState('');
 
   // Pandal section states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedZone, setSelectedZone] = useState<'all' | 'North' | 'Central' | 'South' | 'East'>('all');
-  const [sortBy, setSortBy] = useState<'distance' | 'crowd' | 'name'>(userCoords ? 'distance' : 'name');
+  const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
+  const [sortBy, setSortBy] = useState<'distance' | 'crowd' | 'name'>('distance');
   const [visibleCount, setVisibleCount] = useState(50);
   const [, setCrowdUpdateTick] = useState(0);
 
@@ -86,7 +94,7 @@ export const DirectoryView: React.FC<Props> = ({
 
   React.useEffect(() => {
     setVisibleCount(50);
-  }, [searchTerm, selectedZone, sortBy]);
+  }, [searchTerm, selectedFilter, sortBy]);
 
   // POI section states
   const [poiSearch, setPoiSearch] = useState('');
@@ -126,10 +134,44 @@ export const DirectoryView: React.FC<Props> = ({
 
   // Filtered pandals
   const filteredPandals = useMemo(() => {
+    const refCoords = userCoords || { lat: 22.5645, lng: 88.3516 }; // Esplanade fallback
+
     return PANDALS_DATA.filter((pandal) => {
-      if (selectedZone !== 'all' && pandal.zone !== selectedZone) {
-        return false;
+      // Zone / Category Filter
+      if (selectedFilter !== 'nearby' && selectedFilter !== 'all') {
+        const pZone = pandal.zone.toLowerCase();
+        if (selectedFilter === 'saltlake_rajarhat') {
+          const match =
+            pandal.zone === 'Salt Lake & Rajarhat' ||
+            pZone.includes('salt') ||
+            pZone.includes('rajarhat') ||
+            pandal.nearestMetro.toLowerCase().includes('salt lake') ||
+            pandal.nearestMetro.toLowerCase().includes('karunamoyee');
+          if (!match) return false;
+        } else if (selectedFilter === 'newtown') {
+          const match =
+            pandal.zone === 'Newtown' ||
+            pZone.includes('newtown') ||
+            pZone.includes('new town') ||
+            pandal.nearestMetro.toLowerCase().includes('new town');
+          if (!match) return false;
+        } else if (selectedFilter === 'howrah') {
+          const match =
+            pZone.includes('howrah') ||
+            pandal.nearestMetro.toLowerCase().includes('howrah') ||
+            (pandal.address?.toLowerCase().includes('howrah') ?? false);
+          if (!match) return false;
+        } else if (selectedFilter === 'behala') {
+          const match =
+            pZone.includes('behala') ||
+            pandal.name.en.toLowerCase().includes('behala') ||
+            (pandal.address?.toLowerCase().includes('behala') ?? false);
+          if (!match) return false;
+        } else if (pandal.zone.toLowerCase() !== selectedFilter.toLowerCase()) {
+          return false;
+        }
       }
+
       if (!searchTerm.trim()) return true;
       const query = searchTerm.toLowerCase();
       const nameMatch =
@@ -144,9 +186,9 @@ export const DirectoryView: React.FC<Props> = ({
       const zoneMatch = pandal.zone.toLowerCase().includes(query);
       return nameMatch || themeMatch || metroMatch || zoneMatch;
     }).sort((a, b) => {
-      if (sortBy === 'distance' && userCoords) {
-        const distA = calculateDistanceKm(userCoords.lat, userCoords.lng, a.lat, a.lng);
-        const distB = calculateDistanceKm(userCoords.lat, userCoords.lng, b.lat, b.lng);
+      if (selectedFilter === 'nearby' || sortBy === 'distance') {
+        const distA = calculateDistanceKm(refCoords.lat, refCoords.lng, a.lat, a.lng);
+        const distB = calculateDistanceKm(refCoords.lat, refCoords.lng, b.lat, b.lng);
         return distA - distB;
       }
       if (sortBy === 'crowd') {
@@ -157,7 +199,7 @@ export const DirectoryView: React.FC<Props> = ({
       const nameB = b.name[language] || b.name.en;
       return nameA.localeCompare(nameB);
     });
-  }, [selectedZone, searchTerm, sortBy, userCoords, language]);
+  }, [selectedFilter, searchTerm, sortBy, userCoords, language]);
 
   // Filtered POIs
   const filteredPois = useMemo(() => {
@@ -304,6 +346,21 @@ export const DirectoryView: React.FC<Props> = ({
   };
 
 
+  // Filtered Bus Diversions
+  const filteredBusRoutes = useMemo(() => {
+    if (!busSearch.trim()) return BUS_DIVERSIONS;
+    const query = busSearch.toLowerCase();
+    return BUS_DIVERSIONS.filter((route) => {
+      const matchNo = route.routeNo.toLowerCase().includes(query);
+      const matchOrigin = route.normalOrigin.toLowerCase().includes(query);
+      const matchDest = route.normalDestination.toLowerCase().includes(query);
+      const matchPath = route.divertedPath.toLowerCase().includes(query);
+      const matchRestricted = route.restrictedStops.toLowerCase().includes(query);
+      const matchZones = route.connectingZones.toLowerCase().includes(query);
+      return matchNo || matchOrigin || matchDest || matchPath || matchRestricted || matchZones;
+    });
+  }, [busSearch]);
+
   const handleViewFacility = (facility: FacilityPoint) => {
     if (onViewFacilityOnMap) {
       onViewFacilityOnMap(facility);
@@ -341,34 +398,48 @@ export const DirectoryView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Primary Section Switcher: Pandals vs POI & Transit Directory */}
-      <div className="flex items-center p-1 bg-slate-900/90 rounded-2xl border border-slate-800 mb-4 shadow-sm">
+      {/* Primary Section Switcher: Pandals vs POI vs Buses */}
+      <div className="flex items-center p-1 bg-slate-900/90 rounded-2xl border border-slate-800 mb-4 shadow-sm gap-1">
         <button
           id="tab-pandals-btn"
           onClick={() => setSection('pandals')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
             section === 'pandals'
               ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
               : 'text-slate-400 hover:text-white'
           }`}
         >
           <span>🛕</span>
-          <span>
+          <span className="truncate">
             {t.tabPandals} ({PANDALS_DATA.length})
           </span>
         </button>
         <button
           id="tab-poi-btn"
           onClick={() => setSection('poi')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
             section === 'poi'
               ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
               : 'text-slate-400 hover:text-white'
           }`}
         >
           <span>🚨</span>
-          <span>
+          <span className="truncate">
             {t.tabPoi} ({allPoiFacilities.length})
+          </span>
+        </button>
+        <button
+          id="tab-buses-btn"
+          onClick={() => setSection('buses')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
+            section === 'buses'
+              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <span>🚌</span>
+          <span className="truncate">
+            Buses ({BUS_DIVERSIONS.length})
           </span>
         </button>
       </div>
@@ -397,29 +468,36 @@ export const DirectoryView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Zone Filter Chips */}
+          {/* Zone Filter Chips (Strict Order Invariant) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {(['all', 'North', 'Central', 'South', 'East'] as const).map((zone) => (
-              <button
-                key={zone}
-                onClick={() => setSelectedZone(zone)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition active:scale-95 ${
-                  selectedZone === zone
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-slate-200'
-                }`}
-              >
-                {zone === 'all'
-                  ? t.allZones
-                  : zone === 'North'
-                  ? t.zoneNorth
-                  : zone === 'Central'
-                  ? t.zoneCentral
-                  : zone === 'South'
-                  ? t.zoneSouth
-                  : 'East'}
-              </button>
-            ))}
+            {[
+              { id: 'nearby', label: 'Nearby', emoji: '📍' },
+              { id: 'all', label: t.allZones || 'All Zones' },
+              { id: 'North', label: t.zoneNorth || 'North', emoji: '🧭' },
+              { id: 'South', label: t.zoneSouth || 'South', emoji: '📍' },
+              { id: 'Central', label: t.zoneCentral || 'Central', emoji: '🏛️' },
+              { id: 'East', label: 'East', emoji: '🌅' },
+              { id: 'saltlake_rajarhat', label: 'Salt Lake & Rajarhat', emoji: '🌲' },
+              { id: 'newtown', label: 'Newtown', emoji: '🏢' },
+              { id: 'howrah', label: 'Howrah', emoji: '🌉' },
+              { id: 'behala', label: 'Behala', emoji: '⛵' },
+            ].map((option) => {
+              const isActive = selectedFilter === option.id;
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => setSelectedFilter(option.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition active:scale-95 ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                      : 'bg-slate-900/80 text-slate-400 border border-slate-800 hover:text-slate-200'
+                  }`}
+                >
+                  {option.emoji && <span>{option.emoji}</span>}
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Sort By Row */}
@@ -888,6 +966,106 @@ export const DirectoryView: React.FC<Props> = ({
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================= SECTION 3: KOLKATA POLICE BUS DIVERSIONS ================= */}
+      {section === 'buses' && (
+        <div className="space-y-3 animate-fade-in">
+          {/* Search Bus Routes */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              id="bus-search-input"
+              type="text"
+              value={busSearch}
+              onChange={(e) => setBusSearch(e.target.value)}
+              placeholder="Search Route No, Origin, Destination, or Diverted Path..."
+              className="w-full pl-10 pr-14 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-hidden focus:border-amber-400/50 shadow-xs"
+            />
+            {busSearch && (
+              <button
+                onClick={() => setBusSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded-md bg-slate-800"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="p-3 rounded-2xl bg-red-950/30 border border-red-500/30 flex items-start gap-2.5 text-xs text-slate-300">
+            <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-300">Official Kolkata Police Puja 2026 Traffic Advisory</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Tap on any diverted bus route below to visualize the restricted corridor and police detour on the live map.
+              </p>
+            </div>
+          </div>
+
+          {filteredBusRoutes.length === 0 ? (
+            <div className="text-center py-10 px-4 rounded-2xl bg-slate-900/50 border border-slate-800">
+              <Bus className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+              <p className="text-sm font-bold text-white">No Bus Routes Found</p>
+              <p className="text-xs text-slate-400 mt-1">Try searching a different route number or terminal name.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredBusRoutes.map((route) => (
+                <div
+                  key={route.routeId}
+                  onClick={() => onSelectBusDiversion && onSelectBusDiversion(route)}
+                  className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-red-500/50 transition-all shadow-sm space-y-2.5 cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 font-bold text-xs border border-red-500/40">
+                          Route {route.routeNo}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 font-semibold text-[10px] border border-amber-500/30">
+                          {route.operationalStatus}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[10px]">
+                          {route.connectingZones}
+                        </span>
+                      </div>
+
+                      <h3 className="text-sm font-bold text-white group-hover:text-red-300 transition">
+                        {route.normalOrigin} ➔ {route.normalDestination}
+                      </h3>
+
+                      <div className="mt-2 text-xs space-y-1 text-slate-300">
+                        <p className="text-red-300 font-medium">
+                          ⛔ <span className="font-bold">Restricted:</span> {route.restrictedStops}
+                        </p>
+                        <p className="text-emerald-300">
+                          🔄 <span className="font-bold">Diverted Path:</span> {route.divertedPath}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          ⏱️ <span className="font-semibold">Hours:</span> {route.applicableHours}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-slate-500 truncate">{route.policeNotificationRef}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelectBusDiversion) onSelectBusDiversion(route);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-red-950/40 shrink-0"
+                    >
+                      <Route className="w-3.5 h-3.5" />
+                      <span>View on Map</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

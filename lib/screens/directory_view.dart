@@ -70,10 +70,7 @@ class _DirectoryViewState extends State<DirectoryView> {
 
   Future<void> _loadPandals() async {
     try {
-      final db = AppDatabase.instance;
-      final rows = await (await db.database).query(AppDatabase.tablePandals);
-      final records = rows.map((r) => PandalRecord.fromMap(r)).toList();
-
+      final records = await AppDatabase.instance.getAllPandals();
       if (mounted) {
         setState(() {
           _masterPandals = records;
@@ -81,7 +78,7 @@ class _DirectoryViewState extends State<DirectoryView> {
         });
       }
     } catch (e) {
-      debugPrint('[Agent-Database] Directory query failed: $e');
+      debugPrint('[@AppDatabase] Directory query failed: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -89,7 +86,7 @@ class _DirectoryViewState extends State<DirectoryView> {
   LatLng get _refLocation => widget.userLocation ?? esplanadeFallback;
 
   double _calculateDistanceMeters(double lat, double lng) {
-    const double r = 6371000; // Earth radius in meters
+    const double r = 6371000;
     final double phi1 = _refLocation.latitude * (math.pi / 180);
     final double phi2 = lat * (math.pi / 180);
     final double deltaPhi = (lat - _refLocation.latitude) * (math.pi / 180);
@@ -108,9 +105,10 @@ class _DirectoryViewState extends State<DirectoryView> {
     if (_searchQuery.trim().isNotEmpty) {
       final q = _searchQuery.toLowerCase().trim();
       list = list.where((p) {
-        return p.name.toLowerCase().contains(q) ||
+        return p.nameEn.toLowerCase().contains(q) ||
+            (p.nameBn?.toLowerCase().contains(q) ?? false) ||
             (p.nearestMetro?.toLowerCase().contains(q) ?? false) ||
-            (p.theme2026?.toLowerCase().contains(q) ?? false);
+            (p.themeEn?.toLowerCase().contains(q) ?? false);
       }).toList();
     }
 
@@ -119,9 +117,9 @@ class _DirectoryViewState extends State<DirectoryView> {
       list = list.where((p) {
         final pZone = p.zone.toLowerCase().trim();
         if (_activeFilterId == 'saltlake_rajarhat') {
-          return pZone == 'saltlake_rajarhat' || pZone == 'saltlake' || pZone == 'rajarhat';
+          return pZone.contains('salt') || pZone.contains('rajarhat');
         }
-        return pZone == _activeFilterId;
+        return pZone == _activeFilterId || pZone.contains(_activeFilterId);
       }).toList();
     }
 
@@ -293,23 +291,47 @@ class _DirectoryViewState extends State<DirectoryView> {
                                   child: Text('🛕', style: TextStyle(fontSize: 18)),
                                 ),
                               ),
-                              title: Text(
-                                item.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.nameEn,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (item.isFeatured)
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 6),
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF59E0B).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: const Color(0xFFF59E0B), width: 0.8),
+                                      ),
+                                      child: const Text(
+                                        'FEATURED',
+                                        style: TextStyle(
+                                          color: Color(0xFFFBBF24),
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 2),
-                                  if (item.theme2026 != null && item.theme2026!.isNotEmpty)
+                                  if (item.themeEn != null && item.themeEn!.isNotEmpty)
                                     Text(
-                                      'Theme: ${item.theme2026}',
+                                      'Theme: ${item.themeEn}',
                                       style: const TextStyle(color: Color(0xFFFBBF24), fontSize: 11.5),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -332,13 +354,13 @@ class _DirectoryViewState extends State<DirectoryView> {
                                           ),
                                         ),
                                       ),
-                                      if (item.nearestMetro != null) ...[
+                                      if (item.nearestMetro != null && item.nearestMetro!.isNotEmpty) ...[
                                         const SizedBox(width: 6),
                                         const Icon(Icons.subway, size: 11, color: Color(0xFF38BDF8)),
                                         const SizedBox(width: 3),
                                         Flexible(
                                           child: Text(
-                                            item.nearestMetro!,
+                                            '${item.nearestMetro} (~${item.walkingTimeMin}m)',
                                             style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                                             overflow: TextOverflow.ellipsis,
                                           ),

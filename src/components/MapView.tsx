@@ -19,6 +19,7 @@ import {
   CRITICAL_FACILITIES,
   METRO_STATIONS,
 } from '../data/mockData';
+import { TRANSIT_HUBS } from '../data/transitHubsData';
 import { METRO_LINES, getLineStations } from '../data/metroStations';
 import { TRANSLATIONS } from '../data/translations';
 import {
@@ -65,6 +66,8 @@ interface Props {
   onClearWalkRoute?: () => void;
   activeMetroRoute?: MetroMapRoute | null;
   onClearMetroRoute?: () => void;
+  activeBusDiversion?: BusDiversion | null;
+  onClearBusDiversion?: () => void;
   trailStops?: TrailStop[];
   onOpenTrailBuilder?: () => void;
   onOpenSuggestPandal?: () => void;
@@ -84,6 +87,8 @@ export const MapView: React.FC<Props> = ({
   onClearWalkRoute,
   activeMetroRoute,
   onClearMetroRoute,
+  activeBusDiversion,
+  onClearBusDiversion,
   trailStops,
   onOpenTrailBuilder,
   onOpenSuggestPandal,
@@ -210,14 +215,86 @@ export const MapView: React.FC<Props> = ({
     });
   }, [mapSearchQuery]);
 
+  // Map Transit Hubs into FacilityPoint structure for unified rendering
+  const transitHubFacilities = useMemo<FacilityPoint[]>(() => {
+    return TRANSIT_HUBS.map((h) => ({
+      id: h.id,
+      name: { en: h.name, bn: h.name, hi: h.name },
+      category: (h.category === 'ferry' ? 'ferry' : 'railway') as any,
+      lat: h.lat,
+      lng: h.lng,
+      address: { en: h.connectingZones, bn: h.connectingZones, hi: h.connectingZones },
+      details: { en: `${h.type} • ${h.travelTip}`, bn: `${h.type} • ${h.travelTip}`, hi: `${h.type} • ${h.travelTip}` },
+      pujaHoursBadge: h.operator,
+    }));
+  }, []);
+
+  // Approximate Lat/Lng from existing dataset references for Police Bus Diversions (P1 Resolution)
+  const approximateLocationCoords = (query: string): [number, number] | null => {
+    if (!query) return null;
+    const q = query.toLowerCase().trim();
+
+    // 1. Search in Metro Stations
+    const stn = METRO_STATIONS.find(
+      (s) => s.name.en.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || q.includes(s.name.en.toLowerCase())
+    );
+    if (stn) return [stn.lat, stn.lng];
+
+    // 2. Search in Transit Hubs
+    const hub = TRANSIT_HUBS.find(
+      (h) => h.name.toLowerCase().includes(q) || h.id.toLowerCase().includes(q) || q.includes(h.name.toLowerCase())
+    );
+    if (hub) return [hub.lat, hub.lng];
+
+    // 3. Search in Master Pandals
+    const p = PANDALS_DATA.find(
+      (pd) => pd.name.en.toLowerCase().includes(q) || pd.zone.toLowerCase().includes(q) || q.includes(pd.name.en.toLowerCase())
+    );
+    if (p) return [p.lat, p.lng];
+
+    return null;
+  };
+
+  // Dynamic Bus Diversion Polyline Renderer (P1 Resolution)
+  const renderBusDiversionLine = (originString: string, destinationString: string): L.Polyline | null => {
+    const routesLayer = routesLayerRef.current;
+    const map = mapInstanceRef.current;
+    if (!routesLayer || !map) return null;
+
+    const fromCoords = approximateLocationCoords(originString);
+    const toCoords = approximateLocationCoords(destinationString);
+
+    if (!fromCoords || !toCoords) return null;
+
+    const diversionLine = L.polyline([fromCoords, toCoords], {
+      color: '#EF4444',
+      weight: 4,
+      dashArray: '6, 8',
+      opacity: 0.95,
+      lineCap: 'round',
+    });
+
+    diversionLine.bindTooltip(
+      `🚨 <b>Police Diverted Route</b><br/>${originString} ➔ ${destinationString}`,
+      { direction: 'top', className: 'hopper-metro-station-tooltip' }
+    );
+
+    routesLayer.addLayer(diversionLine);
+    const bounds = L.latLngBounds([fromCoords, toCoords]);
+    map.fitBounds(bounds, { padding: [60, 60], animate: true });
+
+    return diversionLine;
+  };
+
   // Proximity Summary for Active Utility Filter (Memoized with pure isolation)
   const closestUtilitySummary = useMemo(() => {
     if (!isUtilityActive) return null;
 
     const refLat = effectiveCoords.lat;
     const refLng = effectiveCoords.lng;
+    const allFacilitySources = [...CRITICAL_FACILITIES, ...transitHubFacilities];
 
-    const matching = CRITICAL_FACILITIES.filter((facility) => {
+    const matching = allFacilitySources.filter((facility) => {
       if (activeFilter === 'police') return facility.category === 'police';
       if (activeFilter === 'toilets') return facility.category === 'toilets';
       if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
@@ -246,7 +323,7 @@ export const MapView: React.FC<Props> = ({
       distanceBadge: distBadge,
       googleMapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${closest.facility.lat},${closest.facility.lng}`,
     };
-  }, [activeFilter, isUtilityActive, effectiveCoords]);
+  }, [activeFilter, isUtilityActive, effectiveCoords, transitHubFacilities]);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -766,7 +843,8 @@ export const MapView: React.FC<Props> = ({
 
       // Proximity-Sorted Utility POIs (Only rendered when a utility category is actively selected)
       if (isUtilityActive) {
-        const matchingFacilities = CRITICAL_FACILITIES.filter((facility) => {
+        const allFacilitySources = [...CRITICAL_FACILITIES, ...transitHubFacilities];
+        const matchingFacilities = allFacilitySources.filter((facility) => {
           if (activeFilter === 'police') return facility.category === 'police';
           if (activeFilter === 'toilets') return facility.category === 'toilets';
           if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
@@ -1000,6 +1078,21 @@ export const MapView: React.FC<Props> = ({
     const bounds = L.latLngBounds(coords);
     map.fitBounds(bounds, { padding: [80, 80], animate: true });
   }, [activeMetroRoute, language]);
+
+  // Handle Active Bus Diversion Polyline (Police Diverted Corridor)
+  useEffect(() => {
+    const routesLayer = routesLayerRef.current;
+    if (!routesLayer) return;
+
+    if (!activeBusDiversion) {
+      if (!activeWalkRoute && !activeMetroRoute && (!trailStops || trailStops.length < 2)) {
+        routesLayer.clearLayers();
+      }
+      return;
+    }
+
+    renderBusDiversionLine(activeBusDiversion.normalOrigin, activeBusDiversion.normalDestination);
+  }, [activeBusDiversion]);
 
   // Handle Multi-Stop Trail Polyline (Batched via requestAnimationFrame)
   useEffect(() => {
@@ -1366,6 +1459,43 @@ export const MapView: React.FC<Props> = ({
               onClick={onClearMetroRoute}
               className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 active:scale-95 transition shrink-0"
               title={t.clearRoute}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Floating Active Bus Diversion Route Banner */}
+      {activeBusDiversion && !activeWalkRoute && !activeMetroRoute && (
+        <div
+          id="active-bus-diversion-banner"
+          className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-red-500/50 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-red-500/20 text-red-400 shrink-0 font-black text-xs">
+              🚌
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs text-red-400">
+                <span className="font-bold">Route {activeBusDiversion.routeNo}</span>
+                <span>·</span>
+                <span className="text-[10px] text-amber-300 font-semibold">{activeBusDiversion.operationalStatus}</span>
+              </div>
+              <p className="text-xs font-semibold text-white truncate mt-0.5">
+                {activeBusDiversion.normalOrigin} ➔ {activeBusDiversion.normalDestination}
+              </p>
+              <p className="text-[10px] text-slate-300 mt-1 font-medium bg-slate-800/90 px-2 py-0.5 rounded-md inline-block truncate max-w-full">
+                🔄 {activeBusDiversion.divertedPath}
+              </p>
+            </div>
+          </div>
+
+          {onClearBusDiversion && (
+            <button
+              onClick={onClearBusDiversion}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 active:scale-95 transition shrink-0"
+              title="Clear bus diversion"
             >
               <X className="w-4 h-4" />
             </button>

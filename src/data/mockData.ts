@@ -731,14 +731,66 @@ const CURATED_PANDALS: Pandal[] = [
   }
 ];
 
-// Merge curated showcase pandals with imported pandals (deduplicating by normalized name)
-const curatedNames = new Set(CURATED_PANDALS.map((p) => p.name.en.toLowerCase().replace(/[^a-z0-9]/g, '')));
-const filteredImported = IMPORTED_PANDALS.filter(
-  (p) => !curatedNames.has(p.name.en.toLowerCase().replace(/[^a-z0-9]/g, ''))
-);
+// Helper to normalize strings for comparison
+const normalizeKey = (str?: string) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-// High-performance in-memory re-classification patch executed at startup
-export const PANDALS_DATA: Pandal[] = sanitizePandalZones([...CURATED_PANDALS, ...filteredImported]);
+// Quick spatial distance (approximate Haversine in km)
+const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const dLat = (lat2 - lat1) * 111.32;
+  const dLon = (lon2 - lon1) * 111.32 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.sqrt(dLat * dLat + dLon * dLon);
+};
+
+// Track matched curated pandals to prevent double-merging
+const matchedCuratedIds = new Set<string>();
+
+// MERGE rich fields of CURATED_PANDALS directly into IMPORTED_PANDALS (Strict 713 DB resolution)
+const ENHANCED_IMPORTED_PANDALS: Pandal[] = IMPORTED_PANDALS.map((imported) => {
+  const impNameNorm = normalizeKey(imported.name.en);
+  const impId = imported.id;
+
+  // Find corresponding flagship match by ID, normalized name, or proximity (<150m + common word)
+  const match = CURATED_PANDALS.find((curated) => {
+    if (matchedCuratedIds.has(curated.id)) return false;
+    if (curated.id === impId) return true;
+
+    const curNameNorm = normalizeKey(curated.name.en);
+    if (impNameNorm === curNameNorm) return true;
+    if (impNameNorm.includes(curNameNorm) || curNameNorm.includes(impNameNorm)) return true;
+
+    // Proximity check (< 150m)
+    const distKm = getDistanceKm(imported.lat, imported.lng, curated.lat, curated.lng);
+    if (distKm <= 0.15) {
+      const impWords = (imported.name.en || '').toLowerCase().split(/[\s-]+/);
+      const curWords = curated.name.en.toLowerCase().split(/[\s-]+/);
+      const hasWordMatch = curWords.some((w) => w.length > 3 && impWords.includes(w));
+      if (hasWordMatch) return true;
+    }
+
+    return false;
+  });
+
+  if (match) {
+    matchedCuratedIds.add(match.id);
+    return {
+      ...imported,
+      exitGateSuggestion: match.exitGateSuggestion || imported.exitGateSuggestion,
+      isFeatured: match.isFeatured ?? imported.isFeatured,
+      theme: match.theme || imported.theme,
+      description: match.description || imported.description,
+      highlight: match.highlight || imported.highlight,
+      facilities: Array.from(new Set([...(match.facilities || []), ...(imported.facilities || [])])),
+      nearestMetro: match.nearestMetro || imported.nearestMetro,
+      nearestMetroEn: match.nearestMetroEn || imported.nearestMetroEn,
+      walkingTimeToMetroMin: match.walkingTimeToMetroMin || imported.walkingTimeToMetroMin,
+    };
+  }
+
+  return imported;
+});
+
+// High-performance in-memory re-classification patch executed at startup (Strictly 713 pandals)
+export const PANDALS_DATA: Pandal[] = sanitizePandalZones(ENHANCED_IMPORTED_PANDALS);
 export { sanitizePandalZones };
 import { UNIFIED_POI_FACILITIES } from './poiData';
 

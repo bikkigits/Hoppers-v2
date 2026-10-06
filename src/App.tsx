@@ -12,6 +12,7 @@ import {
   TrailStop,
   SuggestedPandal,
   SelectedMapItem,
+  BusDiversion,
 } from './types';
 import { PANDALS_DATA } from './data/mockData';
 import { TopBar } from './components/TopBar';
@@ -94,6 +95,7 @@ function AppContent() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [activeWalkRoute, setActiveWalkRoute] = useState<WalkRoute | null>(null);
   const [activeMetroRoute, setActiveMetroRoute] = useState<MetroMapRoute | null>(null);
+  const [activeBusDiversion, setActiveBusDiversion] = useState<BusDiversion | null>(null);
 
   // Suggest Pandal Modal State & Submissions
   const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
@@ -301,6 +303,8 @@ function AppContent() {
               onClearWalkRoute={() => setActiveWalkRoute(null)}
               activeMetroRoute={activeMetroRoute}
               onClearMetroRoute={() => setActiveMetroRoute(null)}
+              activeBusDiversion={activeBusDiversion}
+              onClearBusDiversion={() => setActiveBusDiversion(null)}
               trailStops={trailStops}
               onOpenTrailBuilder={() => setIsTrailBuilderOpen(true)}
               onOpenSuggestPandal={() => setIsSuggestModalOpen(true)}
@@ -341,6 +345,10 @@ function AppContent() {
             onAddFacilityToTrail={handleAddFacilityToTrail}
             onOpenTrailBuilder={() => setIsTrailBuilderOpen(true)}
             onViewFacilityOnMap={handleViewFacilityOnMap}
+            onSelectBusDiversion={(route) => {
+              setActiveBusDiversion(route);
+              setCurrentTab('map');
+            }}
           />
         )}
 
@@ -351,6 +359,8 @@ function AppContent() {
             onSelectPandal={(pandal) => setSelectedItem(pandal)}
             onClearPassport={handleClearPassport}
             onOpenMap={() => setCurrentTab('map')}
+            userCoords={userCoords}
+            onToggleVisited={handleToggleVisited}
           />
         )}
       </main>

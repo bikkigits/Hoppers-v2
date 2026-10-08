@@ -709,7 +709,7 @@ export const METRO_LINES: import('../types').MetroLineMeta[] = [
     id: 'blue',
     code: 'Line 1',
     name: { en: 'Blue Line (Line 1)', bn: 'ব্লু লাইন (লাইন ১)', hi: 'ब्लू लाइन (लाइन 1)' },
-    color: '#2563EB',
+    color: '#3B82F6',
     corridor: {
       en: 'North–South spine from Dakshineswar to Kavi Subhash',
       bn: 'উত্তর-দক্ষিণ করিডোর: দক্ষিণেশ্বর থেকে কবি সুভাষ',
@@ -754,7 +754,7 @@ export const METRO_LINES: import('../types').MetroLineMeta[] = [
     id: 'purple',
     code: 'Line 3',
     name: { en: 'Purple Line (Line 3)', bn: 'পার্পল লাইন (লাইন ৩)', hi: 'पर्पल लाइन (लाइन 3)' },
-    color: '#9333EA',
+    color: '#8B5CF6',
     corridor: {
       en: 'Diamond Harbour Rd from Joka to Majerhat',
       bn: 'ডায়মন্ড হারবার রোড: জোকা থেকে মাঝেরহাট',

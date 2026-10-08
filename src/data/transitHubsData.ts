@@ -8,7 +8,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Inland Waterways / Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5855,
-    "lng": 88.3475,
+    "lng": 88.3440,
     "connectingZones": "Howrah, Central Kolkata",
     "keyNearbyPandals": "Howrah Maidan; Burrabazar Posta Durgotsav; Ramrajatala",
     "travelTip": "Cross Hooghly river in 7 mins to reach BBD Bag & Burrabazar pandals without Howrah Bridge road jam."
@@ -20,7 +20,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5746,
-    "lng": 88.3428,
+    "lng": 88.3408,
     "connectingZones": "Central Kolkata, BBD Bag",
     "keyNearbyPandals": "Burrabazar; Lalbazar Sarbojanin; Janbazar; College Square feeder",
     "travelTip": "Direct ferry to Howrah & Dakshineswar; walkable to BBD Bag Circular Railway & Mahakaran Green Line."
@@ -32,7 +32,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5678,
-    "lng": 88.3411,
+    "lng": 88.3380,
     "connectingZones": "Central Kolkata, Esplanade",
     "keyNearbyPandals": "Eden Gardens precinct; Babughat festival hub; Esplanade transit zone",
     "travelTip": "Connects to Belur Math directly; 10 min walk to Esplanade Metro multi-line interchange."
@@ -44,7 +44,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.6033,
-    "lng": 88.3644,
+    "lng": 88.3605,
     "connectingZones": "North Kolkata",
     "keyNearbyPandals": "Baghbazar Sarbojanin; Kumartuli Park; Kumartuli Sarbojanin; Jagat Mukherjee Park",
     "travelTip": "Primary North Kolkata ferry gate; direct boat connection from Howrah Station and Bally."
@@ -56,7 +56,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5936,
-    "lng": 88.3581,
+    "lng": 88.3540,
     "connectingZones": "North Kolkata",
     "keyNearbyPandals": "Ahiritola Sarbojanin; Beniatola Sarbojanin; Sovabazar Rajbari; BK Paul Park",
     "travelTip": "Stepping stone to historic heritage sabeki pujas; beats Central Avenue vehicular jams."
@@ -68,7 +68,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5989,
-    "lng": 88.3611,
+    "lng": 88.3565,
     "connectingZones": "North Kolkata",
     "keyNearbyPandals": "Sovabazar Rajbari (Baro Taraf & Choto Taraf); Hatibagan Nabin Pally; Kashi Bose Lane",
     "travelTip": "Quick river exit for North Kolkata heritage trail; 10 mins walk to Sovabazar Sutanuti Metro."
@@ -80,7 +80,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.6322,
-    "lng": 88.3575,
+    "lng": 88.3555,
     "connectingZones": "Howrah North, Bally",
     "keyNearbyPandals": "Belur Math Durga Puja; Bally Barowari; Liluah Sarbojanin",
     "travelTip": "Direct ferry to Chandpal Ghat & Dakshineswar; peaceful river transit between Howrah and Kolkata."
@@ -92,7 +92,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.6548,
-    "lng": 88.3562,
+    "lng": 88.3572,
     "connectingZones": "North Suburban",
     "keyNearbyPandals": "Dakshineswar Mandir puja; Ariadaha Sarbojanin; Dunlop Park",
     "travelTip": "Connects riverway directly to Blue Line Metro terminal (Dakshineswar station 350m walk)."
@@ -104,7 +104,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5769,
-    "lng": 88.3439,
+    "lng": 88.3412,
     "connectingZones": "Central Kolkata, Strand Road",
     "keyNearbyPandals": "BBD Bag pujas; Lalbazar; Mohammad Ali Park corridor",
     "travelTip": "Scenic promenade pier connecting Howrah Station; ideal entry into central colonial Kolkata."
@@ -116,7 +116,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5806,
-    "lng": 88.3461,
+    "lng": 88.3435,
     "connectingZones": "Central Kolkata, Burrabazar",
     "keyNearbyPandals": "Burrabazar; Posta Netaji Sporting; Jagannath Ghat area",
     "travelTip": "Direct ferry across from Howrah Railway Station; saves 45+ mins of Howrah Bridge congestion."
@@ -128,7 +128,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.5572,
-    "lng": 88.3375,
+    "lng": 88.3338,
     "connectingZones": "Central & South Kolkata, Maidan",
     "keyNearbyPandals": "Fort William concourse; Victoria Memorial precinct; Bhawanipore West access",
     "travelTip": "Connects to Botanical Garden & Howrah; adjacent to Eden Gardens Circular Rail station."
@@ -139,8 +139,8 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "type": "Ferry Ghat",
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
-    "lat": 22.5567,
-    "lng": 88.3244,
+    "lat": 22.5550,
+    "lng": 88.3180,
     "connectingZones": "Howrah South, Shibpur",
     "keyNearbyPandals": "B-Garden club pujas; Shibpur Bataitala; Mandirtala pujas",
     "travelTip": "Ferry link between South Howrah (Shibpur) and Kolkata Outram Ghat/Babughat."
@@ -151,8 +151,8 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "type": "Ferry Ghat",
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
-    "lat": 22.5458,
-    "lng": 88.3056,
+    "lat": 22.5450,
+    "lng": 88.3020,
     "connectingZones": "South West Kolkata, Kidderpore",
     "keyNearbyPandals": "Garden Reach Sarbojanin; Kidderpore 25 Palli; Metiabruz clubs",
     "travelTip": "Alternative ferry link to Howrah terminal avoiding Taratala/DH Road traffic bottlenecks."
@@ -164,7 +164,7 @@ export const TRANSIT_HUBS: TransitHub[] = [
     "category": "ferry",
     "operator": "Hooghly Nadi Jalpath Paribahan",
     "lat": 22.6517,
-    "lng": 88.3619,
+    "lng": 88.3580,
     "connectingZones": "Howrah North, Bally",
     "keyNearbyPandals": "Bally Bazar Sarbojanin; Belur clubs; Ballyhalt pandals",
     "travelTip": "River corridor straight to Baghbazar Ghat; bypasses BT Road festive road diversions."

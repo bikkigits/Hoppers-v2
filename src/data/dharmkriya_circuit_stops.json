@@ -1,0 +1,234 @@
+[
+  {
+    "circuit_id": "grand-tour",
+    "circuit_name": "The Grand Tour",
+    "total_stops": 6,
+    "ordered_pandals": [
+      {
+        "slug": "baghbazar-sarbojonin-durgotsav",
+        "name": "Baghbazar Sarbojonin Durgotsav"
+      },
+      {
+        "slug": "college-square-sarbojanin-durgotsab-committee",
+        "name": "College Square Sarbojanin Durgotsab Committee"
+      },
+      {
+        "slug": "suruchi-sangha",
+        "name": "Suruchi Sangha"
+      },
+      {
+        "slug": "ekdalia-evergreen-club",
+        "name": "Ekdalia Evergreen Club"
+      },
+      {
+        "slug": "santosh-mitra-square",
+        "name": "Santosh Mitra Square"
+      },
+      {
+        "slug": "sreebhumi-sporting-club",
+        "name": "Sreebhumi Sporting Club"
+      }
+    ]
+  },
+  {
+    "circuit_id": "north-classics",
+    "circuit_name": "North Kolkata Classics",
+    "total_stops": 6,
+    "ordered_pandals": [
+      {
+        "slug": "baghbazar-sarbojonin-durgotsav",
+        "name": "Baghbazar Sarbojonin Durgotsav"
+      },
+      {
+        "slug": "kumartuli-sarbojanin",
+        "name": "Kumartuli Sarbojanin"
+      },
+      {
+        "slug": "sovabazar-rajbarir-durga-pujo",
+        "name": "Sovabazar Rajbarir Durga Pujo"
+      },
+      {
+        "slug": "ahiritola",
+        "name": "Ahiritola Sarbojanin Durgotsab"
+      },
+      {
+        "slug": "college-square-sarbojanin-durgotsab-committee",
+        "name": "College Square Sarbojanin Durgotsab Committee"
+      },
+      {
+        "slug": "santosh-mitra-square",
+        "name": "Santosh Mitra Square"
+      }
+    ]
+  },
+  {
+    "circuit_id": "south-big-budget",
+    "circuit_name": "South Kolkata Big-Budget",
+    "total_stops": 6,
+    "ordered_pandals": [
+      {
+        "slug": "ekdalia-evergreen-club",
+        "name": "Ekdalia Evergreen Club"
+      },
+      {
+        "slug": "singhi-park",
+        "name": "Singhi Park"
+      },
+      {
+        "slug": "samaj-sebi-sangha",
+        "name": "Samaj Sebi Sangha"
+      },
+      {
+        "slug": "ballygunge-cultural-association",
+        "name": "Ballygunge Cultural Association"
+      },
+      {
+        "slug": "deshapriya-park",
+        "name": "Deshapriya Park"
+      },
+      {
+        "slug": "maddox-square",
+        "name": "Maddox Square"
+      }
+    ]
+  },
+  {
+    "circuit_id": "theme-trail",
+    "circuit_name": "Theme & Award Trail",
+    "total_stops": 6,
+    "ordered_pandals": [
+      {
+        "slug": "chetla-agrani-club",
+        "name": "Chetla Agrani Club"
+      },
+      {
+        "slug": "suruchi-sangha",
+        "name": "Suruchi Sangha"
+      },
+      {
+        "slug": "mudiali-club",
+        "name": "Mudiali Club"
+      },
+      {
+        "slug": "66-palli",
+        "name": "66 Palli"
+      },
+      {
+        "slug": "badamtala-ashar-sangha",
+        "name": "Badamtala Ashar Sangha"
+      },
+      {
+        "slug": "tridhara-sammilani",
+        "name": "Tridhara Sammilani"
+      }
+    ]
+  },
+  {
+    "circuit_id": "salt-lake",
+    "circuit_name": "Salt Lake & Sreebhumi",
+    "total_stops": 4,
+    "ordered_pandals": [
+      {
+        "slug": "sreebhumi-sporting-club",
+        "name": "Sreebhumi Sporting Club"
+      },
+      {
+        "slug": "salt-lake-fd-block",
+        "name": "Salt Lake FD Block"
+      },
+      {
+        "slug": "salt-lake-bj-block",
+        "name": "Salt Lake BJ Block"
+      },
+      {
+        "slug": "salt-lake-ah-block",
+        "name": "Salt Lake AH Block"
+      }
+    ]
+  },
+  {
+    "circuit_id": "behala",
+    "circuit_name": "Behala Circuit",
+    "total_stops": 3,
+    "ordered_pandals": [
+      {
+        "slug": "barisha-club-srishti-sahajatri",
+        "name": "Barisha Club, Srishti Sahajatri"
+      },
+      {
+        "slug": "behala-nutan-dal",
+        "name": "Behala Nutan Dal"
+      },
+      {
+        "slug": "ajeya-sanghati",
+        "name": "Ajeya Sanghati"
+      }
+    ]
+  },
+  {
+    "circuit_id": "kasba-craft",
+    "circuit_name": "Kasba & Eastern Craft",
+    "total_stops": 4,
+    "ordered_pandals": [
+      {
+        "slug": "bosepukur-sitala-mandir",
+        "name": "Bosepukur Sitala Mandir"
+      },
+      {
+        "slug": "rajdanga-naba-uday-sangha",
+        "name": "Rajdanga Naba Uday Sangha"
+      },
+      {
+        "slug": "bosepukur-talbagan",
+        "name": "Bosepukur Talbagan"
+      },
+      {
+        "slug": "telengabagan",
+        "name": "Telengabagan"
+      }
+    ]
+  },
+  {
+    "circuit_id": "metro-parikrama",
+    "circuit_name": "Metro Parikrama",
+    "total_stops": 9,
+    "ordered_pandals": [
+      {
+        "slug": "tala-prattoy-durga-puja-art",
+        "name": "Tala Prattoy"
+      },
+      {
+        "slug": "hatibagan-nabinpally-sarbojanin-durgotsav",
+        "name": "Hatibagan Nabinpally Sarbojanin Durgotsav"
+      },
+      {
+        "slug": "sovabazar-rajbari",
+        "name": "Sovabazar Rajbari"
+      },
+      {
+        "slug": "kumartuli-park",
+        "name": "Kumartuli Park"
+      },
+      {
+        "slug": "college-square-sarbojanin-durgotsab-committee",
+        "name": "College Square Sarbojanin Durgotsab Committee"
+      },
+      {
+        "slug": "deshapriya-park",
+        "name": "Deshapriya Park"
+      },
+      {
+        "slug": "badamtala-ashar-sangha",
+        "name": "Badamtala Ashar Sangha"
+      },
+      {
+        "slug": "mudiali-club",
+        "name": "Mudiali Club"
+      },
+      {
+        "slug": "naktala-udayan-sangha-club",
+        "name": "Naktala Udayan Sangha"
+      }
+    ]
+  }
+]

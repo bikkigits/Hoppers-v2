@@ -29,6 +29,12 @@ export interface Pandal {
   rating?: number;
   category?: string;
   address?: string;
+  nearestFacilities?: {
+    toilet: { name: string; distM: number; lat: number; lng: number };
+    parking: { name: string; distM: number; lat: number; lng: number };
+    medical: { name: string; distM: number; lat: number; lng: number };
+    water: { name: string; distM: number; lat: number; lng: number };
+  };
 }
 
 export type FacilityCategory =
@@ -132,7 +138,9 @@ export type FilterType =
   | 'toilets'
   | 'food'
   | 'railway'
-  | 'ferry';
+  | 'ferry'
+  | 'hospital'
+  | 'parking';
 
 export type NavigationTab = 'map' | 'directory' | 'metro' | 'passport';
 

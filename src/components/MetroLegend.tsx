@@ -69,9 +69,9 @@ export const MetroLegend: React.FC<MetroLegendProps> = ({
 
             {/* 5 Line Color Dots */}
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] shadow-sm ring-1 ring-white/30" title="Blue Line (Line 1)" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6] shadow-sm ring-1 ring-white/30" title="Blue Line (Line 1)" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-sm ring-1 ring-white/30" title="Green Line (Line 2)" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#9333EA] shadow-sm ring-1 ring-white/30" title="Purple Line (Line 3)" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#8B5CF6] shadow-sm ring-1 ring-white/30" title="Purple Line (Line 3)" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#F97316] shadow-sm ring-1 ring-white/30" title="Orange Line (Line 6)" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#EAB308] shadow-sm ring-1 ring-white/30" title="Yellow Line (Line 4)" />
               <span className="text-[9px] font-semibold text-slate-400 ml-0.5">5</span>

@@ -1,0 +1,4055 @@
+1 (Mukundapur)
+Ramnagar → Mukundapur · 20 listed stops
+1A (Mukundapur)
+Ramnagar → Mukundapur · 20 listed stops
+1B (Nayabad)
+Ramnagar → Nayabad · 22 listed stops
+3B (Milk Colony)
+New Alipore → Milk Colony · 23 listed stops
+3C/1 (Nager Bazar)
+Anandapur → Nager Bazar · 31 listed stops
+3D (Milk Colony)
+Sakher Bazar → Milk Colony · 25 listed stops
+12 (Rajabazar)
+Badartala → Rajabazar · 23 listed stops
+12 (Esplanade)
+Badartala → Esplanade · 12 listed stops
+12/1 (Rajabazar)
+Ramnagar → Rajabazar · 22 listed stops
+12A (Howrah Station)
+Badartala → Howrah Station · 16 listed stops
+12AD (Howrah Station)
+Akra Fatak → Howrah Station · 16 listed stops
+12B (Esplanade)
+Kamal Talkies → Esplanade · 8 listed stops
+12C (Howrah Station)
+Pailan → Howrah Station · 19 listed stops
+12C/1 (Howrah Station)
+Shibrampur → Howrah Station · 18 listed stops
+12C/2 (Howrah Station)
+Aquatica → Howrah Station · 18 listed stops
+12C/1A (Howrah Station)
+Pailan → Howrah Station · 17 listed stops
+12C/1B (Howrah Station)
+Pailan → Howrah Station · 21 listed stops
+13 (Sealdah)
+Parnasree → Sealdah · 18 listed stops
+13A (BBD Bag)
+SM Nagar → BBD Bag · 16 listed stops
+13C (Baghajatin)
+Old Dakghar → Baghajatin · 20 listed stops
+17 (Howrah Station)
+Chetla Park → Howrah Station · 14 listed stops
+18A (Howrah Station)
+Greenfield City → Howrah Station · 16 listed stops
+18B/1 (China Mandir)
+Dakghar → China Mandir · 22 listed stops
+18C (Anandapur)
+Kestor → Anandapur · 19 listed stops
+18D (Howrah Station)
+Suryasen Nagar → Howrah Station · 15 listed stops
+21 (Sealdah)
+Barisha → Sealdah · 20 listed stops
+21/1 (Sealdah)
+Barisha → Sealdah · 20 listed stops
+23 (Boalghata)
+Barasat Chapadali → Boalghata · 12 listed stops
+24 (Bandha Ghat)
+Topsia → Bandha Ghat · 15 listed stops
+24A (Bandha Ghat)
+Topsia → Bandha Ghat · 18 listed stops
+24A/1 (Howrah Fire Station)
+Mukundapur → Howrah Fire Station · 18 listed stops
+24B (Howrah Station)
+Sealdah → Howrah Station · 5 listed stops
+28 (Howrah Station)
+Sealdah → Howrah Station · 5 listed stops
+30A (Esplanade)
+Sinthi → Esplanade · 10 listed stops
+30B (Babughat)
+Gouripur → Babughat · 18 listed stops
+30C (Babughat)
+Hatiara → Babughat · 21 listed stops
+30C/1 (Babughat)
+Hatiara → Babughat · 19 listed stops
+30D (Babughat)
+Dumdum Canton → Babughat · 19 listed stops
+32A (Sector V)
+Dakshineswar → Sector V · 20 listed stops
+34B (Esplanade)
+Dunlop → Esplanade · 16 listed stops
+34C (Esplanade)
+Noapara → Esplanade · 13 listed stops
+37 (Howrah Station)
+Dhakuria → Howrah Station · 19 listed stops
+37A (Howrah Station)
+Dhakuria → Howrah Station · 15 listed stops
+39 (High Court)
+Picnic Garden → High Court · 13 listed stops
+39A/2 (Howrah Station)
+VIP Bazar → Howrah Station · 12 listed stops
+40A (Babughat)
+Julpia → Babughat · 23 listed stops
+40B (Babughat)
+Thakurpukur → Babughat · 17 listed stops
+41 (Howrah Station)
+Layalka → Howrah Station · 19 listed stops
+41B (Howrah Station)
+Netaji Nagar → Howrah Station · 16 listed stops
+42A (Bichali Ghat)
+Picnic Garden → Bichali Ghat · 19 listed stops
+42B (Bichali Ghat)
+Anandapur → Bichali Ghat · 20 listed stops
+43 (Esplanade)
+Dakshineswar → Esplanade · 16 listed stops
+44 (Howrah Station)
+Baguiati → Howrah Station · 14 listed stops
+44/1 (Howrah Station)
+Baguiati → Howrah Station · 14 listed stops
+44A (Howrah Station)
+Sector V → Howrah Station · 18 listed stops
+45 (Baisnabghata)
+Airport Gate 1 → Baisnabghata · 27 listed stops
+45A (Garia Station)
+Airport Gate 1 → Garia Station · 29 listed stops
+45B (Garia Station)
+Beleghata Building → Garia Station · 24 listed stops
+46 (Esplanade)
+Airport Gate 1 → Esplanade · 19 listed stops
+46A (Esplanade)
+Jagardanga → Esplanade · 19 listed stops
+46B (Esplanade)
+Moonbeam → Esplanade · 19 listed stops
+47/1 (Rajabazar)
+Tollygunge Metro → Rajabazar · 17 listed stops
+47B (Dhanmath)
+Laketown → Dhanmath · 33 listed stops
+51 (Howrah Station)
+Pardankuni → Howrah Station · 12 listed stops
+52 (Esplanade)
+Ramrajatala → Esplanade · 12 listed stops
+54 (Esplanade)
+Ballykhal → Esplanade · 11 listed stops
+55 (Esplanade)
+B Garden → Esplanade · 11 listed stops
+55A (Esplanade)
+Shibpur Td → Esplanade · 7 listed stops
+56 (Howrah Station)
+Ruiya Purbapara → Howrah Station · 16 listed stops
+57 (Esplanade)
+Kona → Esplanade · 9 listed stops
+57A (Howrah Station)
+Chanditala → Howrah Station · 14 listed stops
+59 (Esplanade)
+Bakultala → Esplanade · 13 listed stops
+61 (Howrah Station)
+Alampur → Howrah Station · 17 listed stops
+63 (Howrah Station)
+Domjur → Howrah Station · 12 listed stops
+64 (Kulgachia)
+Tulshiberia → Kulgachia · 4 listed stops
+67 (Shibgunge)
+Bagnan → Shibgunge · 16 listed stops
+67A (Gadiara)
+Bagnan → Gadiara · 17 listed stops
+67B (58 Gate)
+Bagnan → 58 Gate · 16 listed stops
+68 (Kamalpur)
+Bagnan → Kamalpur · 14 listed stops
+69 (Howrah Station)
+Sankrail → Howrah Station · 16 listed stops
+C (Howrah Maidan)
+Park Street → Howrah Maidan · 7 listed stops
+SD-3 (Ghatakpukur)
+Sonarpur → Ghatakpukur · 26 listed stops
+SD-4 (Sapuipara)
+Thakurpukur → Sapuipara · 19 listed stops
+SD-5 (Khariberia)
+Sonarpur Station → Khariberia · 27 listed stops
+SD-8 (Nandi Bagan)
+Bibirhat → Nandi Bagan · 23 listed stops
+SD-9 (Esplanade)
+Noorpur → Esplanade · 23 listed stops
+SD-11 (Patharpratima)
+Noorpur → Patharpratima · 29 listed stops
+SD-11/1 (Ramganga)
+Noorpur → Ramganga · 39 listed stops
+SD-14 (Taratala)
+Sahararhat → Taratala · 19 listed stops
+SD-16 (Mukundapur)
+Shirakole → Mukundapur · 27 listed stops
+SD-18 (Esplanade)
+Diamond Harbour → Esplanade · 27 listed stops
+SD-19 (Patharpratima)
+Esplanade → Patharpratima · 47 listed stops
+SD-24 (Sonakhali)
+Alipore Zoo → Sonakhali · 45 listed stops
+SD-26 (Babughat)
+Burul → Babughat · 25 listed stops
+SD-27 (Akra Fatak)
+Dostipur → Akra Fatak · 23 listed stops
+SD-29 (Baruipur)
+Amtala → Baruipur · 12 listed stops
+SD-30 (Taratala)
+Sahararhat → Taratala · 20 listed stops
+SD-33 (Jharkhali)
+Baruipur → Jharkhali · 30 listed stops
+SD-39 (Kishorimohonpur)
+Joynagar → Kishorimohonpur · 25 listed stops
+SD-50 (Patharpratima)
+Diamond Harbour → Patharpratima · 21 listed stops
+SD-53 (Maipith)
+Joynagar → Maipith · 25 listed stops
+SD-63 (Gadkhali)
+Baruipur → Gadkhali · 26 listed stops
+SD-64 (Chunakhali)
+Baruipur → Chunakhali · 20 listed stops
+SD-69 (Gangasagar)
+Kachuberia Sagar Island → Gangasagar · 6 listed stops
+SD-76 (Ruby)
+Amtala → Ruby · 23 listed stops
+SD-85 (Dhamakhali)
+Canning → Dhamakhali · 12 listed stops
+SD-94 (Bakkhali)
+Kakdwip Bus Stand → Bakkhali · 9 listed stops
+DN-2/1 (Dakshineswar)
+Shapoorji → Dakshineswar · 21 listed stops
+DN-5 (Naihati Station)
+Barasat Chapadali → Naihati Station · 26 listed stops
+DN-8 (Sector V)
+Barasat Colony → Sector V · 22 listed stops
+DN-9/1 (Rajchandrapur)
+Barasat Chapadali → Rajchandrapur · 17 listed stops
+DN-12 (Basirhat)
+Bongaon → Basirhat · 26 listed stops
+DN-12/1 (Nazat)
+Habra Station → Nazat · 25 listed stops
+DN-13 (Hakimpur)
+Basirhat → Hakimpur · 27 listed stops
+DN-16/1 (Dhamakhali)
+Barasat Chapadali → Dhamakhali · 54 listed stops
+DN-17 (Santragachi)
+Barasat Chapadali → Santragachi · 36 listed stops
+DN-18 (Baduria)
+Shyambazar → Baduria · 23 listed stops
+DN-28 (Haroa Bazar)
+Barasat Chapadali → Haroa Bazar · 13 listed stops
+DN-35 (Nabatkati)
+Barasat Chapadali → Nabatkati · 31 listed stops
+DN-38 (Taranipur)
+Basirhat → Taranipur · 14 listed stops
+DN-43 (Dakshineswar)
+Barasat Colony → Dakshineswar · 11 listed stops
+DN-44 (Dakshineswar)
+Bongaon → Dakshineswar · 39 listed stops
+DN-46 (Sector V)
+Ballyhalt → Sector V · 20 listed stops
+DN-47 (Karunamoyee)
+Barasat Colony → Karunamoyee · 24 listed stops
+K-1 (Kolkata Station)
+Hatishala → Kolkata Station · 23 listed stops
+K-4 (Ruby)
+Dakshineswar → Ruby · 25 listed stops
+K-11 (Rabindra Sadan)
+Domjur → Rabindra Sadan · 14 listed stops
+KB-12 (Unitech Gate 1)
+Parnasree → Unitech Gate 1 · 27 listed stops
+KB-15 (Santragachi)
+Anandapur → Santragachi · 19 listed stops
+KB-16 (Bangur Avenue)
+Shapoorji → Bangur Avenue · 33 listed stops
+KB-17 (Unitech Gate 1)
+Sonarpur Station → Unitech Gate 1 · 41 listed stops
+KB-21 (Leather Complex)
+Ganga Nagar → Leather Complex · 36 listed stops
+KB-22 (Kolkata Station)
+Jamirgachi → Kolkata Station · 24 listed stops
+KB-24 (Kolkata Station)
+Hatishala → Kolkata Station · 21 listed stops
+E-43 (Howrah Station)
+Dihibhursut → Howrah Station · 23 listed stops
+E-44 (Howrah Station)
+Rampur → Howrah Station · 15 listed stops
+E-53 (Howrah Station)
+Narit → Howrah Station · 21 listed stops
+Kolkata to Bakkhali (Bakkhali)
+Esplanade → Bakkhali · 53 listed stops
+E-1 (Howrah Station)
+Jadavpur 8B → Howrah Station · 16 listed stops
+AC-1 (Howrah Station)
+Jadavpur 8B → Howrah Station · 17 listed stops
+S-2 (Howrah Station)
+Kudghat → Howrah Station · 14 listed stops
+AC-2 (Howrah Station)
+Barasat Chapadali → Howrah Station · 23 listed stops
+S-2N (Nabanna)
+Kudghat → Nabanna · 11 listed stops
+S-3A (Sealdah)
+Thakurpukur → Sealdah · 23 listed stops
+S-3B (Kankurgachi)
+Behala 14 No → Kankurgachi · 20 listed stops
+S-3W (Amity University)
+Thakurpukur → Amity University · 38 listed stops
+S-4 (Karunamoyee)
+Parnasree → Karunamoyee · 29 listed stops
+S-4C (Howrah Station)
+Haridevpur → Howrah Station · 15 listed stops
+S-4D (Newtown)
+Parnasree → Newtown · 27 listed stops
+E-4 (Howrah Station)
+Parnasree → Howrah Station · 12 listed stops
+AC-4 (Howrah Station)
+Parnasree → Howrah Station · 15 listed stops
+AC-4A (Shapoorji)
+Parnasree → Shapoorji · 31 listed stops
+AC-4B (Newtown)
+Thakurpukur → Newtown · 27 listed stops
+S-5 (Howrah Station)
+Garia Bus Stand → Howrah Station · 25 listed stops
+S-5A (Howrah Station)
+Jadavpur 8B → Howrah Station · 15 listed stops
+S-5N (Nabanna)
+Garia Bus Stand → Nabanna · 21 listed stops
+S-5C/N (Nabanna)
+Nayabad → Nabanna · 21 listed stops
+AC-5 (Howrah Station)
+Garia Bus Stand → Howrah Station · 25 listed stops
+S-7 (Howrah Station)
+Garia Bus Stand → Howrah Station · 20 listed stops
+S-7N (Nabanna)
+Garia Bus Stand → Nabanna · 16 listed stops
+
+1 (Mukundapur) Bus Route: Ramnagar to Mukundapur
+Stops in dataset order
+Ramnagar
+BNR Hospital
+Babubazar
+Kidderpore
+Ekbalpur
+Alipore Zoo
+Bhabani Bhawan
+Hazra
+Kalighat
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba Post Office
+Haltu Bazar
+Ramlal Bazar
+Sapuipara
+Kalikapur
+EM Bypass
+Mukundapur
+
+1A (Mukundapur) Bus Route: Ramnagar to Mukundapur
+Ramnagar
+Garden Reach
+Babubazar
+Kidderpore
+Ekbalpur
+Alipore Zoo
+Bhabani Bhawan
+Hazra
+Kalighat
+Rashbehari
+Rabindra Sarovar
+Tollygunge Phari
+Anwar Shah Road
+Lake Gardens
+South City
+Jadavpur 8B
+Santoshpur
+Ajaynagar
+EM Bypass
+Mukundapur
+
+1B (Nayabad) Bus Route: Ramnagar to Nayabad
+Stops in dataset order
+Ramnagar
+Nature Park
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Deshapriya Park
+Southern Avenue
+Golpark
+Dhakuria
+Jadavpur 8B
+Santoshpur
+Ajaynagar
+EM Bypass
+Peerless Hospital
+New Garia
+Garia Station
+Nayabad
+
+3B (Milk Colony) Bus Route: New Alipore to Milk Colony
+Stops in dataset order
+New Alipore
+Durgapur Bridge
+Chetla Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+Chandni Chowk
+Central
+Medical College
+MG Road
+Girish Park
+Sovabazar
+Rajballavpara
+Shyambazar
+RG Kar
+Belgachia
+Ashubabu Bazar
+Milk Colony
+
+3C/1 (Nager Bazar) Bus Route: Anandapur to Nager Bazar
+Stops in dataset order
+Anandapur
+Ruby
+Acropolis Mall
+Bosepukur
+Kasba PS
+Ballygunge Station
+Gariahat
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+Chandni Chowk
+Wellington
+Moulali
+Sealdah
+Rajabazar
+Maniktala
+Khanna Cinema
+Shyambazar
+RG Kar
+Belgachia
+Patipukur
+Kalindi
+Bangur Avenue
+Diamond Plaza
+Nager Bazar
+
+3D (Milk Colony) Bus Route: Sakher Bazar to Milk Colony
+Stops in dataset order
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+PTS
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+Chandni Chowk
+Wellington
+Moulali
+Sealdah
+Rajabazar
+Maniktala
+Khanna Cinema
+Shyambazar
+RG Kar
+Belgachia
+Ashubabu Bazar
+Milk Colony
+
+12 (Rajabazar) Bus Route: Badartala to Rajabazar
+Stops in dataset order
+Badartala
+Rajabagan
+Metiabruz
+Bichali Ghat
+Kamal Talkies
+Ramnagar
+Nature Park
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Hide Road
+BNR Hospital
+Babubazar
+Kidderpore
+Hastings
+Princep Ghat
+Babughat
+Esplanade
+Chandni Chowk
+Wellington
+Moulali
+Sealdah
+Rajabazar
+
+12 (Esplanade) Bus Route: Badartala to Esplanade
+Stops in dataset order
+Badartala
+Rajabagan
+Metiabruz
+Bichali Ghat
+Kamal Talkies
+Ramnagar
+Garden Reach
+Babubazar
+Kidderpore
+Hastings
+Fort William
+Esplanade
+
+12/1 (Rajabazar) Bus Route: Ramnagar to Rajabazar
+Stops in dataset order
+Ramnagar
+Kamal Talkies
+Mudiali
+HMG College
+Fatehpur
+Nature Park
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+PTS
+Rabindra Sadan
+Minto Park
+Beck Bagan
+Mallick Bazar
+Moulali
+Sealdah
+Rajabazar
+
+12A (Howrah Station) Bus Route: Badartala to Howrah Station
+Stops in dataset order
+Badartala
+Rajabagan
+Metiabruz
+Bichali Ghat
+Mudiali
+HMG College
+Fatehpur
+Ramnagar
+Garden Reach
+Babubazar
+Kidderpore
+Hastings
+Princep Ghat
+Babughat
+Barabazar
+Howrah Station
+
+12AD (Howrah Station) Bus Route: Akra Fatak to Howrah Station
+Stops in dataset order
+Akra Fatak
+Santoshpur Station
+Nature Park
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+12B (Esplanade) Bus Route: Kamal Talkies to Esplanade
+Stops in dataset order
+Kamal Talkies
+Ramnagar
+Garden Reach
+Babubazar
+Kidderpore
+Hastings
+Fort William
+Esplanade
+
+12C (Howrah Station) Bus Route: Pailan to Howrah Station
+Stops in dataset order
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+Brace Bridge
+Hide Road
+BNR Hospital
+Babubazar
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+12C/1 (Howrah Station) Bus Route: Shibrampur to Howrah Station
+Stops in dataset order
+Shibrampur
+Shakuntala Park
+Bakultala
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+PTS
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+12C/2 (Howrah Station) Bus Route: Aquatica to Howrah Station
+Stops in dataset order
+Aquatica
+Thakdari
+Kestopur Bazar
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Bank Of India
+Bowbazar
+Central
+Lalbazar
+BBD Bag
+Barabazar
+Howrah Station
+
+12C/1A (Howrah Station) Bus Route: Pailan to Howrah Station
+Stops in dataset order
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+12C/1B (Howrah Station) Bus Route: Pailan to Howrah Station
+Stops in dataset order
+Pailan
+Joka Bridge
+Thakurpukur
+Cancer Hospital
+Kalitala Housing
+Kabardanga
+Keorapukur
+Haridevpur
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+13 (Sealdah) Bus Route: Parnasree to Sealdah
+Parnasree
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Podder Court
+Central
+Bowbazar
+Medical College
+College Street
+Sealdah
+
+13A (BBD Bag) Bus Route: SM Nagar to BBD Bag
+Stops in dataset order
+SM Nagar
+Sarkarpool
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Majherhat
+Mominpore
+Alipore Court
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+
+13C (Baghajatin) Bus Route: Old Dakghar to Baghajatin
+Stops in dataset order
+Old Dakghar
+Mollar Gate
+Rampur Quarter
+SM Nagar
+Sarkarpool
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+Majherhat
+Mominpore
+Alipore Court
+Hazra
+Kalighat
+Rashbehari
+Deshapriya Park
+Gariahat
+Golpark
+Dhakuria
+Jadavpur 8B
+Baghajatin
+
+17 (Howrah Station) Bus Route: Chetla Park to Howrah Station
+Stops in dataset order
+Chetla Park
+Rashbehari
+Kalighat
+Hazra
+Alipore Court
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+18A (Howrah Station) Bus Route: Greenfield City to Howrah Station
+Greenfield City
+Shibrampur
+Shakuntala Park
+Bakultala
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+18B/1 (China Mandir) Bus Route: Dakghar to China Mandir
+Stops in dataset order
+Dakghar
+Moynagarh
+Sarada Park
+Shibrampur
+Shakuntala Park
+Bakultala
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Alipore Court
+Hazra
+Kalighat
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+Ruby
+China Mandir
+
+18C (Anandapur) Bus Route: Kestor to Anandapur
+Stops in dataset order
+Kestor
+Sarsuna
+Bakultala
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Alipore Court
+Hazra
+Kalighat
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+Ruby
+Anandapur
+
+18D (Howrah Station) Bus Route: Suryasen Nagar to Howrah Station
+Stops in dataset order
+Suryasen Nagar
+Sarsuna
+Bakultala
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+21 (Sealdah) Bus Route: Barisha to Sealdah
+Stops in dataset order
+Barisha
+Shilpara
+Sakher Bazar
+Ml Gupta Road
+Muchipara
+Siriti
+NSHM Campus
+Mahabirtala
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Minto Park
+Beck Bagan
+Mallick Bazar
+Moulali
+Sealdah
+
+21/1 (Sealdah) Bus Route: Barisha to Sealdah
+Stops in dataset order
+Barisha
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Minto Park
+Beck Bagan
+Mallick Bazar
+Moulali
+Sealdah
+
+23 (Boalghata) Bus Route: Barasat Chapadali to Boalghata
+Stops in dataset order
+Barasat Chapadali
+Kazipara Depot
+Kadambagachi
+Goakhali
+Golabari
+Pakdaha
+Aminpur
+Paltadanga
+Shasan Bazar
+Mithpukuria
+Majlishpur
+Boalghata
+
+24 (Bandha Ghat) Bus Route: Topsia to Bandha Ghat
+Stops in dataset order
+Topsia
+Christopher Road
+Panchkari
+Tangra
+RN Chowdhury Road
+Palmer Bazar
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+Howrah Maidan
+Pilkhana
+Salkia Chowrasta
+Bandha Ghat
+
+24A (Bandha Ghat) Bus Route: Topsia to Bandha Ghat
+Stops in dataset order
+Topsia
+Christopher Road
+Panchkari
+Tangra
+RN Chowdhury Road
+Palmer Bazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+Howrah Maidan
+Pilkhana
+Salkia Chowrasta
+Bandha Ghat
+
+24A/1 (Howrah Fire Station) Bus Route: Mukundapur to Howrah Fire Station
+Stops in dataset order
+Mukundapur
+EM Bypass
+Kalikapur
+Ruby
+VIP Bazar
+Science City
+Topsia
+4 No Bridge
+Chittaranjan Hospital
+CIT Road
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+Howrah Fire Station
+
+24B (Howrah Station) Bus Route: Sealdah to Howrah Station
+Stops in dataset order
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+28 (Howrah Station) Bus Route: Sealdah to Howrah Station
+Stops in dataset order
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+30A (Esplanade) Bus Route: Sinthi to Esplanade
+Stops in dataset order
+Sinthi
+Chiria
+Shyambazar
+Rajballavpara
+Sovabazar
+Girish Park
+MG Road
+Central
+Chandni Chowk
+Esplanade
+
+30B (Babughat) Bus Route: Gouripur to Babughat
+Stops in dataset order
+Gouripur
+Birati
+Airport Gate 3
+Airport Gate 1
+Central Jail
+Nager Bazar
+Dumdum Station
+Chiria
+Shyambazar
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+Babughat
+
+30C (Babughat) Bus Route: Hatiara to Babughat
+Stops in dataset order
+Hatiara
+Helabattala
+Jyangra
+Ashwini Nagar
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Kalindi
+Patipukur
+Belgachia
+RG Kar
+Shyambazar
+Rajballavpara
+Sovabazar
+Girish Park
+MG Road
+Central
+Chandni Chowk
+Esplanade
+Babughat
+
+30C/1 (Babughat) Bus Route: Hatiara to Babughat
+Stops in dataset order
+Hatiara
+Helabattala
+Jyangra
+Ashwini Nagar
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+Babughat
+
+30D (Babughat) Bus Route: Dumdum Canton to Babughat
+Stops in dataset order
+Dumdum Canton
+Central Jail
+Nager Bazar
+Diamond Plaza
+Bangur Avenue
+Kalindi
+Patipukur
+Belgachia
+RG Kar
+Shyambazar
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+Babughat
+
+32A (Sector V) Bus Route: Dakshineswar to Sector V
+Stops in dataset order
+Dakshineswar
+Dunlop
+Bonhooghly
+Tobin Road
+Sinthi
+Chiria
+Shyambazar
+Khanna Cinema
+Ultadanga
+Saltlake PNB
+Saltlake CA Block
+Labony Estate
+Saltlake 13no Tank
+Saltlake Stadium
+Saltlake 14no Tank
+Sushrut Hospital
+Wipro
+SDF
+College More
+Sector V
+
+34B (Esplanade) Bus Route: Dunlop to Esplanade
+Stops in dataset order
+Dunlop
+Chandni Chowk
+Wellington
+Hind Cinema
+Bowbazar
+Medical College
+College Street
+Vivekananda Road
+Hedua
+Hatibagan
+Shyambazar
+Chiria
+Sinthi
+Baranagar Bazar
+Bonhooghly
+Esplanade
+
+34C (Esplanade) Bus Route: Noapara to Esplanade
+Stops in dataset order
+Noapara
+Tobin Road
+Sinthi
+Chiria
+Shyambazar
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+
+37 (Howrah Station) Bus Route: Dhakuria to Howrah Station
+Stops in dataset order
+Dhakuria
+Jadavpur PS
+South City
+Lake Gardens
+Anwar Shah Road
+Tollygunge Phari
+Mahabirtala
+New Alipore
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+37A (Howrah Station) Bus Route: Dhakuria to Howrah Station
+Stops in dataset order
+Dhakuria
+Golpark
+Gariahat
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+39 (High Court) Bus Route: Picnic Garden to High Court
+Stops in dataset order
+Picnic Garden
+Colony Bazar
+Kustia
+Bondel Gate
+4 No Bridge
+Chittaranjan Hospital
+CIT Road
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+BBD Bag
+High Court
+
+39A/2 (Howrah Station) Bus Route: VIP Bazar to Howrah Station
+Stops in dataset order
+VIP Bazar
+Colony Bazar
+Kustia
+Bondel Gate
+Park Circus
+Mallick Bazar
+Moulali
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+40A (Babughat) Bus Route: Julpia to Babughat
+Stops in dataset order
+Julpia
+Nepalgunge
+Bakeshwar
+Mallickpur
+Sajnaberia
+Mittirchak
+Kabardanga
+Keorapukur
+Haridevpur
+Siriti
+NSHM Campus
+Mahabirtala
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+Babughat
+
+40B (Babughat) Bus Route: Thakurpukur to Babughat
+Stops in dataset order
+Thakurpukur
+Cancer Hospital
+Kalitala Housing
+Kabardanga
+Keorapukur
+Haridevpur
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+Babughat
+
+41 (Howrah Station) Bus Route: Layalka to Howrah Station
+Stops in dataset order
+Layalka
+Bijoygarh
+Gandhi Colony
+Netaji Nagar
+Ranikuthi
+Malancha Cinema
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+41B (Howrah Station) Bus Route: Netaji Nagar to Howrah Station
+Stops in dataset order
+Netaji Nagar
+Ranikuthi
+Malancha Cinema
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+42A (Bichali Ghat) Bus Route: Picnic Garden to Bichali Ghat
+Stops in dataset order
+Picnic Garden
+Kustia
+Bondel Gate
+Ballygunge Phari
+Garcha Road
+Sishu Mangal
+Hazra
+Kalighat
+Alipore Court
+Command Hospital
+Ekbalpur
+Kidderpore
+Babubazar
+Garden Reach
+Ramnagar
+Fatehpur
+HMG College
+Mudiali
+Bichali Ghat
+
+42B (Bichali Ghat) Bus Route: Anandapur to Bichali Ghat
+Stops in dataset order
+Anandapur
+Ruby
+Acropolis Mall
+Bosepukur
+Kasba PS
+Ballygunge Station
+Gariahat
+Deshapriya Park
+Rashbehari
+Rabindra Sarovar
+Tollygunge Phari
+Mahabirtala
+New Alipore
+Taratala
+Brace Bridge
+Jhinjhira Bazar
+Nature Park
+Ramnagar
+Kamal Talkies
+Bichali Ghat
+
+43 (Esplanade) Bus Route: Dakshineswar to Esplanade
+Stops in dataset order
+Dakshineswar
+Alambazar
+Deshbandhu Road
+Bonhooghly
+Baranagar Bazar
+Cossipore
+Bibibazar
+Chitpur Bridge
+Bagbazar
+Rajballavpara
+Sovabazar
+Girish Park
+MG Road
+Central
+Chandni Chowk
+Esplanade
+
+44 (Howrah Station) Bus Route: Baguiati to Howrah Station
+Stops in dataset order
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Phoolbagan
+Rajabazar
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+44/1 (Howrah Station) Bus Route: Baguiati to Howrah Station
+Stops in dataset order
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Phoolbagan
+Beleghata
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+44A (Howrah Station) Bus Route: Sector V to Howrah Station
+Stops in dataset order
+Sector V
+SDF
+College More
+Wipro
+Karunamoyee
+Bikash Bhawan
+City Center 1
+Saltlake CA Block
+Saltlake PNB
+Ultadanga
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+College Street
+MG Road
+Barabazar
+Howrah Station
+
+45 (Baisnabghata) Bus Route: Airport Gate 1 to Baisnabghata
+Stops in dataset order
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Phoolbagan
+Beleghata
+Sealdah
+Moulali
+CIT Road
+Chittaranjan Hospital
+Park Circus
+Quest Mall
+Ballygunge Phari
+Gariahat
+Golpark
+Dhakuria
+Jadavpur 8B
+Baghajatin
+Ramgarh
+Baisnabghata
+
+45A (Garia Station) Bus Route: Airport Gate 1 to Garia Station
+Stops in dataset order
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Phoolbagan
+Beleghata
+Sealdah
+Moulali
+CIT Road
+Chittaranjan Hospital
+Park Circus
+Quest Mall
+Ballygunge Phari
+Gariahat
+Golpark
+Dhakuria
+Jadavpur 8B
+Baghajatin
+Ramgarh
+Garia Metro
+Dhalai Bridge
+Garia Station
+
+45B (Garia Station) Bus Route: Beleghata Building to Garia Station
+Stops in dataset order
+Beleghata Building
+Beleghata
+Sealdah
+Moulali
+Mallick Bazar
+Beck Bagan
+Minto Park
+Lansdowne
+Sishu Mangal
+Hazra
+Kalighat
+Rashbehari
+Rabindra Sarovar
+Tollygunge Phari
+Anwar Shah Road
+Lake Gardens
+South City
+Jadavpur 8B
+Baghajatin
+Ramgarh
+45 Bus Stand
+Patuli
+Dhalai Bridge
+Garia Station
+
+46 (Esplanade) Bus Route: Airport Gate 1 to Esplanade
+Stops in dataset order
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Maniktala
+Vivekananda Road
+Amherst Street
+Bank Of India
+Bowbazar
+Wellington
+Chandni Chowk
+Esplanade
+
+46A (Esplanade) Bus Route: Jagardanga to Esplanade
+Stops in dataset order
+Jagardanga
+Derozio College
+Salua Bazar
+Chinar Park
+Lokenath Mandir
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Khanna Cinema
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+
+46B (Esplanade) Bus Route: Moonbeam to Esplanade
+Stops in dataset order
+Moonbeam
+Akanksha
+City Center 2
+Chinar Park
+Lokenath Mandir
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Maniktala
+Rajabazar
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+
+47/1 (Rajabazar) Bus Route: Tollygunge Metro to Rajabazar
+Stops in dataset order
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Central
+Bowbazar
+Medical College
+College Street
+Sealdah
+Rajabazar
+
+47B (Dhanmath) Bus Route: Laketown to Dhanmath
+Stops in dataset order
+Laketown
+Kalindi
+Patipukur
+Belgachia
+RG Kar
+Shyambazar
+Rajballavpara
+Sovabazar
+Girish Park
+MG Road
+Central
+Chandni Chowk
+Esplanade
+Park Street
+Maidan
+Rabindra Sadan
+Bhowanipore
+Hazra
+Kalighat
+Rashbehari
+Rabindra Sarovar
+Tollygunge Phari
+Anwar Shah Road
+Lake Gardens
+South City
+Jadavpur PS
+Saheed Nagar
+Sapuipara
+Kalikapur
+EM Bypass
+Ruby
+Acropolis Mall
+Dhanmath
+
+51 (Howrah Station) Bus Route: Pardankuni to Howrah Station
+Stops in dataset order
+Pardankuni
+Delhi Road
+Dankuni Housing
+Rajchandrapur
+Ballyhalt
+Ballykhal
+Bally Bazar
+Belurmath
+Liluah
+Bandha Ghat
+Golabarai PS
+Howrah Station
+
+52 (Esplanade) Bus Route: Ramrajatala to Esplanade
+Stops in dataset order
+Ramrajatala
+Natun Rasta
+Dalalpukur
+Surkikal
+Shyamasree
+Kalibabu Bazar
+Mallick Fatak
+Howrah Maidan
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+54 (Esplanade) Bus Route: Ballykhal to Esplanade
+Stops in dataset order
+Ballykhal
+Bally Bazar
+Belurmath
+Liluah
+Malipanchghara
+Bandha Ghat
+Golabarai PS
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+55 (Esplanade) Bus Route: B Garden to Esplanade
+Stops in dataset order
+B Garden
+Shalimar Station
+Bataitala Phari
+Kazipara
+Shibpur Bazar
+Mallick Fatak
+Howrah Maidan
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+55A (Esplanade) Bus Route: Shibpur Td to Esplanade
+Stops in dataset order
+Shibpur Td
+Mallick Fatak
+Howrah Maidan
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+56 (Howrah Station) Bus Route: Ruiya Purbapara to Howrah Station
+Stops in dataset order
+Ruiya Purbapara
+Doperia
+Kalyan Nagar
+Rashmoni
+Sodepur Station
+Kamarhati
+Rathtala
+Dunlop
+Dakshineswar
+Ballykhal
+Bally Bazar
+Belurmath
+Liluah
+Bandha Ghat
+Golabarai PS
+Howrah Station
+
+57 (Esplanade) Bus Route: Kona to Esplanade
+Stops in dataset order
+Kona
+Biradingi
+Belgachia
+Tikiapara Bypass
+Howrah Maidan
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+57A (Howrah Station) Bus Route: Chanditala to Howrah Station
+Stops in dataset order
+Chanditala
+Kalipur
+Jagadishpur
+Chamrail
+Eksara
+Kona
+Biradingi
+Belgachia
+Bamangachi
+Salkia Chowrasta
+Bandha Ghat
+Golabarai PS
+Pilkhana
+Howrah Station
+
+59 (Esplanade) Bus Route: Bakultala to Esplanade
+Stops in dataset order
+Bakultala
+Danesh Shaikh Lane
+Amtala Phari
+Narayana Hospital
+Bataitala Phari
+Kazipara
+Shibpur Bazar
+Mallick Fatak
+Howrah Maidan
+Howrah Station
+Barabazar
+BBD Bag
+Esplanade
+
+61 (Howrah Station) Bus Route: Alampur to Howrah Station
+Stops in dataset order
+Alampur
+Argori
+Andul Bazar
+Mourigram
+Chunavati
+Hanskhali Pole
+Bakultala
+Danesh Shaikh Lane
+Amtala Phari
+Narayana Hospital
+Bataitala Phari
+Kazipara
+Avani Mall
+Shibpur Bazar
+Mallick Fatak
+Howrah Maidan
+Howrah Station
+
+63 (Howrah Station) Bus Route: Domjur to Howrah Station
+Stops in dataset order
+Domjur
+Makardaha
+Katlia
+Salap
+Bankra Bazar
+Japani Gate
+Baltikuri
+Dasnagar
+Shanpur
+Tikiapara Bypass
+Howrah Maidan
+Howrah Station
+
+64 (Kulgachia) Bus Route: Tulshiberia to Kulgachia
+Stops in dataset order
+Tulshiberia
+Kamina
+Mahishrekha
+Kulgachia
+
+67 (Shibgunge) Bus Route: Bagnan to Shibgunge
+Stops in dataset order
+Bagnan
+Khalore
+Antila Bridge
+Bantul
+Nuntia
+Mugkalyan
+Noul Bazar
+Deorah
+Shasati
+Belpukur
+Hoglashi
+Kanthalibar
+Shyampur
+Narikelabar
+Bhagabanpur
+Shibgunge
+
+67A (Gadiara) Bus Route: Bagnan to Gadiara
+Stops in dataset order
+Bagnan
+Khalore
+Antila Bridge
+Bantul
+Nuntia
+Mugkalyan
+Noul Bazar
+Deorah
+Shasati
+Belpukur
+Hoglashi
+Kanthalibar
+Shyampur
+Sitalpur
+Gohaldaha
+Gujarpur
+Gadiara
+
+67B (58 Gate) Bus Route: Bagnan to 58 Gate
+Stops in dataset order
+Bagnan
+Khalore
+Antila Bridge
+Bantul
+Nuntia
+Mugkalyan
+Noul Bazar
+Deorah
+Shasati
+Belpukur
+Hoglashi
+Kanthalibar
+Shyampur
+Kharuberia
+Garchumuk
+58 Gate
+
+68 (Kamalpur) Bus Route: Bagnan to Kamalpur
+Stops in dataset order
+Bagnan
+Khalore
+Antila Bridge
+Bantul
+Nuntia
+Mugkalyan
+Noul Bazar
+Deorah
+Shasati
+Belpukur
+Hoglashi
+Shrikole
+Radhapur
+Kamalpur
+
+69 (Howrah Station) Bus Route: Sankrail to Howrah Station
+Stops in dataset order
+Sankrail
+Chapatala
+Rajgunge
+Radhadashi
+Podra Bazar
+Nazirgunge
+Bakultala
+Danesh Shaikh Lane
+Amtala Phari
+Narayana Hospital
+Bataitala Phari
+Kazipara
+Shibpur Bazar
+Mallick Fatak
+Howrah Maidan
+
+C (Howrah Maidan) Bus Route: Park Street to Howrah Maidan
+Stops in dataset order
+Park Street
+Esplanade
+Eden Gardens
+Babughat
+Barabazar
+Howrah Station
+Howrah Maidan
+
+SD-3 (Ghatakpukur) Bus Route: Sonarpur to Ghatakpukur
+Stops in dataset order
+Sonarpur
+Ghasiara
+Ramchandrapur
+Arapanch
+Natagachi
+Kalikapur
+Tematha
+Chakberia
+Makrampur
+Khirishtala
+Prasadpur
+Sundia
+Sanksaharpukur
+Chandaneshwar
+Jhautala
+Sobedatala
+Sondalia Bablatala
+Badir
+Situri
+Kalitala
+Patkelpota
+Bodra
+Nimtala
+Saihati
+Jagulgachi
+Ghatakpukur
+
+SD-4 (Sapuipara) Bus Route: Thakurpukur to Sapuipara
+Stops in dataset order
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Deshapriya Park
+Southern Avenue
+Golpark
+Dhakuria
+Jadavpur 8B
+Palbazar
+Garfa Road
+Sapuipara
+
+SD-5 (Khariberia) Bus Route: Sonarpur Station to Khariberia
+Stops in dataset order
+Sonarpur Station
+Power House
+Iimc Hospital
+Mission Pally
+Shimultala
+Karbala
+Kamalgazi
+Mahamayatala
+Garia Metro
+Naktala
+Bansdroni
+Netaji Nagar
+Ranikuthi
+Malancha Cinema
+Tollygunge Metro
+Mahabirtala
+New Alipore
+Taratala
+Behala 14 No
+Behala Chowrasta
+Sakher Bazar
+Shilpara
+Thakurpukur
+Joka Bridge
+Pailan
+Bhasha 14no
+Khariberia
+
+SD-8 (Nandi Bagan) Bus Route: Bibirhat to Nandi Bagan
+Stops in dataset order
+Bibirhat
+Shamukpota
+Shamali
+Rasapunja
+Hanspukur
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Alipore Court
+Hazra
+Kalighat
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba Post Office
+Haltu Bazar
+Nandi Bagan
+
+SD-9 (Esplanade) Bus Route: Noorpur to Esplanade
+Stops in dataset order
+Noorpur
+Raichak
+Sarisha
+Dostipur
+Fatehpur
+Shirakole
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Bhabani Bhawan
+PTS
+Fort William
+Esplanade
+
+SD-11 (Patharpratima) Bus Route: Noorpur to Patharpratima
+Stops in dataset order
+Noorpur
+Raichak
+Sarisha
+Kalagachia
+Mohanpur
+Kapathat
+Leninnagar
+Noongola
+Diamond Harbour
+Dalanghata
+Hatugunge
+Uttar Chandipur
+Kachuberia
+Kulpi
+Dakshin Ramkrishnapur
+Chakdulalpur
+Karanjali
+Belpukur
+Bhagabanpur
+ONGC
+Natun Rasta
+Kakdwip Station
+Kakdwip Bus Stand
+Kajoler
+Hospital
+Gangadharpur
+Addhabazar
+Milan
+Patharpratima
+
+SD-11/1 (Ramganga) Bus Route: Noorpur to Ramganga
+Stops in dataset order
+Noorpur
+Raichak
+Sarisha
+Kalagachia
+Mohanpur
+Kapathat
+Leninnagar
+Noongola
+Diamond Harbour
+Dalanghata
+Hatugunge
+Uttar Chandipur
+Kachuberia
+Kulpi
+Tantirhat
+Dayarampur Bazar
+Lakshmikantapur Station
+Polerhat
+Gabberia
+Bhagabatipur
+Siddhiberia
+Patharberia
+Jamalpur
+Jagadishpur Hospital
+Dholahat
+Dakshin Birampur
+Bhagabanpur
+Chowdhury Chak
+Sarasberia
+Brahmaner
+Milan
+Rathtala
+Gurudaspur Hospital
+Tentulia Bazar
+Jashoda
+Indranarayanpur
+Ramganga Bdo Office
+Dhrubabazar
+Ramganga
+
+SD-14 (Taratala) Bus Route: Sahararhat to Taratala
+Stops in dataset order
+Sahararhat
+Belsingha
+Harindanga
+Dighirpar
+Dostipur
+Fatehpur
+Shirakole
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+
+SD-16 (Mukundapur) Bus Route: Shirakole to Mukundapur
+Stops in dataset order
+Shirakole
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Alipore Court
+Hazra
+Sishu Mangal
+Garcha Road
+Ballygunge Phari
+Gariahat
+Golpark
+Dhakuria
+Jadavpur 8B
+Santoshpur
+Ajaynagar
+EM Bypass
+Mukundapur
+
+SD-18 (Esplanade) Bus Route: Diamond Harbour to Esplanade
+Stops in dataset order
+Diamond Harbour
+Noongola
+Leninnagar
+Kapathat
+Mohanpur
+Kalagachia
+Sarisha
+Dostipur
+Fatehpur
+Shirakole
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Bhabani Bhawan
+PTS
+Fort William
+Esplanade
+
+SD-19 (Patharpratima) Bus Route: Esplanade to Patharpratima
+Stops in dataset order
+Esplanade
+Fort William
+PTS
+Bhabani Bhawan
+Mominpore
+Majherhat
+Behala 14 No
+Behala Chowrasta
+Sakher Bazar
+Shilpara
+Thakurpukur
+Joka Bridge
+Pailan
+Bhasha 14no
+Khariberia
+Bishnupur
+Amtala
+Shirakole
+Fatehpur
+Dostipur
+Sarisha
+Kalagachia
+Mohanpur
+Kapathat
+Leninnagar
+Noongola
+Diamond Harbour
+Dalanghata
+Hatugunge
+Uttar Chandipur
+Kachuberia
+Kulpi
+Dakshin Ramkrishnapur
+Chakdulalpur
+Karanjali
+Belpukur
+Bhagabanpur
+ONGC
+Natun Rasta
+Kakdwip Station
+Kakdwip Bus Stand
+Kajoler
+Hospital
+Gangadharpur
+Addhabazar
+Milan
+Patharpratima
+
+SD-24 (Sonakhali) Bus Route: Alipore Zoo to Sonakhali
+Stops in dataset order
+Alipore Zoo
+PTS
+Fort William
+Esplanade
+Chandni Chowk
+Wellington
+Moulali
+Sealdah
+Palmer Bazar
+Tangra
+Topsia
+Science City
+Chowbaga
+Bantala Bazar
+Leather Complex
+Kantatala
+Bhojerhat
+Paglarhat
+Boralighat
+Nalmuri
+Ghatakpukur
+Bamunia
+Chandipur
+Ghoshpur
+Ghushighata
+Bamanpukur
+Kushangra
+Minakhan
+Joygram
+Malancha
+Boyermari
+Agarhati
+Sarberia
+Gabbuni
+Charabidya
+Atharobanki
+Dhuri Bazar
+Amjhara
+Kanthalberia
+Kaltala
+Bhangankhali
+Narayantala
+Kultali Bazar
+Uttar Sonakhali
+Sonakhali
+
+SD-26 (Babughat) Bus Route: Burul to Babughat
+Stops in dataset order
+Burul
+Burul Bazar
+Chandua Bazar
+Bisalakshmitala
+Dongaria
+Nodakhali
+Bakhrahat
+Bibirhat
+Shamukpota
+Shamali
+Rasapunja
+Hanspukur
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Bhabani Bhawan
+PTS
+Fort William
+Esplanade
+Babughat
+
+SD-27 (Akra Fatak) Bus Route: Dostipur to Akra Fatak
+Stops in dataset order
+Dostipur
+Mashat Market
+Usthi
+Adharmanik
+Bagaria
+Shirakole
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+Brace Bridge
+Jhinjhira Bazar
+Nature Park
+Santoshpur Station
+Akra Fatak
+
+SD-29 (Baruipur) Bus Route: Amtala to Baruipur
+Stops in dataset order
+Amtala
+Pirtala
+Ghatur
+Gobra
+Jalilpur
+Balakhali
+Julpia
+Dhopagachi
+Kalyanpur Panchayat
+Padmapukur
+Baruipur Station
+Baruipur
+
+SD-30 (Taratala) Bus Route: Sahararhat to Taratala
+Stops in dataset order
+Sahararhat
+Sujapur
+Mohirampur
+Mallickpur
+Bisalakshmitala
+Dongaria
+Calcium
+Birla
+Charial
+Budge Budge
+Nungi
+Bata
+Dakghar
+Mollar Gate
+Rampur Quarter
+SM Nagar
+Sarkarpool
+Jhinjhira Bazar
+Brace Bridge
+Taratala
+
+SD-33 (Jharkhali) Bus Route: Baruipur to Jharkhali
+Stops in dataset order
+Baruipur
+Shibanipith
+Puratan Bazar
+Phooltala
+Uttarbhag
+Kulari
+Taldi
+Betberia Belegachi
+Canning
+Canning Station
+Matla Bridge
+Dockghat
+Kanthalberia
+Kaltala
+Bhangankhali
+Narayantala
+Kultali
+Uttar Sonakhali
+Sonakhali Bus Stand
+Basanti Chowmatha
+Shibganj Bazar
+Sunderban Chowmatha
+Jyotishpur
+Bashiram Bazar
+Hiranmoypur
+Nimtala
+Nafargange
+Kumirmari Bazar
+Sahidnagar
+Jharkhali
+
+SD-39 (Kishorimohonpur) Bus Route: Joynagar to Kishorimohonpur
+Stops in dataset order
+Joynagar
+Duttabazar
+Nimpith
+Tulsighata
+Mollarchak
+Natunhat
+Priyor
+Kholakhali Hat
+Jalaberia
+Naskarpara
+Kultali
+Jamtala
+Mandalerhat
+Sankizahan
+Kantamari
+Dakshin Durgapur
+Petkulchand Bazar
+Bhasa Panchrasta Bazar
+Debipur
+Bhubaneshwari
+Bindopur
+Lakshmi
+Maipith Bazar
+Baikunthapur
+Kishorimohonpur
+
+SD-50 (Patharpratima) Bus Route: Diamond Harbour to Patharpratima
+Stops in dataset order
+Diamond Harbour
+Dalanghata
+Hatugunge
+Uttar Chandipur
+Kachuberia
+Kulpi
+Dakshin Ramkrishnapur
+Chakdulalpur
+Karanjali
+Belpukur
+Bhagabanpur
+ONGC
+Natun Rasta
+Kakdwip Station
+Kakdwip Bus Stand
+Kajoler
+Hospital
+Gangadharpur
+Addhabazar
+Milan
+Patharpratima
+
+SD-53 (Maipith) Bus Route: Joynagar to Maipith
+Stops in dataset order
+Joynagar
+Duttabazar
+Nimpith
+Tulsighata
+Mollarchak
+Natunhat
+Priyor
+Kholakhali Hat
+Jalaberia
+Naskarpara
+Kultali
+Jamtala
+Mandalerhat
+Sankizahan
+Kantamari
+Madhabpur
+Manikpir
+Dakshin Durgapur
+Petkulchand Bazar
+Bhasa Panchrasta Bazar
+Debipur
+Bhubaneshwari
+Binodpur
+Maipith Coastal
+Maipith
+
+SD-63 (Gadkhali) Bus Route: Baruipur to Gadkhali
+Stops in dataset order
+Baruipur
+Shibanipith
+Puratan Bazar
+Phooltala
+Uttarbhag
+Kulari
+Taldi
+Betberia Belegachi
+Canning
+Canning Station
+Matla Bridge
+Dockghat
+Kanthalberia
+Kaltala
+Bhangankhali
+Narayantala
+Kultali
+Uttar Sonakhali
+Sonakhali Bus Stand
+Basanti Chowmatha
+Kalidanga
+Chandkhali
+Matgaran
+Dakshin Battala
+Masjidbati
+Gadkhali
+
+SD-64 (Chunakhali) Bus Route: Baruipur to Chunakhali
+Stops in dataset order
+Baruipur
+Shibanipith
+Puratan Bazar
+Phooltala
+Uttarbhag
+Kulari
+Taldi
+Betberia Belegachi
+Canning
+Canning Station
+Matla Bridge
+Dockghat
+Kanthalberia
+Kaltala
+Panikhali
+Nirdeshkhali
+10 No Majhipara
+Baria
+Bagulakhali
+Chunakhali
+
+SD-69 (Gangasagar) Bus Route: Kachuberia Sagar Island to Gangasagar
+Stops in dataset order
+Kachuberia Sagar Island
+Harinbari
+Rudranagar
+Chemaguri
+Light House
+Gangasagar
+
+SD-76 (Ruby) Bus Route: Amtala to Ruby
+Stops in dataset order
+Amtala
+Bishnupur
+Khariberia
+Bhasha 14no
+Pailan
+Joka Bridge
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Taratala
+New Alipore
+Durgapur Bridge
+Chetla Park
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+Ruby
+
+SD-85 (Dhamakhali) Bus Route: Canning to Dhamakhali
+Stops in dataset order
+Canning
+Canning Station
+Matla Bridge
+Dockghat
+Kanthalberia
+Amjhara
+Dhuri Bazar
+Atharobanki
+Charabidya
+Gabbuni
+Sarberia
+Dhamakhali
+
+SD-94 (Bakkhali) Bus Route: Kakdwip Bus Stand to Bakkhali
+Stops in dataset order
+Kakdwip Bus Stand
+Ukilerhat
+Namkhana Station
+Narayanpur
+Sibanagar
+10 Mile Bazar
+Frazerganj
+Amrabati
+Bakkhali
+
+DN-2/1 (Dakshineswar) Bus Route: Shapoorji to Dakshineswar
+Stops in dataset order
+Shapoorji
+Karigari Bhawan
+Uem Campus
+Unitech Gate 1
+Unitech Gate 2
+DLF 2
+Ecospace
+Aliah University
+Ecopark
+Nawabpur
+Akanksha
+City Center 2
+Chinar Park
+Haldirams
+Kaikhali
+Airport Gate 1
+Airport Gate 3
+Durganagar
+Mathkal
+Dunlop Bridge
+Dakshineswar
+
+DN-5 (Naihati Station) Bus Route: Barasat Chapadali to Naihati Station
+Stops in dataset order
+Barasat Chapadali
+Barasat Colony
+Barbaria
+Jagannathpur
+Kokapur
+Rangapur
+Nilgunge
+Mathrangi
+Chapuria
+Debpukur
+Mohanpur
+Wireless
+Kundubari
+Babanpur
+Kayrapur
+Muthurapur
+Kowgachi
+Hansia
+Basudebpur
+Gurdah
+Keutia
+Panpur
+Banstala
+Dogachia
+Saheb Colony
+Naihati Station
+
+DN-8 (Sector V) Bus Route: Barasat Colony to Sector V
+Stops in dataset order
+Barasat Colony
+Madhyamgram
+BT College
+Birati
+Airport Gate 3
+Airport Gate 1
+Central Jail
+Nager Bazar
+Diamond Plaza
+Bangur Avenue
+Laketown
+Sreebhumi
+Ultadanga
+Saltlake PNB
+Saltlake 4no Tank
+Baisakhi
+Purta Bhawan
+Karunamoyee
+Wipro
+SDF
+College More
+Sector V
+
+DN-9/1 (Rajchandrapur) Bus Route: Barasat Chapadali to Rajchandrapur
+Stops in dataset order
+Barasat Chapadali
+Madhyamgram
+BT College
+Birati
+Airport Gate 3
+Airport Gate 1
+Central Jail
+Nager Bazar
+Dumdum Station
+Chiria
+Sinthi
+Tobin Road
+Bonhooghly
+Dunlop
+Dakshineswar
+Ballyhalt
+Rajchandrapur
+
+DN-12 (Basirhat) Bus Route: Bongaon to Basirhat
+Stops in dataset order
+Bongaon
+Panchpota
+Kalupur
+Dogachia
+Mondonpara
+Debipur
+Chandpara
+Bokchora
+Gaighata
+Amkola
+Matikumra
+Gobardanga
+Nakpul Bazar
+Machhlandapur
+Biswashati
+Shimulpur
+Magra Bazar
+Bagjola Bazar
+Haidarpur
+Rudrapur
+Baduria Bazar
+Taragunia
+Gadarati
+Kholapota
+Trimohini
+Basirhat
+
+DN-12/1 (Nazat) Bus Route: Habra Station to Nazat
+Stops in dataset order
+Habra Station
+Joygachi
+Payragachi
+Nakpul Bazar
+Machhlandapur
+Biswashati
+Shimulpur
+Magra Bazar
+Bagjola Bazar
+Haidarpur
+Rudrapur
+Baduria Bazar
+Taragunia
+Gadarati
+Kholapota
+Trimohini
+Basirhat
+Bhabla Station
+Pifa Bazar
+Bhebia Chowrasta
+Rajapur
+Kharampur
+Akhratala
+Metekhali
+Nazat
+
+DN-13 (Hakimpur) Bus Route: Basirhat to Hakimpur
+Stops in dataset order
+Basirhat
+Sadarpur
+Madartala
+Kendua Bazar
+Malatipur
+Korapara
+Ghoraras Beltala
+Gopalpur
+Kholapota
+Trimohini
+Basirhat
+Sangrampur
+Biramnagar
+Gandharbapur
+Katiahat Bazar
+Aturia
+Goaldaha
+Gokulpur
+Tentulia
+Hathatgange
+Swarupnagar
+Sarapul
+Dakbungalow Bazar
+Nirman
+Duttapara
+Bithari
+Hakimpur
+
+DN-16/1 (Dhamakhali) Bus Route: Barasat Chapadali to Dhamakhali
+Stops in dataset order
+Barasat Chapadali
+Madhyamgram
+BT College
+Gouripur
+Birati
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Saltlake PNB
+Saltlake CA Block
+Labony Estate
+Sushrut Hospital
+Wipro
+Nicco Park
+Chingrighata
+Mathpukur
+Science City
+Chowbaga
+Bantala Bazar
+Leather Complex
+Kantatala
+Calcutta Leather Complex
+Bhojerhat
+Paglarhat
+Boralighat
+Nalmuri
+Ghatakpukur
+Bamunia
+Chandipur
+Ghoshpur
+Ghushighata
+Bamanpukur
+Kushangra
+Minakhan
+Joygram
+Malancha
+Mathbari
+Rajbari
+Shirishtala
+Boyermari
+Kanmari
+Agarhati
+Sarberia
+Fakirtala
+Rampur
+Dhamakhali
+
+DN-17 (Santragachi) Bus Route: Barasat Chapadali to Santragachi
+Stops in dataset order
+Barasat Chapadali
+Madhyamgram
+BT College
+Sukantanagar
+Michaelnagar
+Bankra
+Gouripur
+Birati
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Phoolbagan
+Beleghata
+Sealdah
+Moulali
+Wellington
+Chandni Chowk
+Esplanade
+Akashbani Bhawan
+Babughat
+Princep Ghat
+Hastings
+Vidyasagar Setu
+Carry Road
+Belepole
+Baksara
+Santragachi
+
+DN-18 (Baduria) Bus Route: Shyambazar to Baduria
+Stops in dataset order
+Shyambazar
+RG Kar
+Belgachia
+Patipukur
+Kalindi
+Bangur Avenue
+Diamond Plaza
+Nager Bazar
+Central Jail
+Airport Gate 1
+Airport Gate 3
+Birati
+BT College
+Madhyamgram
+Barasat Chapadali
+Kadambagachi
+Golabari
+Beleghata
+Deganga
+Berachampa
+Jadurhati
+Raghunathpur
+Baduria
+
+DN-28 (Haroa Bazar) Bus Route: Barasat Chapadali to Haroa Bazar
+Stops in dataset order
+Barasat Chapadali
+Kadambagachi
+Goakhali
+Golabari
+Beleghata
+Deganga
+Aturia
+Berachampa
+Hadipur
+Hamadama
+Ramnagar
+Adampur
+Haroa Bazar
+
+DN-35 (Nabatkati) Bus Route: Barasat Chapadali to Nabatkati
+Stops in dataset order
+Barasat Chapadali
+Bamangachi
+Duttapukur
+Bira Chowmatha
+Guma Chowmatha
+Khosdelpur
+Ashoknagar Station
+Habra Station
+Joygachi
+Payragachi
+Nakpul Bazar
+Machhlandapur
+Chatra Bazar
+Kalupur
+Chandipur
+Benar
+Kayosa Bazar
+Ramchandrapur Bazar
+Tentulia
+Hathatgange
+Swarupnagar
+Malangapara
+Mallickbari
+Sarapul
+Nirman
+Duttapara
+Nandibari
+Bithari
+Goalbathan
+Balti Bazar
+Nabatkati
+
+DN-38 (Taranipur) Bus Route: Basirhat to Taranipur
+Stops in dataset order
+Basirhat
+Sangrampur
+Biramnagar
+Katiahat Bazar
+Aturia
+Goaldaha
+Gokulpur
+Tentulia
+Hathatgange
+Swarupnagar
+Sarapul
+Raghabkati
+Gobindapur
+Taranipur
+
+DN-43 (Dakshineswar) Bus Route: Barasat Colony to Dakshineswar
+Stops in dataset order
+Barasat Colony
+Madhyamgram
+Sajirhat
+Boardghar
+Muragacha
+Ghola Bazar
+Sodepur Station
+Kamarhati
+Rathtala
+Dunlop
+Dakshineswar
+
+DN-44 (Dakshineswar) Bus Route: Bongaon to Dakshineswar
+Stops in dataset order
+Bongaon
+Panchpota
+Kalupur
+Dogachia
+Mondonpara
+Debipur
+Chandpara
+Bokchora
+Gaighata
+Bagna
+Dharampur
+Kolashim Bazar
+Kulpukur
+Chongda
+Hatthuba
+Saptapally
+Joygachi
+Habra Station
+Ashoknagar Station
+Khosdelpur
+Guma Chowmatha
+Bira Chowmatha
+Joypul Bazar
+Duttapukur
+Bamangachi
+Mondonkathi
+Kazipara
+Barasat Chapadali
+Madhyamgram
+BT College
+Michaelnagar
+Gouripur
+Birati
+Airport Gate 3
+Belgharia Expressway
+Durganagar
+Mathkal
+Dunlop Bridge
+Dakshineswar
+
+DN-46 (Sector V) Bus Route: Ballyhalt to Sector V
+Stops in dataset order
+Ballyhalt
+Dakshineswar
+Dunlop Bridge
+Mathkal
+Durganagar
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Chinar Park
+City Center 2
+Akanksha
+Nawabpur
+Ecopark
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+Sector V
+
+DN-47 (Karunamoyee) Bus Route: Barasat Colony to Karunamoyee
+Stops in dataset order
+Barasat Colony
+Madhyamgram
+BT College
+Michaelnagar
+Gouripur
+Birati
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Chinar Park
+City Center 2
+Akanksha
+Nawabpur
+Ecopark
+Jatragachi
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+Wipro
+Saltlake 10no Tank
+Karunamoyee
+
+K-1 (Kolkata Station) Bus Route: Hatishala to Kolkata Station
+Stops in dataset order
+Hatishala
+Shapoorji
+Karigari Bhawan
+Uem Campus
+Unitech Gate 1
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+Wipro
+Saltlake 10no Tank
+Karunamoyee
+Bikash Bhawan
+City Center 1
+Saltlake CA Block
+Saltlake PNB
+Ultadanga Hudco
+Ultadanga
+Khanna Cinema
+Shyambazar
+RG Kar
+Kolkata Station
+
+K-4 (Ruby) Bus Route: Dakshineswar to Ruby
+Stops in dataset order
+Dakshineswar
+Alambazar
+Tantipara
+Sabedabagan
+Dunlop
+Indian Statistical Institute
+Bonhooghly
+Tobin Road
+Sinthi
+Chiria
+Shyambazar
+Khanna Cinema
+Maniktala
+Sukea Street
+Rajabazar
+Sealdah
+Moulali
+CIT Road
+Chittaranjan Hospital
+4 No Bridge
+Topsia
+Science City
+Uttar Panchannagram
+VIP Bazar
+Ruby
+
+K-11 (Rabindra Sadan) Bus Route: Domjur to Rabindra Sadan
+Stops in dataset order
+Domjur
+Domjur Bdo Office
+Makardaha
+Katlia
+Salap
+Khejurtala
+Garpa
+Santragachi
+Baksara
+Belepole
+Carry Road
+Vidyasagar Setu
+PTS
+Rabindra Sadan
+
+KB-12 (Unitech Gate 1) Bus Route: Parnasree to Unitech Gate 1
+Stops in dataset order
+Parnasree
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+PTS
+Rabindra Sadan
+Minto Park
+Beck Bagan
+Mallick Bazar
+Moulali
+Sealdah
+Beleghata
+Beleghata Building
+Chingrighata
+Sukantanagar
+Nicco Park
+Wipro
+SDF
+College More
+DLF 1
+Newtown
+Axis Mall
+Narkelbagan
+Unitech Gate 1
+
+KB-15 (Santragachi) Bus Route: Anandapur to Santragachi
+Stops in dataset order
+Anandapur
+Ruby
+Acropolis Mall
+Bosepukur
+Kasba PS
+Ballygunge Station
+Gariahat
+Deshapriya Park
+Sishu Mangal
+Lansdowne
+Minto Park
+Rabindra Sadan
+PTS
+Vidyasagar Setu
+Carry Road
+Belepole
+Betore
+Baksara
+Santragachi
+
+KB-16 (Bangur Avenue) Bus Route: Shapoorji to Bangur Avenue
+Stops in dataset order
+Shapoorji
+Natunpukur
+Hajratala
+Karigari Bhawan
+Uem Campus
+Unitech Gate 1
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+IBM
+Wipro
+Saltlake 10no Tank
+Karunamoyee
+Mayukh Bhawan
+Bikash Bhawan
+Central Park
+City Center 1
+Saltlake CA Block
+2 No Tank
+Saltlake PNB
+Ultadanga Hudco
+Ultadanga
+Khanna Cinema
+Shyambazar
+RG Kar
+Belgachia
+Duttabagan
+Patipukur
+Kalindi
+Laketown Jessore Road
+Bangur Avenue
+
+KB-17 (Unitech Gate 1) Bus Route: Sonarpur Station to Unitech Gate 1
+Stops in dataset order
+Sonarpur Station
+Power House
+Iimc Hospital
+Mission Pally
+Shimultala
+Karbala
+Kamalgazi
+Mahamayatala
+Garia Metro
+Ramgarh
+Baghajatin
+Sulekha
+Jadavpur 8B
+Jadavpur PS
+Dhakuria
+Golpark
+Gariahat
+Ballygunge Phari
+Quest Mall
+Park Circus
+Chittaranjan Hospital
+CIT Road
+Moulali
+Sealdah
+Rajabazar
+Maniktala
+Kankurgachi
+Ultadanga
+Saltlake PNB
+Saltlake 4no Tank
+Sech Bhawan
+Bikash Bhawan
+Karunamoyee
+Wipro
+College More
+DLF 1
+Newtown
+Axis Mall
+Narkelbagan
+Tata Medical
+Unitech Gate 1
+
+KB-21 (Leather Complex) Bus Route: Ganga Nagar to Leather Complex
+Stops in dataset order
+Ganga Nagar
+BT College
+Sukantanagar
+Michaelnagar
+Bankra
+Gouripur
+Birati
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Khanna Cinema
+Maniktala
+Sukea Street
+Rajabazar
+Sealdah
+Moulali
+Entally Market
+Jora Girja
+Ripon Street
+Nonapukur
+Mallick Bazar
+Park Circus
+4 No Bridge
+Topsia
+Science City
+Chowbaga
+Bantala Bazar
+Leather Complex
+
+KB-22 (Kolkata Station) Bus Route: Jamirgachi to Kolkata Station
+Stops in dataset order
+Jamirgachi
+Shonepur
+Gabtala Bazar
+Hatishala
+Shapoorji
+Karigari Bhawan
+Uem Campus
+Unitech Gate 1
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+Wipro
+Karunamoyee
+Bikash Bhawan
+City Center 1
+Saltlake CA Block
+Saltlake PNB
+Ultadanga
+Khanna Cinema
+Shyambazar
+RG Kar
+Kolkata Station
+
+KB-24 (Kolkata Station) Bus Route: Hatishala to Kolkata Station
+Stops in dataset order
+Hatishala
+Shapoorji
+Karigari Bhawan
+Uem Campus
+Unitech Gate 1
+Narkelbagan
+Axis Mall
+Newtown
+DLF 1
+College More
+Wipro
+Karunamoyee
+Bikash Bhawan
+City Center 1
+Saltlake CA Block
+Saltlake PNB
+Ultadanga
+Khanna Cinema
+Shyambazar
+RG Kar
+Kolkata Station
+
+E-43 (Howrah Station) Bus Route: Dihibhursut to Howrah Station
+Stops in dataset order
+Dihibhursut
+Udaynarayanpur
+Garh Bhowanipore
+Sehagori
+Khorop
+Betai Bandar
+Amta
+Panpur
+Ranihati
+Dhulagarh
+Alampur
+Jalan Gate
+Ankurhati
+Nibra
+Salap
+Bankra Bazar
+Japani Gate
+Baltikuri
+Dasnagar
+Shanpur
+Tikiapara Bypass
+Howrah Maidan
+Howrah Station
+
+E-44 (Howrah Station) Bus Route: Rampur to Howrah Station
+Stops in dataset order
+Rampur
+Udaynarayanpur
+Munshirhat
+Bargachia
+Domjur
+Makardaha
+Katlia
+Salap
+Bankra Bazar
+Japani Gate
+Dasnagar
+Shanpur
+Tikiapara Bypass
+Howrah Maidan
+Howrah Station
+
+E-53 (Howrah Station) Bus Route: Narit to Howrah Station
+Stops in dataset order
+Narit
+Khejurdaha
+Joypur
+Sehagori
+Amta
+Panpur
+Ranihati
+Dhulagarh
+Alampur
+Jalan Gate
+Ankurhati
+Nibra
+Salap
+Bankra Bazar
+Japani Gate
+Baltikuri
+Dasnagar
+Shanpur
+Tikiapara Bypass
+Howrah Maidan
+Howrah Station
+
+Kolkata to Bakkhali (Bakkhali) Bus Route: Esplanade to Bakkhali
+Stops in dataset order
+Esplanade
+PTS
+Alipore Zoo
+Mominpore
+Taratala
+Behala Tram Depot
+Behala Chowrasta
+Sakher Bazar
+Shilpara
+Thakurpukur Bazar
+Thakurpukur
+Thakurpukur 3A Bus Stand
+Joka Esi
+Joka Khalpole
+Iim Joka
+Joka Bharat Sevashram Hospital
+Pailan
+Konchowki
+Swaminarayan Temple
+Khariberia
+Bagirhat
+Bishnupur PS
+Amtala
+Kriparampur
+Rajarhat
+Shirakole
+Mollarthesh
+Hashimnagar
+Fatehpur
+Dostipur
+Marine College
+Sarishahat
+Sarisha Ashram
+Kapathat
+Diamond Harbour
+Hatugunj
+Kulpi
+Karanjali
+Nischintapur
+Kshirishtala
+5no Haat
+Notun Rasta
+Kakdwip
+Ukilerhat
+Namkhana
+Notun Bazar
+Dwariknagar
+Chandranagar
+7 Mile Bazar
+Shibpur Junction
+10 Mile Bazar
+Frasergunj
+Bakkhali
+
+E-1 (Howrah Station) Bus Route: Jadavpur 8B to Howrah Station
+Stops in dataset order
+Jadavpur 8B
+Jadavpur University
+Dhakuria
+Golpark
+Southern Avenue
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+AC-1 (Howrah Station) Bus Route: Jadavpur 8B to Howrah Station
+Stops in dataset order
+Jadavpur 8B
+South City
+Lake Gardens
+Anwar Shah Road
+Tollygunge Phari
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+S-2 (Howrah Station) Bus Route: Kudghat to Howrah Station
+Stops in dataset order
+Kudghat
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+AC-2 (Howrah Station) Bus Route: Barasat Chapadali to Howrah Station
+Stops in dataset order
+Barasat Chapadali
+Dakbanglow
+Madhyamgram
+BT College
+Birati
+Airport Gate 3
+Airport Gate 1
+Kaikhali
+Haldirams
+Teghoria
+Baguiati
+Kestopur
+Dumdum Park
+Laketown
+Sreebhumi
+Ultadanga
+Kankurgachi
+Maniktala
+Vivekananda Road
+Girish Park
+MG Road
+Barabazar
+Howrah Station
+
+S-2N (Nabanna) Bus Route: Kudghat to Nabanna
+Stops in dataset order
+Kudghat
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+PTS
+Vidyasagar Setu
+Nabanna
+
+S-3A (Sealdah) Bus Route: Thakurpukur to Sealdah
+Stops in dataset order
+Thakurpukur
+Thakurpukur Bazar
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Princep Ghat
+Babughat
+Esplanade
+BBD Bag
+Podder Court
+Central
+Bowbazar
+Medical College
+College Street
+Suryasen Street
+Rajabazar Tram Depot
+Sealdah
+
+S-3B (Kankurgachi) Bus Route: Behala 14 No to Kankurgachi
+Stops in dataset order
+Behala 14 No
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Princep Ghat
+Babughat
+Esplanade
+BBD Bag
+Podder Court
+Central
+Bowbazar
+Medical College
+College Street
+Sealdah
+Rajabazar
+Maniktala
+Bagmari Bazar
+Kankurgachi
+
+S-3W (Amity University) Bus Route: Thakurpukur to Amity University
+Stops in dataset order
+Thakurpukur
+Shilpara
+Sakher Bazar
+Behala Chowrasta
+Manton
+Behala 14 No
+Taratala
+New Alipore
+Durgapur Bridge
+Chetla Park
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+GST Bhawan
+Ruby
+VIP Bazar
+Uttar Panchannagram
+Science City
+Mathpukur
+Chingrighata
+Nicco Park
+Wipro
+SDF
+College More
+Technopolis
+DLF 1
+Newtown
+Axis Mall
+Narkelbagan
+Tata Cancer Hospital
+Unitech Gate 2
+DLF 2
+Ecospace
+Amity University
+
+S-4 (Karunamoyee) Bus Route: Parnasree to Karunamoyee
+Stops in dataset order
+Parnasree
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+Ruby
+VIP Bazar
+Uttar Panchannagram
+Science City
+Mathpukur
+Chingrighata
+Beleghata Building
+Apollo Hospital
+Bengal Chemical
+Saltlake Gate
+Saltlake PNB
+Saltlake 4no Tank
+Quality
+Baisakhi
+Purta Bhawan
+Bidyut Bhawan
+Karunamoyee
+
+S-4C (Howrah Station) Bus Route: Haridevpur to Howrah Station
+Stops in dataset order
+Haridevpur
+Tollygunge Karunamoyee
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+S-4D (Newtown) Bus Route: Parnasree to Newtown
+Stops in dataset order
+Parnasree
+State Garage
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Anwar Shah Road
+Lake Gardens
+South City
+Jadavpur PS
+Saheed Nagar
+Sapuipara
+Kalikapur
+EM Bypass
+Ruby
+VIP Bazar
+Uttar Panchannagram
+Science City
+Mathpukur
+Chingrighata
+Nicco Park
+Wipro
+SDF
+College More
+Technopolis
+DLF 1
+Newtown
+
+E-4 (Howrah Station) Bus Route: Parnasree to Howrah Station
+Stops in dataset order
+Parnasree
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+Fort William
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+AC-4 (Howrah Station) Bus Route: Parnasree to Howrah Station
+Stops in dataset order
+Parnasree
+Taratala
+Majherhat
+Mominpore
+Ekbalpur
+Kidderpore
+Hastings
+PTS
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+AC-4A (Shapoorji) Bus Route: Parnasree to Shapoorji
+Stops in dataset order
+Parnasree
+Taratala
+New Alipore
+Mahabirtala
+Tollygunge Phari
+Anwar Shah Road
+Lake Gardens
+South City
+Jadavpur PS
+Saheed Nagar
+Sapuipara
+Kalikapur
+EM Bypass
+Ruby
+VIP Bazar
+Uttar Panchannagram
+Science City
+Mathpukur
+Chingrighata
+Nicco Park
+Wipro
+SDF
+College More
+DLF 1
+Newtown
+Axis Mall
+Narkelbagan
+Unitech Gate 1
+Uem Campus
+Karigari Bhawan
+Shapoorji
+
+AC-4B (Newtown) Bus Route: Thakurpukur to Newtown
+Stops in dataset order
+Thakurpukur
+Cancer Hospital
+Kalitala Housing
+Kabardanga
+Keorapukur
+Haridevpur
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Deshapriya Park
+Gariahat
+Ballygunge Station
+Kasba PS
+Bosepukur
+Acropolis Mall
+Ruby
+VIP Bazar
+Uttar Panchannagram
+Science City
+Mathpukur
+Chingrighata
+Nicco Park
+Wipro
+SDF
+College More
+DLF 1
+Newtown
+
+S-5 (Howrah Station) Bus Route: Garia Bus Stand to Howrah Station
+Stops in dataset order
+Garia Bus Stand
+Ramgarh
+Baghajatin
+Sulekha
+Jadavpur 8B
+Jadavpur PS
+Jodhpur Park
+Dhakuria
+Golpark
+Southern Avenue
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Elgin
+Exide
+Rabindra Sadan
+Maidan
+Park Street
+Mayo Road
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+S-5A (Howrah Station) Bus Route: Jadavpur 8B to Howrah Station
+Stops in dataset order
+Jadavpur 8B
+Dhakuria
+Golpark
+Southern Avenue
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+S-5N (Nabanna) Bus Route: Garia Bus Stand to Nabanna
+Stops in dataset order
+Garia Bus Stand
+Ramgarh
+Baghajatin
+Sulekha
+Jadavpur 8B
+Jadavpur PS
+Jodhpur Park
+Dhakuria
+Golpark
+Southern Avenue
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Elgin
+Exide
+Rabindra Sadan
+PTS
+Vidyasagar Setu
+Nabanna
+
+S-5C/N (Nabanna) Bus Route: Nayabad to Nabanna
+Stops in dataset order
+Nayabad
+Garia Station
+New Garia
+Peerless Hospital
+Hiland Park
+Ajaynagar
+Santoshpur
+Jadavpur 8B
+Jadavpur PS
+Dhakuria
+Golpark
+Southern Avenue
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+PTS
+Vidyasagar Setu
+Nabanna
+
+AC-5 (Howrah Station) Bus Route: Garia Bus Stand to Howrah Station
+Stops in dataset order
+Garia Bus Stand
+Ramgarh
+Baghajatin
+Sulekha
+Jadavpur 8B
+Jadavpur PS
+Jodhpur Park
+Dhakuria
+Golpark
+Gariahat
+Deshapriya Park
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Elgin
+Exide
+Rabindra Sadan
+Maidan
+Park Street
+Mayo Road
+Esplanade
+BBD Bag
+Barabazar
+Howrah Station
+
+S-7 (Howrah Station) Bus Route: Garia Bus Stand to Howrah Station
+Stops in dataset order
+Garia Bus Stand
+Naktala
+Bansdroni
+Netaji Nagar
+Ranikuthi
+Malancha Cinema
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+Maidan
+Park Street
+Esplanade
+BBD Bag
+GPO
+Barabazar
+Howrah Station
+
+S-7N (Nabanna) Bus Route: Garia Bus Stand to Nabanna
+Stops in dataset order
+Garia Bus Stand
+Naktala
+Bansdroni
+Netaji Nagar
+Ranikuthi
+Malancha Cinema
+Tollygunge Metro
+Rabindra Sarovar
+Rashbehari
+Kalighat
+Hazra
+Bhowanipore
+Rabindra Sadan
+PTS
+Vidyasagar Setu
+Nabanna

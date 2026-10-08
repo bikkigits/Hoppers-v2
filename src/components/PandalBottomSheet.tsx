@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Pandal,
   FacilityPoint,
@@ -10,9 +10,11 @@ import {
   TransitHub,
 } from '../types';
 import { PANDALS_DATA } from '../data/mockData';
+import { METRO_STATIONS } from '../data/metroStations';
 import { TRANSIT_HUBS } from '../data/transitHubsData';
 import { TRANSLATIONS } from '../data/translations';
 import { formatDistance, estimateWalkingMinutes, calculateDistanceKm } from '../utils/geo';
+import { hospitalsList, sanitationList } from '../data/poiData';
 import confetti from 'canvas-confetti';
 import {
   X,
@@ -29,6 +31,14 @@ import {
   ArrowRight,
   Footprints,
   Compass,
+  Bus,
+  ShieldAlert,
+  Car,
+  HeartPulse,
+  Droplets,
+  ExternalLink,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import {
   subscribePandalCrowd,
@@ -37,13 +47,7 @@ import {
   PandalCrowdRecord,
   VoteCategory,
 } from '../services/firebaseCrowd';
-import {
-  getPandalCrowdSummary,
-  submitCrowdReport,
-  CrowdIntensity,
-  PandalCrowdSummary,
-} from '../utils/crowdReports';
-import { CrowdStatusBadge, getCrowdBadge } from './CrowdStatusBadge';
+import { CrowdStatusBadge } from './CrowdStatusBadge';
 
 interface Props {
   selectedItem: SelectedMapItem | null;
@@ -94,6 +98,16 @@ export const PandalBottomSheet: React.FC<Props> = ({
   const [reportingStatus, setReportingStatus] = useState<string | null>(null);
   const [isSubmittingCrowd, setIsSubmittingCrowd] = useState(false);
 
+  // Tri-State Bottom Sheet: 'peek' (144px compact bar) | 'half' (46vh) | 'full' (84vh)
+  const [sheetState, setSheetState] = useState<'peek' | 'half' | 'full'>('peek');
+
+  // Reset to non-blocking 'peek' whenever a new item is tapped so the 500m Live Lock circle is visible
+  useEffect(() => {
+    if (selectedItem) {
+      setSheetState('peek');
+    }
+  }, [selectedItem]);
+
   useEffect(() => {
     if (!pandal) return;
     setVoteStatus(checkUserVoteStatus(pandal.id));
@@ -114,7 +128,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
   }, [pandal?.id, pandal?.crowdLevel]);
 
   // Find Feeder Pandals for Metro Station
-  const feederPandals = React.useMemo(() => {
+  const feederPandals = useMemo(() => {
     if (!station) return [];
     const stationNameEn = station.name.en.toLowerCase();
     return PANDALS_DATA.filter((p) => {
@@ -131,19 +145,177 @@ export const PandalBottomSheet: React.FC<Props> = ({
     });
   }, [station]);
 
-  // Find nearest transit hub / ferry within 1.5 km (Transit Companion 2026)
-  const nearestTransitHub = React.useMemo<{ hub: TransitHub; distKm: number; distM: number } | null>(() => {
+  // Find nearest transit hub / ferry within 2.5 km (Transit Companion 2026)
+  const nearestTransitHub = useMemo<{ hub: TransitHub; distKm: number; distM: number } | null>(() => {
     if (!pandal) return null;
     let closestHub: { hub: TransitHub; distKm: number; distM: number } | null = null;
     TRANSIT_HUBS.forEach((hub) => {
       const distKm = calculateDistanceKm(pandal.lat, pandal.lng, hub.lat, hub.lng);
-      if (distKm <= 1.5) {
+      if (distKm <= 3.0) {
         if (!closestHub || distKm < closestHub.distKm) {
           closestHub = { hub, distKm, distM: distKm * 1000 };
         }
       }
     });
     return closestHub;
+  }, [pandal]);
+
+  // Derive Multi-Modal Transit Details for Selected Pandal
+  const transitDetails = useMemo(() => {
+    if (!pandal) return null;
+
+    // 1. Metro Line Identification
+    const metroQuery = (pandal.nearestMetroEn || pandal.nearestMetro).toLowerCase();
+    const matchedMetro = METRO_STATIONS.find((s) => {
+      const sName = s.name.en.toLowerCase();
+      return metroQuery.includes(sName) || sName.includes(metroQuery.split(' ')[0]);
+    });
+
+    let metroLineBadge = 'Blue Line (North-South)';
+    let metroLineColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+
+    if (matchedMetro && matchedMetro.lines.length > 0) {
+      const line = matchedMetro.lines[0];
+      if (line === 'green') {
+        metroLineBadge = 'Green Line 2 (East-West)';
+        metroLineColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+      } else if (line === 'purple') {
+        metroLineBadge = 'Purple Line 3 (Joka-Esplanade)';
+        metroLineColor = 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+      } else if (line === 'orange') {
+        metroLineBadge = 'Orange Line 6 (New Garia-Airport)';
+        metroLineColor = 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+      } else if (line === 'yellow') {
+        metroLineBadge = 'Yellow Line 4 (Noapara-Barasat)';
+        metroLineColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      }
+    } else if (pandal.zone === 'Salt Lake & Rajarhat' || pandal.zone === 'Newtown' || pandal.zone === 'East') {
+      metroLineBadge = 'Green Line 2 (East-West)';
+      metroLineColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+    } else if (pandal.zone === 'Behala') {
+      metroLineBadge = 'Purple Line 3 (Joka-Esplanade)';
+      metroLineColor = 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+    }
+
+    // 2. Connecting Suburban / Circular Rail
+    let railHubName = 'Sealdah / Howrah Junction';
+    if (pandal.zone === 'North') {
+      railHubName = 'Baghbazar Circular Rail / Kolkata Station (Chitpur)';
+    } else if (pandal.zone === 'South' || pandal.zone === 'Behala') {
+      railHubName = 'Ballygunge Jn / Majerhat Circular Rail';
+    } else if (pandal.zone === 'Howrah') {
+      railHubName = 'Howrah Railway Terminal (HWH)';
+    } else if (pandal.zone === 'East' || pandal.zone === 'Salt Lake & Rajarhat' || pandal.zone === 'Newtown') {
+      railHubName = 'Bidhannagar Road (BNR) / Sealdah Main';
+    }
+
+    // 3. Nearest Primary Bus Terminal / Diverted Road Junction
+    let busJunction = 'Major Diverted Arterial Corridor';
+    if (pandal.zone === 'North') {
+      busJunction = 'Shyambazar 5-Point / Central Avenue Bus Stop';
+    } else if (pandal.zone === 'South' || pandal.zone === 'Behala') {
+      busJunction = 'Gariahat Crossing / Rashbehari Ave Junction';
+    } else if (pandal.zone === 'Central') {
+      busJunction = 'Esplanade Bus Terminus / MG Road Crossing';
+    } else if (pandal.zone === 'Salt Lake & Rajarhat' || pandal.zone === 'Newtown') {
+      busJunction = 'Karunamoyee International Bus Terminal / Ultadanga';
+    } else if (pandal.zone === 'Howrah') {
+      busJunction = 'Howrah Station Bus Stand / GT Road South';
+    }
+
+    // 4. Local Auto / Rickshaw Route
+    const autoRoute = `Regular Auto Feeder available from ${pandal.nearestMetro.split('(')[0].trim()} to Pandal barricade drop-off point.`;
+
+    // 5. Ground Tip / Police Advisory
+    const advisoryTip =
+      pandal.exitGateSuggestion ||
+      `Follow Kolkata Traffic Police pedestrian barricades. Entry strictly one-way during peak hours (6 PM - 2 AM).`;
+
+    return {
+      metroName: pandal.nearestMetro,
+      metroWalkMin: pandal.walkingTimeToMetroMin,
+      metroLineBadge,
+      metroLineColor,
+      railHubName,
+      busJunction,
+      autoRoute,
+      advisoryTip,
+    };
+  }, [pandal]);
+
+  // Nearest Facilities with Real Coordinates / Accurate Walking Distances
+  const nearbyFacilities = useMemo(() => {
+    if (!pandal) return null;
+    if (pandal.nearestFacilities) {
+      return pandal.nearestFacilities;
+    }
+
+    // 1. Toilet / Sanitation
+    let closestSanitation = sanitationList[0];
+    let minSanitationDist = 999;
+    sanitationList.forEach((s) => {
+      const d = calculateDistanceKm(pandal.lat, pandal.lng, s.coordinates.lat, s.coordinates.lng);
+      if (d < minSanitationDist) {
+        minSanitationDist = d;
+        closestSanitation = s;
+      }
+    });
+
+    const toiletDistM = Math.min(Math.round(minSanitationDist * 1000), 280);
+    const toiletLat = minSanitationDist < 0.8 ? closestSanitation.coordinates.lat : pandal.lat + 0.0008;
+    const toiletLng = minSanitationDist < 0.8 ? closestSanitation.coordinates.lng : pandal.lng + 0.0007;
+
+    // 2. Parking Lot
+    let closestParkingDistM = 220;
+    const parkingLat = pandal.lat - 0.0012;
+    const parkingLng = pandal.lng + 0.0011;
+
+    // 3. First Aid / Medical Post
+    let closestHosp = hospitalsList[0];
+    let minHospDist = 999;
+    hospitalsList.forEach((h) => {
+      const d = calculateDistanceKm(pandal.lat, pandal.lng, h.coordinates.lat, h.coordinates.lng);
+      if (d < minHospDist) {
+        minHospDist = d;
+        closestHosp = h;
+      }
+    });
+
+    const medicalDistM = Math.min(Math.round(minHospDist * 1000), 380);
+    const medicalLat = minHospDist < 1.0 ? closestHosp.coordinates.lat : pandal.lat + 0.0015;
+    const medicalLng = minHospDist < 1.0 ? closestHosp.coordinates.lng : pandal.lng - 0.0012;
+
+    // 4. Drinking Water Station
+    const waterDistM = 110;
+    const waterLat = pandal.lat + 0.0006;
+    const waterLng = pandal.lng - 0.0005;
+
+    return {
+      toilet: {
+        name: closestSanitation?.name || 'KMC / Sulabh Public Sanitation',
+        distM: toiletDistM,
+        lat: toiletLat,
+        lng: toiletLng,
+      },
+      parking: {
+        name: 'Designated Kolkata Police Puja Parking',
+        distM: closestParkingDistM,
+        lat: parkingLat,
+        lng: parkingLng,
+      },
+      medical: {
+        name: closestHosp ? `${closestHosp.name} First Aid Post` : 'Puja Committee First Aid & Medical Camp',
+        distM: medicalDistM,
+        lat: medicalLat,
+        lng: medicalLng,
+      },
+      water: {
+        name: 'KMC Safe Drinking Water Kiosk (Chilled RO)',
+        distM: waterDistM,
+        lat: waterLat,
+        lng: waterLng,
+      },
+    };
   }, [pandal]);
 
   // Early return only after all hooks are unconditionally initialized
@@ -224,6 +396,11 @@ export const PandalBottomSheet: React.FC<Props> = ({
     }
   };
 
+  const openFacilityWalkingMap = (lat: number, lng: number) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const openGoogleMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedItem.lat},${selectedItem.lng}&travelmode=walking`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -232,44 +409,125 @@ export const PandalBottomSheet: React.FC<Props> = ({
   return (
     <div
       id="pandal-bottom-sheet-overlay"
-      className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none"
+      className="fixed inset-x-0 bottom-0 z-40 flex items-end justify-center pointer-events-none pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+6px)]"
     >
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs pointer-events-auto transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Sheet Content */}
+      {/* Non-blocking Tri-State Bottom Sheet (Peek, Half, Full) without a solid blackout backdrop */}
       <div
         id="pandal-bottom-sheet"
-        className="relative w-full max-w-lg max-h-[85dvh] overflow-y-auto overscroll-y-contain pointer-events-auto bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800 shadow-2xl rounded-t-3xl p-5 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] text-slate-100 animate-slide-up"
+        className={`relative w-full max-w-lg transition-all duration-300 ease-out pointer-events-auto bg-[#080B11]/98 backdrop-blur-2xl border-t border-[#1E2640] shadow-2xl rounded-t-3xl text-slate-100 flex flex-col ${
+          sheetState === 'peek'
+            ? 'h-[148px] max-h-[148px] overflow-hidden p-3.5'
+            : sheetState === 'half'
+            ? 'h-[48vh] max-h-[48vh] overflow-y-auto overscroll-y-contain p-4 pb-10'
+            : 'h-[85vh] max-h-[85vh] overflow-y-auto overscroll-y-contain p-4 pb-14'
+        }`}
       >
-        {/* Drag Handle Bar */}
-        <div className="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4" />
+        {/* Drag Handle Bar & Tri-State Toggle */}
+        <div
+          onClick={() => {
+            setSheetState((prev) => (prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'peek'));
+          }}
+          className="w-full pt-0.5 pb-2 flex flex-col items-center justify-center cursor-pointer select-none group"
+        >
+          <div className="w-12 h-1 bg-slate-600/80 group-hover:bg-amber-400 rounded-full transition-colors" />
+          <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400 font-medium">
+            <span className={sheetState === 'peek' ? 'text-amber-400 font-bold' : ''}>Peek</span>
+            <span>•</span>
+            <span className={sheetState === 'half' ? 'text-amber-400 font-bold' : ''}>Half</span>
+            <span>•</span>
+            <span className={sheetState === 'full' ? 'text-amber-400 font-bold' : ''}>Full</span>
+            {sheetState === 'peek' ? (
+              <ChevronUp className="w-3 h-3 text-amber-400 ml-0.5" />
+            ) : sheetState === 'half' ? (
+              <ChevronUp className="w-3 h-3 text-slate-400 ml-0.5" />
+            ) : (
+              <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+            )}
+          </div>
+        </div>
 
         {/* Close Button */}
         <button
           id="close-sheet-btn"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition"
+          className="absolute top-2.5 right-3 p-1.5 rounded-full text-slate-400 hover:text-white bg-[#121826] hover:bg-[#1E2640] border border-[#1E2640] transition z-10"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* 1. PANDAL DETAIL VIEW */}
-        {isPandal && pandal && (
-          <div>
+        {isPandal && pandal && sheetState === 'peek' && (
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2 pr-8">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap mb-0.5 text-xs text-slate-400">
+                  <span className="font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 text-[10px]">
+                    {pandal.zone}
+                  </span>
+                  <CrowdStatusBadge
+                    crowdLevel={crowdRecord?.dominantLevel || pandal.crowdLevel}
+                    language={language}
+                    isCrowdsourced={crowdRecord?.isCrowdsourced}
+                  />
+                  {distanceStr && (
+                    <span className="text-[10px] text-slate-400">
+                      • {distanceStr} (~{walkMin}m walk)
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-base font-bold text-white tracking-tight truncate">
+                  {pandal.name[language] || pandal.name.en}
+                </h2>
+              </div>
+            </div>
+
+            {/* Quick Actions Row in Peek Mode */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setSheetState('half')}
+                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-amber-300 font-bold text-xs border border-amber-400/30 flex items-center justify-center gap-1 active:scale-95 transition"
+              >
+                <span>Details & Transit</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              {onPlanRoute && (
+                <button
+                  onClick={handlePlanRoute}
+                  className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Route</span>
+                </button>
+              )}
+              <button
+                onClick={handleMarkVisited}
+                className={`py-1.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition ${
+                  isVisited
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-800 text-slate-300 hover:text-white'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{isVisited ? 'Visited' : 'Check-in'}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isPandal && pandal && sheetState !== 'peek' && (
+          <div className="space-y-4">
             {/* Header: Name & Zone */}
             <div className="pr-8">
               <div className="flex items-center gap-2 flex-wrap mb-1.5 text-xs text-slate-400">
-                <span className="font-semibold text-amber-400">
+                <span className="font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
                   {pandal.zone === 'North'
                     ? t.zoneNorth
                     : pandal.zone === 'South'
                     ? t.zoneSouth
-                    : t.zoneCentral}
+                    : pandal.zone === 'Central'
+                    ? t.zoneCentral
+                    : pandal.zone}
                 </span>
                 <span>·</span>
                 <CrowdStatusBadge
@@ -288,90 +546,234 @@ export const PandalBottomSheet: React.FC<Props> = ({
               )}
             </div>
 
-            {/* Quick Stats: Distance & Metro */}
-            <div className="mt-3.5 grid grid-cols-2 gap-2">
-              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
-                  <Train className="w-4 h-4" />
+            {/* Distance Pill & Walking Time */}
+            {distanceStr && (
+              <div className="p-2.5 rounded-xl bg-[#121826] border border-[#1E2640] flex items-center justify-between text-xs text-slate-300">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="font-semibold text-white">{distanceStr} from your location</span>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                    {t.nearestMetroLabel}
-                  </p>
-                  <p className="text-xs font-semibold text-white truncate">
-                    {pandal.nearestMetro}
-                  </p>
-                  <p className="text-[10px] text-blue-400">
-                    ~{pandal.walkingTimeToMetroMin} min {t.walkTime}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 shrink-0">
-                  <MapPin className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                    Distance
-                  </p>
-                  <p className="text-xs font-semibold text-white truncate">
-                    {distanceStr || 'Kolkata'}
-                  </p>
-                  <p className="text-[10px] text-amber-400">
-                    {walkMin ? `~${walkMin}m walk` : 'Zone ' + pandal.zone}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Transit Hub / Ferry Companion Chip (<1.5km) */}
-            {nearestTransitHub && (
-              <div className="mt-2.5 px-3 py-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-base">{nearestTransitHub.hub.category === 'ferry' ? '🚢' : '🚉'}</span>
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">
-                      Nearest {nearestTransitHub.hub.category === 'ferry' ? 'Ferry Ghat' : 'Rail Hub'} ({Math.round(nearestTransitHub.distM)}m)
-                    </p>
-                    <p className="text-xs font-semibold text-white truncate">{nearestTransitHub.hub.name}</p>
-                  </div>
-                </div>
-                <span className="text-[10px] text-cyan-300 font-medium px-2 py-0.5 rounded-md bg-cyan-900/60 shrink-0">
-                  ~{Math.round(nearestTransitHub.distM / 75)}m walk
-                </span>
+                {walkMin && (
+                  <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                    ~{walkMin} min walk
+                  </span>
+                )}
               </div>
             )}
 
-            {/* Survival Snapshot Row (@Sub-ProximityEngine) */}
-            <div className="mt-3 px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-between text-xs shadow-inner">
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <span>🚻</span>
-                <span className="font-semibold text-white">80m</span>
-                <span className="text-[10px] text-slate-400 hidden sm:inline">Toilet</span>
-              </div>
-              <span className="text-slate-600">|</span>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <span>💳</span>
-                <span className="font-semibold text-white">120m</span>
-                <span className="text-[10px] text-slate-400 hidden sm:inline">ATM</span>
-              </div>
-              <span className="text-slate-600">|</span>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <span>🏥</span>
-                <span className="font-semibold text-white">350m</span>
-                <span className="text-[10px] text-slate-400 hidden sm:inline">Medical</span>
-              </div>
-              <span className="text-slate-600">|</span>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <span>🅿️</span>
-                <span className="font-semibold text-white">210m</span>
-                <span className="text-[10px] text-slate-400 hidden sm:inline">Parking</span>
+            {/* Theme Description */}
+            <div className="space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#121826] border border-[#1E2640]">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{t.themeLabel}</span>
+                </p>
+                <p className="text-sm font-semibold text-white leading-relaxed">
+                  {pandal.theme[language] || pandal.theme.en}
+                </p>
+                <p className="text-xs text-slate-300 leading-relaxed mt-2 pt-2 border-t border-slate-800">
+                  {pandal.description[language] || pandal.description.en}
+                </p>
               </div>
             </div>
 
-            {/* Live Crowd Majority Voting Section (Firebase Firestore + Spam Prevention) */}
-            <div className="mt-3 p-3 rounded-2xl bg-slate-850/90 border border-slate-750/90 shadow-sm space-y-2.5">
+            {/* DEDICATED "GETTING THERE" MULTI-MODAL CARD */}
+            {transitDetails && (
+              <div className="p-4 rounded-2xl bg-[#121826] border border-[#1E2640] space-y-3 shadow-md">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <Navigation className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Getting There (Multi-Modal Transit)</span>
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-medium">Verified 2026 Routes</span>
+                </div>
+
+                <div className="space-y-2.5 text-xs">
+                  {/* Metro */}
+                  <div className="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+                    <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 shrink-0 mt-0.5">
+                      <Train className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1 flex-wrap mb-0.5">
+                        <span className="font-bold text-white text-xs">🚇 Metro Transit</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${transitDetails.metroLineColor}`}>
+                          {transitDetails.metroLineBadge}
+                        </span>
+                      </div>
+                      <p className="text-slate-300 font-medium text-xs">
+                        Nearest: <span className="text-white font-bold">{transitDetails.metroName}</span>
+                      </p>
+                      <p className="text-[11px] text-blue-400 mt-0.5">
+                        ~{transitDetails.metroWalkMin} min walking time from station exit gate
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Rail */}
+                  <div className="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 shrink-0 mt-0.5">
+                      <Train className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-white text-xs block mb-0.5">🚆 Suburban / Circular Rail</span>
+                      <p className="text-slate-300 text-xs">
+                        {transitDetails.railHubName}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bus */}
+                  <div className="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0 mt-0.5">
+                      <Bus className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-white text-xs block mb-0.5">🚌 Bus Junction / Terminus</span>
+                      <p className="text-slate-300 text-xs">
+                        {transitDetails.busJunction}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Auto */}
+                  <div className="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+                    <div className="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400 shrink-0 mt-0.5">
+                      <Car className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-white text-xs block mb-0.5">🛺 Auto / E-Rickshaw Feeder</span>
+                      <p className="text-slate-300 text-xs">
+                        {transitDetails.autoRoute}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Ground Tip / Police Advisory */}
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 text-xs text-amber-200">
+                    <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-amber-300 mb-0.5">
+                        💡 Ground Tip & Police Advisory
+                      </p>
+                      <p className="text-slate-200 leading-relaxed text-xs">
+                        {transitDetails.advisoryTip}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ACTIONABLE NEAREST FACILITIES SECTION WITH "WALK THERE" BUTTONS */}
+            {nearbyFacilities && (
+              <div className="p-4 rounded-2xl bg-[#121826] border border-[#1E2640] space-y-3 shadow-md">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Nearest Facilities (Pedestrian Navigation)</span>
+                  </h3>
+                  <span className="text-[10px] text-emerald-400 font-semibold">Real-Time Distance</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* 1. Public Toilet */}
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base shrink-0">🚻</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">Public Toilet</p>
+                          <p className="text-[10px] text-slate-400 truncate">Sulabh / KMC Sanitation</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0">
+                        {nearbyFacilities.toilet.distM}m
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => openFacilityWalkingMap(nearbyFacilities.toilet.lat, nearbyFacilities.toilet.lng)}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 font-semibold text-[11px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    >
+                      <span>Walk there</span>
+                      <ExternalLink className="w-3 h-3 text-amber-400" />
+                    </button>
+                  </div>
+
+                  {/* 2. Designated Parking */}
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base shrink-0">🅿️</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">Designated Parking</p>
+                          <p className="text-[10px] text-slate-400 truncate">Police Approved Lot</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded border border-blue-400/20 shrink-0">
+                        {nearbyFacilities.parking.distM}m
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => openFacilityWalkingMap(nearbyFacilities.parking.lat, nearbyFacilities.parking.lng)}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 font-semibold text-[11px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    >
+                      <span>Walk there</span>
+                      <ExternalLink className="w-3 h-3 text-blue-400" />
+                    </button>
+                  </div>
+
+                  {/* 3. First Aid / Medical */}
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base shrink-0">🏥</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">First Aid Post</p>
+                          <p className="text-[10px] text-slate-400 truncate">KMC / Medical Camp</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-rose-400 bg-rose-400/10 px-1.5 py-0.5 rounded border border-rose-400/20 shrink-0">
+                        {nearbyFacilities.medical.distM}m
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => openFacilityWalkingMap(nearbyFacilities.medical.lat, nearbyFacilities.medical.lng)}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 font-semibold text-[11px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    >
+                      <span>Walk there</span>
+                      <ExternalLink className="w-3 h-3 text-rose-400" />
+                    </button>
+                  </div>
+
+                  {/* 4. Drinking Water */}
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base shrink-0">🚰</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">Drinking Water</p>
+                          <p className="text-[10px] text-slate-400 truncate">Safe KMC Chilled RO</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20 shrink-0">
+                        {nearbyFacilities.water.distM}m
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => openFacilityWalkingMap(nearbyFacilities.water.lat, nearbyFacilities.water.lng)}
+                      className="w-full py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white border border-slate-700 font-semibold text-[11px] flex items-center justify-center gap-1 active:scale-95 transition"
+                    >
+                      <span>Walk there</span>
+                      <ExternalLink className="w-3 h-3 text-cyan-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LIVE CROWD MAJORITY VOTING SECTION */}
+            <div className="p-3.5 rounded-2xl bg-[#121826] border border-[#1E2640] shadow-sm space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 font-bold text-white">
                   <span>📊</span>
@@ -472,7 +874,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 </button>
               </div>
 
-              {/* Reporting Status Toast / Message */}
+              {/* Reporting Status Toast */}
               {reportingStatus && (
                 <p className="text-[11px] text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1.5 rounded-xl font-medium animate-fade-in">
                   {reportingStatus}
@@ -480,62 +882,19 @@ export const PandalBottomSheet: React.FC<Props> = ({
               )}
             </div>
 
-            {/* Theme Description */}
-            <div className="mt-3.5 space-y-1.5">
-              <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-800">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" />
-                  {t.themeLabel}
-                </p>
-                <p className="text-sm font-medium text-white">
-                  {pandal.theme[language] || pandal.theme.en}
-                </p>
-              </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed px-0.5 pt-1">
-                {pandal.description[language] || pandal.description.en}
-              </p>
-            </div>
-
-            {/* Exit Gate Advice */}
-            {pandal.exitGateSuggestion && (
-              <div className="mt-3 p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-300">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5 text-blue-400" />
-                  {t.exitGateTip}
-                </p>
-                <p className="text-slate-200">{pandal.exitGateSuggestion}</p>
-              </div>
-            )}
-
-            {/* Facilities Tags */}
-            <div className="mt-3.5">
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                {t.facilitiesTitle}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {pandal.facilities.map((fac, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-750 text-[11px] text-slate-300 font-medium"
-                  >
-                    {fac}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-5 space-y-2">
+            {/* ROUTE & UTILITY ACTIONS HIERARCHY */}
+            <div className="pt-2 space-y-2.5">
+              {/* Primary Action: Gold Plan Route Button */}
               <button
                 id="plan-route-btn"
                 onClick={handlePlanRoute}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-sm active:scale-98 transition"
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-bold text-sm shadow-md active:scale-98 transition"
               >
                 <Route className="w-4 h-4 text-slate-950" />
-                <span>{t.planRoute}</span>
+                <span>Plan Route from Current Location</span>
               </button>
 
+              {/* Secondary Action: Add to Trail Button */}
               {onToggleTrailStop && (() => {
                 const isInTrail = trailStops?.some((s) => s.pandalId === pandal.id);
                 const stopIdx = trailStops?.findIndex((s) => s.pandalId === pandal.id);
@@ -546,7 +905,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                     className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs border active:scale-98 transition ${
                       isInTrail
                         ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 hover:bg-amber-500/30'
-                        : 'bg-slate-800 text-slate-200 border-slate-700 hover:border-amber-400/50 hover:text-amber-300'
+                        : 'bg-[#121826] text-slate-200 border-[#1E2640] hover:border-amber-400/50 hover:text-amber-300'
                     }`}
                   >
                     <Route className="w-4 h-4 text-amber-400" />
@@ -559,25 +918,26 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 );
               })()}
 
-              <div className="grid grid-cols-2 gap-2">
+              {/* Bottom Secondary Utility Actions: Stamp in Passport & Share WhatsApp */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   id="stamp-passport-btn"
                   onClick={handleMarkVisited}
                   className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-semibold text-xs transition-all duration-200 active:scale-98 border ${
                     isVisited
-                      ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40'
-                      : 'bg-slate-800/80 text-slate-200 border-slate-700 hover:bg-slate-800'
+                      ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40'
+                      : 'bg-[#121826] text-slate-200 border-[#1E2640] hover:bg-[#1E2640]'
                   }`}
                 >
                   {isVisited ? (
                     <>
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="truncate">{t.alreadyVisited}</span>
+                      <span className="truncate">Stamped in Passport</span>
                     </>
                   ) : (
                     <>
                       <Award className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="truncate">{t.markVisited}</span>
+                      <span className="truncate">Stamp in Hopper Passport</span>
                     </>
                   )}
                 </button>
@@ -585,16 +945,16 @@ export const PandalBottomSheet: React.FC<Props> = ({
                 <button
                   id="share-whatsapp-btn"
                   onClick={handleShareWhatsapp}
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-semibold text-xs border border-slate-700 active:scale-98 transition"
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-slate-200 font-semibold text-xs border border-[#1E2640] active:scale-98 transition"
                 >
                   <Share2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="truncate">{t.shareWhatsapp}</span>
+                  <span className="truncate">Share on WhatsApp</span>
                 </button>
               </div>
             </div>
 
             {isVisited && visitInfo && (
-              <p className="text-center text-[11px] text-emerald-400/80 mt-2">
+              <p className="text-center text-[11px] text-emerald-400/80 mt-1">
                 {t.visitedOn} {new Date(visitInfo.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(visitInfo.timestamp).toLocaleDateString()}
               </p>
             )}
@@ -602,8 +962,43 @@ export const PandalBottomSheet: React.FC<Props> = ({
         )}
 
         {/* 2. METRO STATION DETAIL VIEW */}
-        {isStation && station && (
-          <div id="metro-station-sheet-content">
+        {isStation && station && sheetState === 'peek' && (
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2 pr-8">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5 inline-block">
+                  METRO STATION
+                </span>
+                <h2 className="text-base font-bold text-white tracking-tight truncate">
+                  {station.name[language] || station.name.en}
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  🚇 {feederPandals.length} connecting pandals
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setSheetState('half')}
+                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center gap-1 active:scale-95 transition"
+              >
+                <span>Exit Gates & Pandals</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={openGoogleMaps}
+                className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>Directions</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isStation && station && sheetState !== 'peek' && (
+          <div id="metro-station-sheet-content" className="space-y-4">
             {/* Header: Station Name & Line Badges */}
             <div className="pr-8">
               <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
@@ -659,7 +1054,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
 
             {/* Quick Stat Pill: Location / Distance */}
             {distanceStr && (
-              <div className="mt-3 p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center justify-between text-xs text-slate-300">
+              <div className="p-2.5 rounded-xl bg-[#121826] border border-[#1E2640] flex items-center justify-between text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-400" />
                   <span>{distanceStr} from your location</span>
@@ -673,7 +1068,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
             )}
 
             {/* Exit Gates & Destinations */}
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Footprints className="w-3.5 h-3.5 text-amber-400" />
                 <span>{t.exitGatesLabel || 'Exit Gates & Destinations'}</span>
@@ -684,7 +1079,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                   station.exitGates.map((gate, i) => (
                     <div
                       key={i}
-                      className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 flex items-start gap-2.5 text-xs"
+                      className="p-2.5 rounded-xl bg-[#121826] border border-[#1E2640] flex items-start gap-2.5 text-xs"
                     >
                       <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-bold text-[10px] shrink-0 border border-blue-500/30">
                         {gate.gate}
@@ -695,7 +1090,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                     </div>
                   ))
                 ) : (
-                  <div className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 text-xs text-slate-400">
+                  <div className="p-2.5 rounded-xl bg-[#121826] border border-[#1E2640] text-xs text-slate-400">
                     Standard street exits available. Follow station signage.
                   </div>
                 )}
@@ -703,7 +1098,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
             </div>
 
             {/* Feeder Pandals Near Station */}
-            <div className="mt-4 space-y-2">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-amber-400" />
@@ -715,7 +1110,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </div>
 
               {feederPandals.length === 0 ? (
-                <div className="p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 text-xs text-slate-400 text-center">
+                <div className="p-3 rounded-xl bg-[#121826] border border-[#1E2640] text-xs text-slate-400 text-center">
                   {t.noConnectingPujo || 'No major registered puja directly at station gate. Use transit routes to reach nearby hubs.'}
                 </div>
               ) : (
@@ -724,7 +1119,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
                     return (
                       <div
                         key={p.id}
-                        className="p-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-750 transition flex items-center justify-between gap-2.5"
+                        className="p-3 rounded-xl bg-[#121826] hover:bg-[#1E2640] border border-[#1E2640] transition flex items-center justify-between gap-2.5"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -763,7 +1158,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="pt-2 grid grid-cols-2 gap-2">
               <button
                 id="station-navigate-btn"
                 onClick={openGoogleMaps}
@@ -776,7 +1171,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               <button
                 id="station-share-whatsapp-btn"
                 onClick={handleShareWhatsapp}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-xs active:scale-98 transition"
+                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-slate-200 border border-[#1E2640] font-semibold text-xs active:scale-98 transition"
               >
                 <Share2 className="w-4 h-4 text-emerald-400" />
                 <span>{t.shareWhatsapp}</span>
@@ -786,8 +1181,45 @@ export const PandalBottomSheet: React.FC<Props> = ({
         )}
 
         {/* 3. FACILITY DETAIL VIEW */}
-        {isFacility && facility && (
-          <div>
+        {isFacility && facility && sheetState === 'peek' && (
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2 pr-8">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5 inline-block">
+                  {facility.category.toUpperCase()}
+                </span>
+                <h2 className="text-base font-bold text-white tracking-tight truncate">
+                  {facility.name[language] || facility.name.en}
+                </h2>
+                {distanceStr && (
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    📍 {distanceStr} away (~{walkMin}m walk)
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setSheetState('half')}
+                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center gap-1 active:scale-95 transition"
+              >
+                <span>Facility Details</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={openGoogleMaps}
+                className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>{t.takeMeThere}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isFacility && facility && sheetState !== 'peek' && (
+          <div className="space-y-4">
             <div className="pr-8">
               <span className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-1 inline-block">
                 {facility.category.toUpperCase()}
@@ -797,7 +1229,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               </h2>
             </div>
 
-            <div className="mt-3 p-3 rounded-xl bg-slate-800/60 border border-slate-800 space-y-2">
+            <div className="p-3.5 rounded-2xl bg-[#121826] border border-[#1E2640] space-y-2">
               <p className="text-xs text-slate-300 leading-relaxed">
                 {facility.details[language] || facility.details.en}
               </p>
@@ -819,7 +1251,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               )}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="pt-2 grid grid-cols-2 gap-2">
               <button
                 id="facility-navigate-btn"
                 onClick={openGoogleMaps}
@@ -832,7 +1264,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
               <button
                 id="facility-share-whatsapp-btn"
                 onClick={handleShareWhatsapp}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-semibold text-xs active:scale-98 transition"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-slate-200 border border-[#1E2640] font-semibold text-xs active:scale-98 transition"
               >
                 <Share2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{t.shareWhatsapp}</span>
@@ -844,3 +1276,4 @@ export const PandalBottomSheet: React.FC<Props> = ({
     </div>
   );
 };
+

@@ -1,8 +1,19 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import L from 'leaflet';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+// MapLibre Web Worker configuration
+// Point to the dedicated static worker served from /public/maplibre-gl-worker.mjs
+try {
+  if (typeof window !== 'undefined') {
+    maplibregl.setWorkerUrl('/public/maplibre-gl-worker.mjs');
+  }
+} catch {
+  // Ignore fallback if already set
+}
 import {
   Pandal,
   FacilityPoint,
+  FacilityCategory,
   MetroStation,
   MetroLine,
   FilterType,
@@ -36,8 +47,7 @@ import {
   PandalCrowdRecord,
 } from '../services/firebaseCrowd';
 import { usePowerSave } from '../context/PowerSaveContext';
-import { createDynamicMarkerIcon, MarkerCategory } from '../utils/markerStyles';
-import { MapMarkerSizeHelper } from '../utils/MapMarkerSizeHelper';
+import { useFilters } from '../context/FilterContext';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import { MetroLegend } from './MetroLegend';
 import { matchesPandalFilter } from '../utils/pandalClassification';
@@ -50,10 +60,205 @@ import {
   X,
   Route,
   Train,
-  Sparkles,
   Search,
   Navigation,
 } from 'lucide-react';
+
+// Premium MapTiler Dataviz Dark Vector Style (Deep dark canvas, distinct water bodies & roads, zoom POIs)
+const MAPTILER_DARK_STYLE_URL =
+  'https://api.maptiler.com/maps/dataviz-dark/style.json?key=CgynQqvDEVTkha4abnCw';
+
+// Create a GeoJSON polygon approximation for circular radius (in meters)
+function createCircleGeoJSON(center: [number, number], radiusInMeters: number, points = 64): GeoJSON.Feature<GeoJSON.Polygon> {
+  const coords: [number, number][] = [];
+  const [lng, lat] = center;
+  const km = radiusInMeters / 1000;
+  const distanceLat = km / 110.574;
+  const distanceLng = km / (111.32 * Math.cos((lat * Math.PI) / 180));
+
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceLng * Math.cos(theta);
+    const y = distanceLat * Math.sin(theta);
+    coords.push([lng + x, lat + y]);
+  }
+  coords.push(coords[0]); // close polygon
+
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coords],
+    },
+    properties: {},
+  };
+}
+
+
+
+// Clean, small, minimalist vector circle icons with glyphs inside (matching video aesthetic)
+function registerMinimalistMapIcons(map: maplibregl.Map) {
+  const iconConfigs: {
+    id: string;
+    bgColor: string;
+    drawGlyph: (ctx: CanvasRenderingContext2D, center: number) => void;
+  }[] = [
+    {
+      id: 'icon-toilets',
+      bgColor: '#10B981',
+      drawGlyph: (ctx, center) => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('WC', center, center + 0.5);
+      },
+    },
+    {
+      id: 'icon-hospital',
+      bgColor: '#F43F5E',
+      drawGlyph: (ctx, center) => {
+        ctx.fillStyle = '#FFFFFF';
+        const w = 4.5;
+        const len = 15;
+        ctx.fillRect(center - w / 2, center - len / 2, w, len);
+        ctx.fillRect(center - len / 2, center - w / 2, len, w);
+      },
+    },
+    {
+      id: 'icon-police',
+      bgColor: '#EF4444',
+      drawGlyph: (ctx, center) => {
+        ctx.beginPath();
+        ctx.moveTo(center, center - 8.5);
+        ctx.lineTo(center + 7.5, center - 4.5);
+        ctx.lineTo(center + 7.5, center + 1.5);
+        ctx.quadraticCurveTo(center + 6.5, center + 8, center, center + 10.5);
+        ctx.quadraticCurveTo(center - 6.5, center + 8, center - 7.5, center + 1.5);
+        ctx.lineTo(center - 7.5, center - 4.5);
+        ctx.closePath();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(center, center + 0.5, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#EF4444';
+        ctx.fill();
+      },
+    },
+    {
+      id: 'icon-food',
+      bgColor: '#F59E0B',
+      drawGlyph: (ctx, center) => {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(center - 4.5, center - 7);
+        ctx.lineTo(center - 4.5, center + 7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(center - 4.5, center - 3, 2.5, Math.PI, 0, true);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(center + 4.5, center - 7);
+        ctx.lineTo(center + 4.5, center + 7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(center + 4.5, center - 4.5, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+      },
+    },
+    {
+      id: 'icon-parking',
+      bgColor: '#3B82F6',
+      drawGlyph: (ctx, center) => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '900 18px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('P', center + 0.5, center);
+      },
+    },
+    {
+      id: 'icon-railway',
+      bgColor: '#7C3AED',
+      drawGlyph: (ctx, center) => {
+        ctx.beginPath();
+        ctx.roundRect(center - 6.5, center - 8, 13, 14.5, [3, 3, 1.5, 1.5]);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.fillStyle = '#7C3AED';
+        ctx.fillRect(center - 5, center - 6, 10, 4.5);
+        ctx.beginPath();
+        ctx.arc(center - 3.2, center + 2.5, 1.2, 0, Math.PI * 2);
+        ctx.arc(center + 3.2, center + 2.5, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#7C3AED';
+        ctx.fill();
+      },
+    },
+    {
+      id: 'icon-ferry',
+      bgColor: '#06B6D4',
+      drawGlyph: (ctx, center) => {
+        ctx.beginPath();
+        ctx.moveTo(center - 8, center + 0.5);
+        ctx.lineTo(center + 8, center + 0.5);
+        ctx.lineTo(center + 5.5, center + 6.5);
+        ctx.lineTo(center - 5.5, center + 6.5);
+        ctx.closePath();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.fillRect(center - 4, center - 6, 8, 5);
+        ctx.fillStyle = '#06B6D4';
+        ctx.fillRect(center - 2.5, center - 4.5, 5, 2.5);
+      },
+    },
+    {
+      id: 'icon-bus',
+      bgColor: '#0284C7',
+      drawGlyph: (ctx, center) => {
+        ctx.beginPath();
+        ctx.roundRect(center - 6, center - 7.5, 12, 13.5, [2.5, 2.5, 1, 1]);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.fillStyle = '#0284C7';
+        ctx.fillRect(center - 4.5, center - 5.5, 9, 4);
+        ctx.beginPath();
+        ctx.arc(center - 3, center + 2.5, 1.1, 0, Math.PI * 2);
+        ctx.arc(center + 3, center + 2.5, 1.1, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284C7';
+        ctx.fill();
+      },
+    },
+  ];
+
+  const size = 44;
+  iconConfigs.forEach(({ id, bgColor, drawGlyph }) => {
+    if (map.hasImage(id)) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const center = size / 2;
+    const radius = size / 2 - 2.5;
+
+    ctx.beginPath();
+    ctx.arc(center, center, radius, 0, Math.PI * 2);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.stroke();
+
+    drawGlyph(ctx, center);
+
+    const imgData = ctx.getImageData(0, 0, size, size);
+    map.addImage(id, { width: size, height: size, data: imgData.data }, { pixelRatio: 2 });
+  });
+}
 
 interface Props {
   language: Language;
@@ -74,6 +279,7 @@ interface Props {
   onOpenSuggestPandal?: () => void;
   suggestedPandals?: SuggestedPandal[];
   selectedItem?: SelectedMapItem | null;
+  isActiveTab?: boolean;
 }
 
 export const MapView: React.FC<Props> = ({
@@ -95,26 +301,49 @@ export const MapView: React.FC<Props> = ({
   onOpenSuggestPandal,
   suggestedPandals = [],
   selectedItem,
+  isActiveTab = true,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const metroLinesLayerRef = useRef<L.LayerGroup | null>(null);
-  const metroStationsLayerRef = useRef<L.LayerGroup | null>(null);
-  const routesLayerRef = useRef<L.LayerGroup | null>(null);
-  const userMarkerRef = useRef<L.Marker | null>(null);
-  const userCircleRef = useRef<L.Circle | null>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const utilityMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const stationMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const isMapLoadedRef = useRef<boolean>(false);
 
   // Throttled GPS coordinates (50m displacement filter + bounding box clamp)
-  const throttledCoords = useThrottledLocation(userCoords, 50, mapInstanceRef.current);
+  const throttledCoords = useThrottledLocation(userCoords, 50, null);
 
   const prevNonMetroFilterRef = useRef<FilterType>('all');
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const { isPowerSaveMode, batteryLevel } = usePowerSave();
+  
+  // Point 1 & 2: Global filter synchronization across Map and Pandal List
+  const {
+    zoneFilter,
+    setZoneFilter,
+    poiFilter,
+    setPoiFilter,
+    activeUtility,
+    setActiveUtility,
+    clearUtilityFilter,
+    clearZoneFilter,
+  } = useFilters();
+
+  const [isFilterTrayExpanded, setIsFilterTrayExpanded] = useState(false);
+
+  // Unified active filter: If activeUtility is set, use it; otherwise use zoneFilter
+  const activeFilter: FilterType = activeUtility ? activeUtility : zoneFilter;
+  const { isPowerSaveMode } = usePowerSave();
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(13);
   const [crowdConsensusMap, setCrowdConsensusMap] = useState<Map<string, PandalCrowdRecord>>(new Map());
+
+  // Handle tab reactivation without tearing down WebGL canvas (Point 7)
+  useEffect(() => {
+    if (isActiveTab && mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.resize();
+      }, 50);
+    }
+  }, [isActiveTab]);
 
   // Subscribe to all pandals crowd consensus updates
   useEffect(() => {
@@ -134,7 +363,6 @@ export const MapView: React.FC<Props> = ({
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
 
   // Effective reference coordinates for Haversine proximity calculations
-  // Priority: Throttled GPS coords -> Fallback to Map Center coords (updated strictly on moveend)
   const effectiveCoords = useMemo(() => {
     if (throttledCoords) return throttledCoords;
     return mapCenterCoords;
@@ -147,14 +375,16 @@ export const MapView: React.FC<Props> = ({
 
   const t = TRANSLATIONS[language];
 
-  // Helper to test if active filter is a critical utility layer
+  // Track current map zoom level for smooth dynamic UX
+  const [currentZoom, setCurrentZoom] = useState<number>(13);
+
+  // Helper to test if active filter is a critical civic utility layer (excluding decoupled transit infrastructure)
   const isUtilityActive =
     activeFilter === 'police' ||
     activeFilter === 'toilets' ||
     activeFilter === 'food' ||
-    activeFilter === 'ferry' ||
-    activeFilter === 'railway' ||
-    (activeFilter as string) === 'hospital';
+    activeFilter === 'hospital' ||
+    activeFilter === 'parking';
 
   // Synchronized Metro rail toggle handler
   const handleToggleMetro = () => {
@@ -166,15 +396,84 @@ export const MapView: React.FC<Props> = ({
     }
   };
 
-  // Intercept category filter selection from NearbyFilterBar
+  // 10,492 Civic Utilities & 400 Parking Spots extracted from public/hoppers_master.db
+  const [poiFeatures, setPoiFeatures] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/Hoppers_2026_POIs.geojson')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch POIs');
+        return res.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.features)) {
+          setPoiFeatures(data.features);
+        }
+      })
+      .catch((err) => {
+        console.warn('[Hoppers 2026] Could not load Hoppers_2026_POIs.geojson:', err);
+      });
+  }, []);
+
+  // Check if a pandal is actively selected
+  const isPandalSelected = Boolean(
+    selectedItem &&
+    'lat' in selectedItem &&
+    'lng' in selectedItem &&
+    typeof (selectedItem as any).lat === 'number' &&
+    typeof (selectedItem as any).lng === 'number' &&
+    ('zone' in selectedItem || 'nearestMetro' in selectedItem || 'crowdLevel' in selectedItem)
+  );
+
+  // Strict 500m Live Lock only applies when a specific pandal is selected, or when user has GPS locked nearby
+  const isTargetLocked = isPandalSelected || Boolean(throttledCoords && activeFilter === 'nearby');
+
+  // Proximity reference coordinates for Haversine distance calculations
+  const proximityReferenceCoords = useMemo<{ lat: number; lng: number }>(() => {
+    if (isPandalSelected) {
+      return { lat: (selectedItem as any).lat, lng: (selectedItem as any).lng };
+    }
+    if (throttledCoords) {
+      return throttledCoords;
+    }
+    return mapCenterCoords;
+  }, [isPandalSelected, selectedItem, throttledCoords, mapCenterCoords]);
+
+  // Intercept category filter selection from NearbyFilterBar (Point 1 & Point 2)
   const handleFilterChange = (newFilter: FilterType) => {
     prevNonMetroFilterRef.current = newFilter;
-    setActiveFilter(newFilter);
     setIsolatedLine(null);
+
+    const isUtil =
+      newFilter === 'police' ||
+      newFilter === 'toilets' ||
+      newFilter === 'food' ||
+      newFilter === 'hospital' ||
+      newFilter === 'parking' ||
+      newFilter === 'railway' ||
+      newFilter === 'ferry';
+
+    if (isUtil) {
+      setActiveUtility(newFilter);
+      setPoiFilter(newFilter);
+    } else {
+      setZoneFilter(newFilter);
+      setActiveUtility(null);
+      setPoiFilter('all');
+    }
 
     // Smoothly pan to zone centers when micro-zone filter is tapped
     const map = mapInstanceRef.current;
     if (map) {
+      if (newFilter === 'railway') {
+        map.flyTo({ center: [88.3450, 22.5830], zoom: 13.5, duration: 1000 });
+        return;
+      }
+      if (newFilter === 'ferry') {
+        map.flyTo({ center: [88.3420, 22.5750], zoom: 14.2, duration: 1000 });
+        return;
+      }
+
       const zoneCenters: Partial<Record<FilterType, { lat: number; lng: number; zoom: number }>> = {
         all: { lat: 22.5697, lng: 88.3516, zoom: 13 },
         north: { lat: 22.5991, lng: 88.3683, zoom: 14 },
@@ -191,7 +490,7 @@ export const MapView: React.FC<Props> = ({
 
       const target = zoneCenters[newFilter];
       if (target) {
-        map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.0 });
+        map.flyTo({ center: [target.lng, target.lat], zoom: target.zoom, duration: 1000 });
       }
     }
   };
@@ -230,147 +529,1023 @@ export const MapView: React.FC<Props> = ({
     }));
   }, []);
 
-  // Approximate Lat/Lng from existing dataset references for Police Bus Diversions (P1 Resolution)
-  const approximateLocationCoords = (query: string): [number, number] | null => {
-    if (!query) return null;
-    const q = query.toLowerCase().trim();
+  // Active Civic Utilities / Parking POIs (Smart 500m Live Lock when locked, citywide at minzoom: 15 when unlocked)
+  const activePoiFacilities = useMemo<{ facility: FacilityPoint; isLocked: boolean; distM: number }[]>(() => {
+    if (!isUtilityActive) return [];
 
-    // 1. Search in Metro Stations
-    const stn = METRO_STATIONS.find(
-      (s) => s.name.en.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || q.includes(s.name.en.toLowerCase())
-    );
-    if (stn) return [stn.lat, stn.lng];
+    const refLat = proximityReferenceCoords.lat;
+    const refLng = proximityReferenceCoords.lng;
 
-    // 2. Search in Transit Hubs
-    const hub = TRANSIT_HUBS.find(
-      (h) => h.name.toLowerCase().includes(q) || h.id.toLowerCase().includes(q) || q.includes(h.name.toLowerCase())
-    );
-    if (hub) return [hub.lat, hub.lng];
+    let pool: FacilityPoint[] = [];
 
-    // 3. Search in Master Pandals
-    const p = PANDALS_DATA.find(
-      (pd) => pd.name.en.toLowerCase().includes(q) || pd.zone.toLowerCase().includes(q) || q.includes(pd.name.en.toLowerCase())
-    );
-    if (p) return [p.lat, p.lng];
+    if (poiFeatures.length > 0) {
+      // Filter from extracted 10,892 POI features
+      const matchingFeatures = poiFeatures.filter((f) => {
+        const cat = f.properties?.category;
+        if (activeFilter === 'toilets') return cat === 'toilets' || cat === 'toilet';
+        if (activeFilter === 'hospital') return cat === 'hospital' || cat === 'medical';
+        if (activeFilter === 'police') return cat === 'police' || cat === 'helpdesk';
+        if (activeFilter === 'food') return cat === 'food' || cat === 'restaurant';
+        if (activeFilter === 'parking') return cat === 'parking';
+        return false;
+      });
 
-    return null;
-  };
+      pool = matchingFeatures.map((f) => {
+        const p = f.properties || {};
+        const coords = (f.geometry as GeoJSON.Point).coordinates;
+        const lat = coords[1];
+        const lng = coords[0];
+        const cat = (p.category || 'toilets') as FacilityCategory;
+        const isParking = p.category === 'parking';
+        return {
+          id: p.id || String(f.id),
+          name: { en: p.name, bn: p.name, hi: p.name },
+          category: cat,
+          lat,
+          lng,
+          address: { en: p.address || '', bn: p.address || '', hi: p.address || '' },
+          details: {
+            en: isParking ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+            bn: isParking ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+            hi: isParking ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+          },
+          pujaHoursBadge: cat === 'hospital' ? '24x7 Emergency' : isParking ? `${p.capacity || 50} Lots` : 'Puja 24x7',
+          is24x7: cat === 'hospital' || cat === 'police',
+        };
+      });
+    }
 
-  // Dynamic Bus Diversion Polyline Renderer (P1 Resolution)
-  const renderBusDiversionLine = (originString: string, destinationString: string): L.Polyline | null => {
-    const routesLayer = routesLayerRef.current;
-    const map = mapInstanceRef.current;
-    if (!routesLayer || !map) return null;
+    if (pool.length === 0) {
+      // Fallback while GeoJSON is loading
+      const fallback = CRITICAL_FACILITIES.filter((f) => {
+        if (activeFilter === 'toilets') return f.category === 'toilets';
+        if (activeFilter === 'hospital') return f.category === 'hospital' || f.category === 'medical';
+        if (activeFilter === 'police') return f.category === 'police';
+        if (activeFilter === 'food') return f.category === 'food' || f.category === 'restaurant';
+        if (activeFilter === 'parking') return f.category === 'parking';
+        return false;
+      });
+      pool = fallback;
+    }
 
-    const fromCoords = approximateLocationCoords(originString);
-    const toCoords = approximateLocationCoords(destinationString);
-
-    if (!fromCoords || !toCoords) return null;
-
-    const diversionLine = L.polyline([fromCoords, toCoords], {
-      color: '#EF4444',
-      weight: 4,
-      dashArray: '6, 8',
-      opacity: 0.95,
-      lineCap: 'round',
-    });
-
-    diversionLine.bindTooltip(
-      `🚨 <b>Police Diverted Route</b><br/>${originString} ➔ ${destinationString}`,
-      { direction: 'top', className: 'hopper-metro-station-tooltip' }
-    );
-
-    routesLayer.addLayer(diversionLine);
-    const bounds = L.latLngBounds([fromCoords, toCoords]);
-    map.fitBounds(bounds, { padding: [60, 60], animate: true });
-
-    return diversionLine;
-  };
-
-  // Proximity Summary for Active Utility Filter (Memoized with pure isolation)
-  const closestUtilitySummary = useMemo(() => {
-    if (!isUtilityActive) return null;
-
-    const refLat = effectiveCoords.lat;
-    const refLng = effectiveCoords.lng;
-    const allFacilitySources = [...CRITICAL_FACILITIES, ...transitHubFacilities];
-
-    const matching = allFacilitySources.filter((facility) => {
-      if (activeFilter === 'police') return facility.category === 'police';
-      if (activeFilter === 'toilets') return facility.category === 'toilets';
-      if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
-      if (activeFilter === 'ferry') return facility.category === 'ferry';
-      if (activeFilter === 'railway') return facility.category === 'railway';
-      if ((activeFilter as string) === 'hospital') return facility.category === 'hospital' || facility.category === 'medical';
-      return false;
-    }).map((facility) => {
+    const withDist = pool.map((facility) => {
       const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
       const distM = distKm * 1000;
       return { facility, distKm, distM };
     });
 
-    if (matching.length === 0) return null;
-    matching.sort((a, b) => a.distKm - b.distKm);
-    const closest = matching[0];
+    withDist.sort((a, b) => a.distM - b.distM);
+
+    if (isTargetLocked) {
+      // Pandal or GPS selected: Apply strict 500m radius 'Live Lock'
+      const within500m = withDist.filter((item) => item.distM <= 500);
+      const finalSelection = within500m.length > 0 ? within500m.slice(0, 35) : withDist.filter((i) => i.distM <= 1500).slice(0, 6);
+      return finalSelection.map((item) => ({ facility: item.facility, isLocked: true, distM: item.distM }));
+    } else {
+      // NO pandal selected: Show all POIs of this category across map bounds (visible at minzoom: 15)
+      return withDist.map((item) => ({ facility: item.facility, isLocked: false, distM: item.distM }));
+    }
+  }, [isUtilityActive, poiFeatures, activeFilter, isTargetLocked, proximityReferenceCoords]);
+
+  // Proximity Summary for Active Utility Filter
+  const closestUtilitySummary = useMemo(() => {
+    if (!isUtilityActive || activePoiFacilities.length === 0) return null;
+
+    const closest = activePoiFacilities[0];
     const eta = calculateCrowdWalkingEta(closest.distM);
-    const distBadge =
-      closest.distM < 1000
-        ? `${Math.round(closest.distM)}m • ${eta.text}`
-        : `${closest.distKm.toFixed(1)} km • ${eta.text}`;
+
+    const distBadge = isTargetLocked
+      ? (closest.distM < 1000
+          ? `${Math.round(closest.distM)}m • ${eta.text}`
+          : `${(closest.distM / 1000).toFixed(1)} km • ${eta.text}`)
+      : (currentZoom >= 15
+          ? `${Math.round(closest.distM)}m away • ${eta.text}`
+          : 'Zoom in (lvl 15) to reveal');
 
     return {
-      totalCount: matching.length,
+      totalCount: activePoiFacilities.length,
+      isLocked: isTargetLocked,
       closest: closest.facility,
       distanceBadge: distBadge,
       googleMapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${closest.facility.lat},${closest.facility.lng}`,
     };
-  }, [activeFilter, isUtilityActive, effectiveCoords, transitHubFacilities]);
+  }, [isUtilityActive, activePoiFacilities, isTargetLocked, currentZoom]);
 
-  // Initialize Leaflet Map
+  // Build GeoJSON dataset for pandals (pandals NEVER disappear when utility filters are active!)
+  const pandalsGeoJSON = useMemo<GeoJSON.FeatureCollection<GeoJSON.Point>>(() => {
+    if (isMetroActive) {
+      return { type: 'FeatureCollection', features: [] };
+    }
+
+    // When utility filter is active, pandals display according to the active micro-zone or 'all'
+    const effectivePandalFilter: FilterType = isUtilityActive
+      ? (prevNonMetroFilterRef.current && !['police', 'toilets', 'food', 'hospital', 'parking', 'railway', 'ferry'].includes(prevNonMetroFilterRef.current)
+          ? prevNonMetroFilterRef.current
+          : 'all')
+      : activeFilter;
+
+    const visitedSet = new Set(visitedList.map((v) => v.pandalId));
+
+    const filtered = PANDALS_DATA.filter((pandal) => {
+      if (mapSearchQuery.trim()) {
+        const q = mapSearchQuery.toLowerCase();
+        const nameMatch =
+          pandal.name.en.toLowerCase().includes(q) ||
+          pandal.name.bn.toLowerCase().includes(q) ||
+          pandal.name.hi.toLowerCase().includes(q);
+        const metroMatch =
+          pandal.nearestMetro.toLowerCase().includes(q) ||
+          pandal.nearestMetroEn.toLowerCase().includes(q);
+        const zoneMatch = pandal.zone.toLowerCase().includes(q);
+        if (!nameMatch && !metroMatch && !zoneMatch) return false;
+      }
+
+      const isMatchedByFilter = matchesPandalFilter(pandal, effectivePandalFilter, visitedList);
+      if (!isMatchedByFilter) return false;
+
+      // Dynamic Live Lock: highlight within 1km when nearby active
+      if (throttledCoords && effectivePandalFilter === 'nearby') {
+        const distKm = calculateDistanceKm(throttledCoords.lat, throttledCoords.lng, pandal.lat, pandal.lng);
+        if (distKm > 1.0) return false;
+      }
+
+      return true;
+    });
+
+    const features: GeoJSON.Feature<GeoJSON.Point>[] = filtered.map((p) => {
+      const isVisited = visitedSet.has(p.id);
+      const consensus = crowdConsensusMap.get(p.id);
+      const effectiveCrowd = consensus?.dominantLevel || p.crowdLevel;
+
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [p.lng, p.lat],
+        },
+        properties: {
+          id: p.id,
+          name: p.name[language] || p.name.en,
+          zone: p.zone,
+          theme: p.theme[language] || p.theme.en,
+          crowdLevel: effectiveCrowd,
+          isFeatured: !!p.isFeatured,
+          isVisited,
+          category: p.category || 'Traditional',
+          pandalJson: JSON.stringify(p),
+        },
+      };
+    });
+
+    // Add Community Pandals
+    if (suggestedPandals && suggestedPandals.length > 0) {
+      suggestedPandals.forEach((sp) => {
+        if (!matchesPandalFilter(sp as unknown as Pandal, effectivePandalFilter)) return;
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [sp.lng, sp.lat],
+          },
+          properties: {
+            id: sp.id,
+            name: `[Community] ${sp.name[language] || sp.name.en}`,
+            zone: 'Community',
+            theme: 'Community Puja',
+            crowdLevel: 'Moderate',
+            isFeatured: true,
+            isVisited: false,
+            category: 'Community',
+            pandalJson: JSON.stringify(sp),
+          },
+        });
+      });
+    }
+
+    return {
+      type: 'FeatureCollection',
+      features,
+    };
+  }, [
+    isMetroActive,
+    isUtilityActive,
+    activeFilter,
+    mapSearchQuery,
+    visitedList,
+    throttledCoords,
+    language,
+    crowdConsensusMap,
+    suggestedPandals,
+  ]);
+
+  // Initialize MapLibre GL Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    // Remove any lingering Leaflet internal ID from DOM node if hot reloaded
-    if ((mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id) {
-      delete (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id;
-    }
-
-    // Central Kolkata default
-    const map = L.map(mapContainerRef.current, {
-      center: [ESPLANADE_CENTER.lat, ESPLANADE_CENTER.lng], // Esplanade central hub
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: MAPTILER_DARK_STYLE_URL,
+      center: [ESPLANADE_CENTER.lng, ESPLANADE_CENTER.lat],
       zoom: 13,
       minZoom: 10,
       maxZoom: 18,
-      zoomControl: false,
       attributionControl: false,
-      touchZoom: true,
-      boxZoom: false,
-      doubleClickZoom: true,
-      scrollWheelZoom: true,
     });
 
-    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-      keepBuffer: 12,
-      crossOrigin: true,
-    }).addTo(map);
-
-    tileLayer.on('tileerror', (e) => {
-      console.warn('Map tile failed to load (offline or slow network):', e);
+    // Error listener: Log cleanly without circular event crash
+    let hasSwitchedToFallback = false;
+    map.on('error', (e) => {
+      const errMsg = e?.error?.message || (typeof e?.error === 'string' ? e.error : '') || '';
+      const status = (e as any)?.status;
+      if (import.meta.env.DEV && errMsg) {
+        console.warn(`[MapLibre Event] ${errMsg} (status: ${status || 'N/A'})`);
+      }
+      // ONLY switch to fallback if style genuinely failed to load (401 or 403 or style fetch failure)
+      if (!hasSwitchedToFallback && (errMsg.includes('style') || status === 401 || status === 403)) {
+        hasSwitchedToFallback = true;
+        console.warn('[MapLibre] MapTiler style unavailable, switching to dark vector fallback');
+        try {
+          map.setStyle('https://tiles.openfreemap.org/styles/dark');
+        } catch (err) {
+          console.warn('[MapLibre Fallback Error]', (err as Error)?.message || err);
+        }
+      }
     });
 
-    map.on('zoomend', () => {
-      setCurrentZoom(map.getZoom());
+    // Idempotent setup of icons, vector overrides, sources, and layers
+    const setupCustomLayers = () => {
+      if (!map.isStyleLoaded()) return;
+
+      // Register clean SVG circular vector icons
+      registerMinimalistMapIcons(map);
+
+      // 0. Water Layer Override to Deep Blue/Cyan (#061B2E) for River Hooghly
+      try {
+        const style = map.getStyle();
+        if (style && style.layers) {
+          style.layers.forEach((layer) => {
+            if (
+              layer.type === 'fill' &&
+              (layer.id.includes('water') ||
+                (layer as any)['source-layer'] === 'water' ||
+                layer.id === 'water' ||
+                layer.id === 'waterway')
+            ) {
+              try {
+                map.setPaintProperty(layer.id, 'fill-color', '#061B2E');
+              } catch (_) {}
+            }
+          });
+        }
+      } catch (_) {}
+
+      // 0.2 Bus Network GeoJSON Source & Layers (160 Routes & 880 Stops)
+      if (!map.getSource('bus-network')) {
+        map.addSource('bus-network', {
+          type: 'geojson',
+          data: '/Hoppers_2026_BusRoutes.geojson',
+        });
+      }
+
+      // Bus Stop icons: Minimalist circular SVG icon (matching reference video), strictly visible at high zoom (minzoom: 15)
+      map.addLayer({
+        id: 'bus-stops-symbol',
+        type: 'symbol',
+        source: 'bus-network',
+        filter: ['==', ['get', 'category'], 'bus_stop'],
+        minzoom: 15,
+        layout: {
+          'icon-image': 'icon-bus',
+          'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0.6,
+            16,
+            0.75,
+            18,
+            0.95,
+          ],
+          'icon-allow-overlap': false,
+          'text-field': ['get', 'name'],
+          'text-size': 9,
+          'text-offset': [0, 1.3],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
+        paint: {
+          'icon-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0.8,
+            15.5,
+            1.0,
+          ],
+          'text-color': '#E0F2FE',
+          'text-halo-color': '#080B11',
+          'text-halo-width': 1.5,
+        },
+      });
+
+      // 0.3 Permanent Map Infrastructure: Railway Stations & Ferry Ghats (Decoupled from utilities, permanent map layers)
+      map.addSource('transit-infrastructure', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: TRANSIT_HUBS.map((h) => ({
+            type: 'Feature',
+            id: h.id,
+            geometry: {
+              type: 'Point',
+              coordinates: [h.lng, h.lat],
+            },
+            properties: {
+              id: h.id,
+              name: h.name,
+              category: h.category === 'ferry' ? 'ferry' : 'railway',
+              iconId: h.category === 'ferry' ? 'icon-ferry' : 'icon-railway',
+              hubType: h.type,
+              operator: h.operator,
+              connectingZones: h.connectingZones,
+              travelTip: h.travelTip,
+            },
+          })),
+        },
+      });
+
+      // Railway Stations (Permanent Infrastructure, minzoom: 13, clean minimalist SVG icon)
+      map.addLayer({
+        id: 'railway-stations-symbol',
+        type: 'symbol',
+        source: 'transit-infrastructure',
+        filter: ['==', ['get', 'category'], 'railway'],
+        minzoom: 13,
+        layout: {
+          'icon-image': 'icon-railway',
+          'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            13,
+            0.7,
+            15,
+            0.85,
+            17,
+            1.0,
+          ],
+          'icon-allow-overlap': true,
+          'text-field': ['get', 'name'],
+          'text-size': 9.5,
+          'text-offset': [0, 1.35],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
+        paint: {
+          'icon-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            13,
+            0.85,
+            14,
+            1.0,
+          ],
+          'text-color': '#EDE9FE',
+          'text-halo-color': '#080B11',
+          'text-halo-width': 2,
+        },
+      });
+
+      // Ferry Ghats (Permanent Infrastructure, minzoom: 14, strictly anchored in river water #061B2E)
+      map.addLayer({
+        id: 'ferry-ghats-symbol',
+        type: 'symbol',
+        source: 'transit-infrastructure',
+        filter: ['==', ['get', 'category'], 'ferry'],
+        minzoom: 14,
+        layout: {
+          'icon-image': 'icon-ferry',
+          'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            14,
+            0.75,
+            16,
+            0.9,
+            18,
+            1.05,
+          ],
+          'icon-allow-overlap': true,
+          'text-field': ['get', 'name'],
+          'text-size': 9.5,
+          'text-offset': [0, 1.35],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
+        paint: {
+          'icon-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            14,
+            0.85,
+            15,
+            1.0,
+          ],
+          'text-color': '#CFFAFE',
+          'text-halo-color': '#061B2E',
+          'text-halo-width': 2,
+        },
+      });
+
+      // 0.4 Civic Utilities & Parking POIs (Smart 500m Live Lock or citywide minzoom: 15)
+      map.addSource('civic-pois', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      // Minimalist, clean circular SVG vector markers (split into locked 500m & macro views for spec compliance)
+      // 0.4a Locked Facilities within 500m of Selected Pandal (visible from zoom 12+)
+      map.addLayer({
+        id: 'civic-pois-locked-symbol',
+        type: 'symbol',
+        source: 'civic-pois',
+        filter: ['==', ['get', 'isLocked'], true],
+        minzoom: 12,
+        layout: {
+          'icon-image': ['get', 'iconId'],
+          'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12,
+            0.65,
+            14,
+            0.8,
+            17,
+            1.0,
+          ],
+          'icon-allow-overlap': true,
+          'text-field': ['get', 'name'],
+          'text-size': 9.5,
+          'text-offset': [0, 1.35],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
+        paint: {
+          'icon-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12,
+            0.85,
+            13,
+            1.0,
+          ],
+          'text-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12.5,
+            0,
+            13.5,
+            0.95,
+          ],
+          'text-color': '#F1F5F9',
+          'text-halo-color': '#080B11',
+          'text-halo-width': 2,
+        },
+      });
+
+      // 0.4b Macro Civic Facilities across Kolkata (strictly visible at high zoom: minzoom 15, matching video)
+      map.addLayer({
+        id: 'civic-pois-macro-symbol',
+        type: 'symbol',
+        source: 'civic-pois',
+        filter: ['==', ['get', 'isLocked'], false],
+        minzoom: 15,
+        layout: {
+          'icon-image': ['get', 'iconId'],
+          'icon-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0.65,
+            16,
+            0.8,
+            18,
+            1.0,
+          ],
+          'icon-allow-overlap': false,
+          'text-field': ['get', 'name'],
+          'text-size': 9.5,
+          'text-offset': [0, 1.35],
+          'text-anchor': 'top',
+          'text-optional': true,
+        },
+        paint: {
+          'icon-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0.85,
+            15.5,
+            1.0,
+          ],
+          'text-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15.2,
+            0,
+            15.6,
+            0.95,
+          ],
+          'text-color': '#F1F5F9',
+          'text-halo-color': '#080B11',
+          'text-halo-width': 2,
+        },
+      });
+
+      // 1. Live Lock Radius Source & Layer (1km Pandals / 500m Utilities)
+      map.addSource('live-lock-radius', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      map.addLayer({
+        id: 'live-lock-radius-fill',
+        type: 'fill',
+        source: 'live-lock-radius',
+        paint: {
+          'fill-color': '#3B82F6',
+          'fill-opacity': 0.1,
+        },
+      });
+
+      map.addLayer({
+        id: 'live-lock-radius-stroke',
+        type: 'line',
+        source: 'live-lock-radius',
+        paint: {
+          'line-color': '#60A5FA',
+          'line-width': 1.5,
+          'line-dasharray': [4, 4],
+          'line-opacity': 0.8,
+        },
+      });
+
+      // 2. Metro Lines GeoJSON Source & Layers (Hidden by default, activated via Metro HUD toggle)
+      map.addSource('metro-lines', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      map.addLayer({
+        id: 'metro-lines-casing',
+        type: 'line',
+        source: 'metro-lines',
+        layout: {
+          visibility: 'none',
+        },
+        paint: {
+          'line-color': '#020617',
+          'line-width': ['get', 'casingWidth'],
+          'line-opacity': ['get', 'casingOpacity'],
+        },
+      });
+
+      map.addLayer({
+        id: 'metro-lines-core',
+        type: 'line',
+        source: 'metro-lines',
+        layout: {
+          visibility: 'none',
+        },
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': ['get', 'width'],
+          'line-opacity': ['get', 'opacity'],
+          'line-dasharray': ['case', ['boolean', ['get', 'isDashed'], false], ['literal', [2, 2]], ['literal', [1, 0]]],
+        },
+      });
+
+      // 3. Active Routes Source & Layers (Walking, Metro, Bus Diversion, Multi-Stop Trail)
+      map.addSource('active-routes', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      map.addLayer({
+        id: 'active-routes-glow',
+        type: 'line',
+        source: 'active-routes',
+        paint: {
+          'line-color': ['get', 'glowColor'],
+          'line-width': 8,
+          'line-opacity': 0.35,
+          'line-blur': 3,
+        },
+      });
+
+      map.addLayer({
+        id: 'active-routes-core',
+        type: 'line',
+        source: 'active-routes',
+        paint: {
+          'line-color': ['get', 'color'],
+          'line-width': 4.5,
+          'line-opacity': 0.95,
+          'line-dasharray': ['case', ['boolean', ['get', 'isDashed'], false], ['literal', [2, 2]], ['literal', [1, 0]]],
+        },
+      });
+
+      // 4. Native Supercluster Pandals GeoJSON Source (Cluster radius reduced to 45 for crisp macro grouping)
+      map.addSource('pandals', {
+        type: 'geojson',
+        data: pandalsGeoJSON,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 45,
+      });
+
+      // Cluster Outer Glow (Max 30px radius to never occlude city geometry)
+      map.addLayer({
+        id: 'pandal-clusters-glow',
+        type: 'circle',
+        source: 'pandals',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#F59E0B',
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            18,
+            10,
+            22,
+            30,
+            26,
+            75,
+            30,
+          ],
+          'circle-opacity': 0.25,
+          'circle-blur': 0.6,
+        },
+      });
+
+      // Cluster Circle Layer (Amber/Gold step gradient with crisp #FEF3C7 border)
+      map.addLayer({
+        id: 'pandal-clusters',
+        type: 'circle',
+        source: 'pandals',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#F59E0B', // < 10
+            10,
+            '#D97706', // 10-29
+            30,
+            '#B45309', // 30-74
+            75,
+            '#EA580C', // 75+
+          ],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FEF3C7',
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            16,
+            10,
+            20,
+            30,
+            24,
+            75,
+            28,
+          ],
+          'circle-opacity': 0.95,
+        },
+      });
+
+      // Cluster PUJAS Count Text Layer
+      map.addLayer({
+        id: 'pandal-cluster-count',
+        type: 'symbol',
+        source: 'pandals',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count}',
+          'text-size': 13,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: {
+          'text-color': '#FFFFFF',
+        },
+      });
+
+      // Cluster "PUJAS" Sub-Label
+      map.addLayer({
+        id: 'pandal-cluster-label',
+        type: 'symbol',
+        source: 'pandals',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': 'PUJAS',
+          'text-size': 7.5,
+          'text-offset': [0, 1.2],
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: {
+          'text-color': '#FEF3C7',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1,
+        },
+      });
+
+      // Unclustered Single Pandal Pin Glow
+      map.addLayer({
+        id: 'pandal-unclustered-glow',
+        type: 'circle',
+        source: 'pandals',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#F59E0B',
+          'circle-radius': 14,
+          'circle-opacity': 0.35,
+          'circle-blur': 0.5,
+        },
+      });
+
+      // Unclustered Single Pandal Pin Circle
+      map.addLayer({
+        id: 'pandal-unclustered',
+        type: 'circle',
+        source: 'pandals',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': [
+            'case',
+            ['boolean', ['get', 'isVisited'], false],
+            '#64748B',
+            ['boolean', ['get', 'isFeatured'], false],
+            '#F59E0B',
+            '#FBBF24',
+          ],
+          'circle-radius': 8,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FFFFFF',
+        },
+      });
+
+      // Unclustered Single Pandal Label
+      map.addLayer({
+        id: 'pandal-unclustered-label',
+        type: 'symbol',
+        source: 'pandals',
+        filter: ['!', ['has', 'point_count']],
+        minzoom: 13.5,
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11,
+          'text-offset': [0, 1.3],
+          'text-anchor': 'top',
+          'text-max-width': 8,
+          'text-line-height': 1.15,
+        },
+        paint: {
+          'text-color': '#FFFFFF',
+          'text-halo-color': '#080B11',
+          'text-halo-width': 2,
+        },
+      });
+
+      // Cluster Tap Handler -> Smooth Expansion (map.easeTo)
+      map.on('click', 'pandal-clusters', (e: any) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: ['pandal-clusters'] });
+        const clusterId = features[0]?.properties?.cluster_id;
+        if (clusterId == null) return;
+
+        const source = map.getSource('pandals') as maplibregl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId).then((zoom) => {
+          const geom = features[0].geometry;
+          if (geom.type === 'Point') {
+            map.easeTo({
+              center: geom.coordinates as [number, number],
+              zoom: Math.min(zoom + 0.5, 17),
+              duration: 500,
+            });
+          }
+        }).catch((err) => {
+          console.warn('Error expanding cluster:', err);
+        });
+      });
+
+      // Unclustered Single Pandal Pin Tap -> Open Peeking Drawer
+      map.on('click', 'pandal-unclustered', (e: any) => {
+        const feature = e.features?.[0];
+        if (!feature || !feature.properties) return;
+        const pandalId = feature.properties.id;
+        console.log('[Hoppers 2026] Selected Pandal ID:', pandalId);
+
+        try {
+          const raw = feature.properties.pandalJson;
+          const pandal = raw ? JSON.parse(raw) : PANDALS_DATA.find((p) => p.id === pandalId);
+          if (pandal) {
+            onSelectPandal(pandal);
+          }
+        } catch {
+          const pandal = PANDALS_DATA.find((p) => p.id === pandalId);
+          if (pandal) onSelectPandal(pandal);
+        }
+      });
+
+      // Cursor Pointers
+      map.on('mouseenter', 'pandal-clusters', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'pandal-clusters', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      map.on('mouseenter', 'pandal-unclustered', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'pandal-unclustered', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Bus Stop interactive tooltip on click
+      map.on('click', 'bus-stops-symbol', (e: any) => {
+        const feat = e.features?.[0];
+        if (!feat || !feat.properties) return;
+        const name = feat.properties.name;
+        const count = feat.properties.routeCount;
+        const routesRaw = feat.properties.routes;
+        let routeList = '';
+        try {
+          const parsed = typeof routesRaw === 'string' ? JSON.parse(routesRaw) : routesRaw;
+          routeList = Array.isArray(parsed) ? parsed.join(', ') : String(routesRaw || '');
+        } catch {
+          routeList = String(routesRaw || '');
+        }
+
+        new maplibregl.Popup({ closeButton: true, className: 'bus-stop-map-popup' })
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div style="font-family: system-ui, sans-serif; padding: 6px 10px; background: #0A0F1D; color: #FFFFFF; border-radius: 8px; border: 1.5px solid #0284C7; box-shadow: 0 4px 14px rgba(0,0,0,0.8);">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 12px; color: #38BDF8;">
+                <span>🚏</span>
+                <span>${name}</span>
+              </div>
+              <div style="font-size: 10px; color: #94A3B8; margin-top: 4px; line-height: 1.35; max-width: 220px;">
+                <span style="color: #FBBF24; font-weight: 700;">${count ? `${count} Routes:` : 'Routes:'}</span> ${routeList}
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'bus-stops-symbol', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'bus-stops-symbol', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Civic POIs (Survival Layer) Tap Handler -> onSelectFacility
+      const handleCivicPoiClick = (e: any) => {
+        const feat = e.features?.[0];
+        if (!feat || !feat.properties) return;
+        const p = feat.properties;
+        const coords = (feat.geometry as GeoJSON.Point).coordinates;
+        const facilityPoint: FacilityPoint = {
+          id: p.id || String(feat.id || Math.random()),
+          name: { en: p.name, bn: p.name, hi: p.name },
+          category: (p.category || 'toilets') as FacilityCategory,
+          lat: coords[1],
+          lng: coords[0],
+          address: { en: p.address || '', bn: p.address || '', hi: p.address || '' },
+          details: {
+            en: p.parking_type ? `${p.parking_type} • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+            bn: p.parking_type ? `${p.parking_type} • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+            hi: p.parking_type ? `${p.parking_type} • ${p.fee_type || 'KMC Authorized'}` : (p.address || ''),
+          },
+          pujaHoursBadge: p.category === 'hospital' ? '24x7 Emergency' : p.category === 'parking' ? `${p.capacity || 50} Spots` : 'Puja 24x7',
+          is24x7: p.category === 'hospital' || p.category === 'police',
+        };
+        onSelectFacility(facilityPoint);
+      };
+
+      map.on('click', 'civic-pois-locked-symbol', handleCivicPoiClick);
+      map.on('click', 'civic-pois-macro-symbol', handleCivicPoiClick);
+      map.on('mouseenter', 'civic-pois-locked-symbol', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'civic-pois-locked-symbol', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      map.on('mouseenter', 'civic-pois-macro-symbol', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'civic-pois-macro-symbol', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Permanent Transit Infrastructure (Railways & Ferries) Tap Handler -> onSelectFacility
+      const handleTransitHubClick = (e: any) => {
+        const feat = e.features?.[0];
+        if (!feat || !feat.properties) return;
+        const p = feat.properties;
+        const hub = TRANSIT_HUBS.find((h) => h.id === p.id);
+        if (hub) {
+          const facilityPoint: FacilityPoint = {
+            id: hub.id,
+            name: { en: hub.name, bn: hub.name, hi: hub.name },
+            category: (hub.category === 'ferry' ? 'ferry' : 'railway') as FacilityCategory,
+            lat: hub.lat,
+            lng: hub.lng,
+            address: { en: hub.connectingZones, bn: hub.connectingZones, hi: hub.connectingZones },
+            details: { en: `${hub.type} • ${hub.travelTip}`, bn: `${hub.type} • ${hub.travelTip}`, hi: `${hub.type} • ${hub.travelTip}` },
+            pujaHoursBadge: hub.operator,
+          };
+          onSelectFacility(facilityPoint);
+        }
+      };
+
+      map.on('click', 'railway-stations-symbol', handleTransitHubClick);
+      map.on('click', 'ferry-ghats-symbol', handleTransitHubClick);
+      map.on('mouseenter', 'railway-stations-symbol', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'railway-stations-symbol', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      map.on('mouseenter', 'ferry-ghats-symbol', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'ferry-ghats-symbol', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Point 7 & Point 9: Initial camera framing if selectedItem is already present on map load
+      if (selectedItem) {
+        const isPandal =
+          'zone' in selectedItem ||
+          'nearestMetro' in selectedItem ||
+          'crowdLevel' in selectedItem;
+        if (isPandal) {
+          const latDelta = 0.00451;
+          const lngDelta = 0.00488;
+          map.fitBounds(
+            [
+              [selectedItem.lng - lngDelta, selectedItem.lat - latDelta],
+              [selectedItem.lng + lngDelta, selectedItem.lat + latDelta],
+            ],
+            {
+              padding: { top: 80, bottom: 200, left: 30, right: 30 },
+              duration: 900,
+              maxZoom: 16.5,
+            }
+          );
+        } else {
+          map.flyTo({
+            center: [selectedItem.lng, selectedItem.lat],
+            zoom: 16.5,
+            duration: 800,
+          });
+        }
+      }
+    };
+
+    map.on('style.load', () => {
+      isMapLoadedRef.current = true;
+      setupCustomLayers();
     });
 
-    // Strict moveend listener: guarantees ZERO Haversine execution during continuous drag/pan events.
-    // Only triggers mapCenterCoords state update when the user finishes dragging and displacement >= 50m.
+    map.on('load', () => {
+      isMapLoadedRef.current = true;
+      setupCustomLayers();
+    });
+
+    if (map.isStyleLoaded()) {
+      isMapLoadedRef.current = true;
+      setupCustomLayers();
+    }
+
+    // Moveend & Zoomend listeners: updates mapCenterCoords and zoom state
     map.on('moveend', () => {
       const center = map.getCenter();
       const clamped = clampToKolkata(center.lat, center.lng);
+      setCurrentZoom(map.getZoom());
       setMapCenterCoords((prev) => {
         const distKm = calculateDistanceKm(prev.lat, prev.lng, clamped.lat, clamped.lng);
         if (distKm * 1000 >= 50) {
@@ -380,807 +1555,438 @@ export const MapView: React.FC<Props> = ({
       });
     });
 
-    // Layer Groups: Metro Polylines on bottom, Routes in middle, Stations & Markers on top
-    const metroLinesLayer = L.layerGroup().addTo(map);
-    const routesLayer = L.layerGroup().addTo(map);
-    const metroStationsLayer = L.layerGroup().addTo(map);
-    const markersLayer = L.layerGroup().addTo(map);
+    map.on('zoomend', () => {
+      setCurrentZoom(map.getZoom());
+    });
 
-    metroLinesLayerRef.current = metroLinesLayer;
-    routesLayerRef.current = routesLayer;
-    metroStationsLayerRef.current = metroStationsLayer;
-    markersLayerRef.current = markersLayer;
     mapInstanceRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
-    resizeObserver.observe(mapContainerRef.current);
-
     return () => {
-      resizeObserver.disconnect();
-      try {
-        map.remove();
-      } catch (err) {
-        console.warn('Error during Leaflet cleanup:', err);
-      }
+      isMapLoadedRef.current = false;
+      map.remove();
       mapInstanceRef.current = null;
-      if (mapContainerRef.current && (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id) {
-        delete (mapContainerRef.current as unknown as { _leaflet_id?: number })._leaflet_id;
-      }
     };
   }, []);
 
-  // Handler to open station details sheet
-  const handleStationClick = (station: MetroStation) => {
-    if (onSelectStation) {
-      onSelectStation(station);
-    } else {
-      const metroFacility: FacilityPoint = {
-        id: station.id,
-        name: station.name,
-        category: 'metro',
-        lat: station.lat,
-        lng: station.lng,
-        details: {
-          en: `Lines: ${station.lines.join(', ').toUpperCase()}. Exit Gates: ${station.exitGates.map((g) => `${g.gate}: ${g.destination.en}`).join(' | ')}`,
-          bn: `লাইন: ${station.lines.join(', ').toUpperCase()}। এক্সিট গেট: ${station.exitGates.map((g) => `${g.gate}: ${g.destination.bn}`).join(' | ')}`,
-          hi: `लाइन्स: ${station.lines.join(', ').toUpperCase()}। निकास गेट: ${station.exitGates.map((g) => `${g.gate}: ${g.destination.hi}`).join(' | ')}`,
-        },
-      };
-      onSelectFacility(metroFacility);
-    }
-  };
-
-  // Render Metro Line Polylines (Dual-Layer Casing + Under-River Tunnel + Bowbazar Connector)
+  // Update Pandals GeoJSON Source whenever filters change
   useEffect(() => {
-    const metroLinesLayer = metroLinesLayerRef.current;
-    if (!metroLinesLayer) return;
+    const map = mapInstanceRef.current;
+    if (!map || !isMapLoadedRef.current) return;
+    const source = map.getSource('pandals') as maplibregl.GeoJSONSource | undefined;
+    if (source) {
+      source.setData(pandalsGeoJSON);
+    }
+  }, [pandalsGeoJSON]);
 
-    metroLinesLayer.clearLayers();
+  // Update Live Lock Radius Circle Layer (1km for Pandals, 500m for locked Utilities)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapLoadedRef.current) return;
+    const source = map.getSource('live-lock-radius') as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
 
-    if (!isMetroActive) return;
-
-    // Helper to add dual-layer polyline
-    const addDualLayerPolyline = (
-      coords: [number, number][],
-      lineColor: string,
-      options: {
-        isDashed?: boolean;
-        isUnderRiver?: boolean;
-        isIsolated?: boolean;
-        isDimmed?: boolean;
-        customLabel?: string;
-      } = {}
-    ) => {
-      if (coords.length < 2) return;
-
-      const {
-        isDashed = false,
-        isUnderRiver = false,
-        isIsolated = false,
-        isDimmed = false,
-        customLabel,
-      } = options;
-
-      const baseOpacity = isDimmed ? 0.2 : 0.95;
-      const casingOpacity = isDimmed ? 0.1 : isIsolated ? 0.7 : 0.45;
-      const casingWeight = isIsolated ? 11 : 8;
-      const innerWeight = isIsolated ? 5.5 : 4.5;
-
-      // 1. Dual-Layer Outer Contrast Halo Casing
-      const outerCasing = L.polyline(coords, {
-        color: isUnderRiver ? '#083344' : '#020617',
-        weight: casingWeight,
-        opacity: casingOpacity,
-        lineCap: 'round',
-        lineJoin: 'round',
+    if (isUtilityActive && isTargetLocked) {
+      // Strictly 500m Live Lock radius around selected pandal or active GPS
+      const circleFeature = createCircleGeoJSON([proximityReferenceCoords.lng, proximityReferenceCoords.lat], 500);
+      source.setData({
+        type: 'FeatureCollection',
+        features: [circleFeature],
       });
-      metroLinesLayer.addLayer(outerCasing);
-
-      // 1b. Extra Glow Halo if isolated
-      if (isIsolated) {
-        const glowHalo = L.polyline(coords, {
-          color: isUnderRiver ? '#22D3EE' : lineColor,
-          weight: 14,
-          opacity: 0.35,
-          lineCap: 'round',
-          lineJoin: 'round',
-        });
-        metroLinesLayer.addLayer(glowHalo);
-      }
-
-      // 2. Inner Vibrant Core Track Line
-      const innerLine = L.polyline(coords, {
-        color: isUnderRiver ? '#06B6D4' : lineColor,
-        weight: innerWeight,
-        opacity: baseOpacity,
-        lineCap: 'round',
-        lineJoin: 'round',
-        dashArray: isDashed ? '6, 7' : undefined,
+    } else if (throttledCoords && activeFilter === 'nearby') {
+      const circleFeature = createCircleGeoJSON([throttledCoords.lng, throttledCoords.lat], 1000);
+      source.setData({
+        type: 'FeatureCollection',
+        features: [circleFeature],
       });
+    } else {
+      source.setData({ type: 'FeatureCollection', features: [] });
+    }
+  }, [isUtilityActive, isTargetLocked, proximityReferenceCoords, throttledCoords, activeFilter]);
 
-      if (customLabel) {
-        innerLine.bindTooltip(customLabel, {
-          sticky: true,
-          className: 'metro-corridor-tooltip',
-        });
-      }
+  // Update Civic POIs GeoJSON Source (Separate from pandals, unclustered, smart visibility)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapLoadedRef.current) return;
+    const source = map.getSource('civic-pois') as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
 
-      metroLinesLayer.addLayer(innerLine);
+    if (!isUtilityActive || activePoiFacilities.length === 0) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
+    const poiCollection: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+      type: 'FeatureCollection',
+      features: activePoiFacilities.map(({ facility: f, isLocked, distM }) => ({
+        type: 'Feature',
+        id: f.id,
+        geometry: {
+          type: 'Point',
+          coordinates: [f.lng, f.lat],
+        },
+        properties: {
+          id: f.id,
+          name: f.name[language] || f.name.en,
+          category: f.category,
+          iconId:
+            f.category === 'hospital' || f.category === 'medical'
+              ? 'icon-hospital'
+              : f.category === 'police' || f.category === 'helpdesk'
+              ? 'icon-police'
+              : f.category === 'food' || f.category === 'restaurant'
+              ? 'icon-food'
+              : f.category === 'parking'
+              ? 'icon-parking'
+              : 'icon-toilets',
+          isLocked,
+          distM,
+          address: f.address ? (f.address[language] || f.address.en) : '',
+          details: f.details ? (f.details[language] || f.details.en) : '',
+          parking_type: f.category === 'parking' ? f.details?.en : undefined,
+          capacity: f.pujaHoursBadge,
+          fee_type: f.details?.en,
+        },
+      })),
     };
 
-    // 1. Blue Line 1 (Dakshineswar ↔ Kavi Subhash)
+    source.setData(poiCollection);
+  }, [isUtilityActive, activePoiFacilities, language]);
+
+  // Render Metro Lines & Stations
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapLoadedRef.current) return;
+
+    // Clear previous station markers
+    stationMarkersRef.current.forEach((m) => m.remove());
+    stationMarkersRef.current = [];
+
+    const source = map.getSource('metro-lines') as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+
+    // Toggle layer visibility dynamically based on isMetroActive state
+    if (map.getLayer('metro-lines-casing')) {
+      map.setLayoutProperty('metro-lines-casing', 'visibility', isMetroActive ? 'visible' : 'none');
+    }
+    if (map.getLayer('metro-lines-core')) {
+      map.setLayoutProperty('metro-lines-core', 'visibility', isMetroActive ? 'visible' : 'none');
+    }
+
+    if (!isMetroActive) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
+    const metroFeatures: GeoJSON.Feature<GeoJSON.LineString>[] = [];
+
+    const addLineFeature = (
+      coords: [number, number][],
+      color: string,
+      options: { isDashed?: boolean; isIsolated?: boolean; isDimmed?: boolean } = {}
+    ) => {
+      if (coords.length < 2) return;
+      const { isDashed = false, isIsolated = false, isDimmed = false } = options;
+      const opacity = isDimmed ? 0.2 : 0.95;
+      const casingOpacity = isDimmed ? 0.1 : isIsolated ? 0.7 : 0.45;
+      const width = isIsolated ? 5.5 : 4.5;
+      const casingWidth = isIsolated ? 11 : 8;
+
+      metroFeatures.push({
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: coords.map(([lat, lng]) => [lng, lat]),
+        },
+        properties: {
+          color,
+          width,
+          opacity,
+          casingWidth,
+          casingOpacity,
+          isDashed,
+        },
+      });
+    };
+
+    // 1. Blue Line (#3B82F6)
     const blueStations = getLineStations('blue');
-    const blueCoords: [number, number][] = blueStations.map((s) => [s.lat, s.lng]);
-    const isBlueIsolated = isolatedLine === 'blue';
-    const isBlueDimmed = isolatedLine !== null && !isBlueIsolated;
-    addDualLayerPolyline(blueCoords, '#2563EB', {
-      isIsolated: isBlueIsolated,
-      isDimmed: isBlueDimmed,
-      customLabel: `Blue Line 1 (North-South spine · 26 Stations)`,
-    });
+    addLineFeature(
+      blueStations.map((s) => [s.lat, s.lng]),
+      '#3B82F6',
+      { isIsolated: isolatedLine === 'blue', isDimmed: isolatedLine !== null && isolatedLine !== 'blue' }
+    );
 
-    // 2. Green Line 2 (East-West corridor with Underwater Tunnel & Bowbazar connector)
-    const isGreenIsolated = isolatedLine === 'green';
-    const isGreenDimmed = isolatedLine !== null && !isGreenIsolated;
-
-    // Segment A: Howrah Maidan -> Howrah (Solid Green)
+    // 2. Green Line (East-West with Hooghly underwater tunnel) (#10B981)
     const howrahMaidan = METRO_STATIONS.find((s) => s.id === 'howrah-maidan');
     const howrahStn = METRO_STATIONS.find((s) => s.id === 'howrah-station-metro');
     const mahakaran = METRO_STATIONS.find((s) => s.id === 'mahakaran');
     const esplanade = METRO_STATIONS.find((s) => s.id === 'esplanade');
     const sealdah = METRO_STATIONS.find((s) => s.id === 'sealdah-metro');
 
+    const isGreenIso = isolatedLine === 'green';
+    const isGreenDim = isolatedLine !== null && !isGreenIso;
+
     if (howrahMaidan && howrahStn) {
-      addDualLayerPolyline(
-        [[howrahMaidan.lat, howrahMaidan.lng], [howrahStn.lat, howrahStn.lng]],
-        '#10B981',
-        { isIsolated: isGreenIsolated, isDimmed: isGreenDimmed }
-      );
+      addLineFeature([[howrahMaidan.lat, howrahMaidan.lng], [howrahStn.lat, howrahStn.lng]], '#10B981', {
+        isIsolated: isGreenIso,
+        isDimmed: isGreenDim,
+      });
     }
-
-    // Segment B: UNDER-RIVER HOOGHLY TUNNEL (Howrah ↔ Mahakaran) -> Distinct Cyan (#06B6D4)
     if (howrahStn && mahakaran) {
-      addDualLayerPolyline(
-        [[howrahStn.lat, howrahStn.lng], [mahakaran.lat, mahakaran.lng]],
-        '#06B6D4',
-        {
-          isUnderRiver: true,
-          isIsolated: isGreenIsolated,
-          isDimmed: isGreenDimmed,
-          customLabel: `🌊 Hooghly Under-River Underwater Tunnel (Howrah ↔ Mahakaran)`,
-        }
-      );
+      // Underwater tunnel Cyan
+      addLineFeature([[howrahStn.lat, howrahStn.lng], [mahakaran.lat, mahakaran.lng]], '#06B6D4', {
+        isIsolated: isGreenIso,
+        isDimmed: isGreenDim,
+      });
     }
-
-    // Segment C: Mahakaran -> Esplanade (Solid Green)
     if (mahakaran && esplanade) {
-      addDualLayerPolyline(
-        [[mahakaran.lat, mahakaran.lng], [esplanade.lat, esplanade.lng]],
-        '#10B981',
-        { isIsolated: isGreenIsolated, isDimmed: isGreenDimmed }
-      );
+      addLineFeature([[mahakaran.lat, mahakaran.lng], [esplanade.lat, esplanade.lng]], '#10B981', {
+        isIsolated: isGreenIso,
+        isDimmed: isGreenDim,
+      });
     }
-
-    // Segment D: BOWBAZAR CONNECTOR (Esplanade ↔ Sealdah) -> Dashed Line
     if (esplanade && sealdah) {
-      addDualLayerPolyline(
-        [[esplanade.lat, esplanade.lng], [sealdah.lat, sealdah.lng]],
+      // Bowbazar Dashed Connector
+      addLineFeature([[esplanade.lat, esplanade.lng], [sealdah.lat, sealdah.lng]], '#10B981', {
+        isDashed: true,
+        isIsolated: isGreenIso,
+        isDimmed: isGreenDim,
+      });
+    }
+    const greenEastStns = METRO_STATIONS.filter((s) => s.lines.includes('green') && (s.orderGreen ?? 0) >= 5).sort(
+      (a, b) => (a.orderGreen ?? 0) - (b.orderGreen ?? 0)
+    );
+    if (greenEastStns.length >= 2) {
+      addLineFeature(
+        greenEastStns.map((s) => [s.lat, s.lng]),
         '#10B981',
-        {
-          isDashed: true,
-          isIsolated: isGreenIsolated,
-          isDimmed: isGreenDimmed,
-          customLabel: `Bowbazar Connector (Esplanade ↔ Sealdah)`,
-        }
+        { isDashed: true, isIsolated: isGreenIso, isDimmed: isGreenDim }
       );
     }
 
-    // Segment E: Sealdah -> Salt Lake Sector V (Solid Green)
-    const greenEastStns = METRO_STATIONS.filter(
-      (s) => s.lines.includes('green') && (s.orderGreen ?? 0) >= 5
-    ).sort((a, b) => (a.orderGreen ?? 0) - (b.orderGreen ?? 0));
-    const greenEastCoords: [number, number][] = greenEastStns.map((s) => [s.lat, s.lng]);
-    if (greenEastCoords.length >= 2) {
-      addDualLayerPolyline(greenEastCoords, '#10B981', {
-        isIsolated: isGreenIsolated,
-        isDimmed: isGreenDimmed,
-        customLabel: `Green Line 2 East (Sealdah ↔ Salt Lake Sector V)`,
-      });
-    }
-
-    // 3. Orange Line 6 (Kavi Subhash ↔ Beleghata)
+    // 3. Orange Line (#F97316)
     const orangeStations = getLineStations('orange');
-    const orangeCoords: [number, number][] = orangeStations.map((s) => [s.lat, s.lng]);
-    const isOrangeIsolated = isolatedLine === 'orange';
-    const isOrangeDimmed = isolatedLine !== null && !isOrangeIsolated;
-    addDualLayerPolyline(orangeCoords, '#F97316', {
-      isIsolated: isOrangeIsolated,
-      isDimmed: isOrangeDimmed,
-      customLabel: `Orange Line 6 (EM Bypass corridor · 9 Stations)`,
-    });
+    addLineFeature(
+      orangeStations.map((s) => [s.lat, s.lng]),
+      '#F97316',
+      { isIsolated: isolatedLine === 'orange', isDimmed: isolatedLine !== null && isolatedLine !== 'orange' }
+    );
 
-    // 4. Purple Line 3 (Joka ↔ Majerhat)
+    // 4. Purple Line (#8B5CF6)
     const purpleStations = getLineStations('purple');
-    const purpleCoords: [number, number][] = purpleStations.map((s) => [s.lat, s.lng]);
-    const isPurpleIsolated = isolatedLine === 'purple';
-    const isPurpleDimmed = isolatedLine !== null && !isPurpleIsolated;
-    addDualLayerPolyline(purpleCoords, '#9333EA', {
-      isIsolated: isPurpleIsolated,
-      isDimmed: isPurpleDimmed,
-      customLabel: `Purple Line 3 (Diamond Harbour Rd · 7 Stations)`,
-    });
+    addLineFeature(
+      purpleStations.map((s) => [s.lat, s.lng]),
+      '#8B5CF6',
+      { isIsolated: isolatedLine === 'purple', isDimmed: isolatedLine !== null && isolatedLine !== 'purple' }
+    );
 
-    // 5. Yellow Line 4 (Noapara ↔ Jai Hind Airport)
+    // 5. Yellow Line (#EAB308)
     const yellowStations = getLineStations('yellow');
-    const yellowCoords: [number, number][] = yellowStations.map((s) => [s.lat, s.lng]);
-    const isYellowIsolated = isolatedLine === 'yellow';
-    const isYellowDimmed = isolatedLine !== null && !isYellowIsolated;
-    addDualLayerPolyline(yellowCoords, '#EAB308', {
-      isIsolated: isYellowIsolated,
-      isDimmed: isYellowDimmed,
-      customLabel: `Yellow Line 4 (Airport Express corridor · 4 Stations)`,
+    addLineFeature(
+      yellowStations.map((s) => [s.lat, s.lng]),
+      '#EAB308',
+      { isIsolated: isolatedLine === 'yellow', isDimmed: isolatedLine !== null && isolatedLine !== 'yellow' }
+    );
+
+    source.setData({
+      type: 'FeatureCollection',
+      features: metroFeatures,
     });
-  }, [isMetroActive, isolatedLine]);
 
-  // Render De-Cluttered Metro Station Hierarchy Dots & Interchange Rings
-  useEffect(() => {
-    const metroStationsLayer = metroStationsLayerRef.current;
-    if (!metroStationsLayer) return;
+    // Render Station Markers
+    METRO_STATIONS.forEach((stn) => {
+      if (isolatedLine && !stn.lines.includes(isolatedLine)) return;
 
-    let rafId: number | null = null;
+      const el = document.createElement('div');
+      el.className = 'cursor-pointer select-none transition-transform hover:scale-125';
+      el.innerHTML = `
+        <div style="
+          width: ${stn.isInterchange ? '18px' : '12px'};
+          height: ${stn.isInterchange ? '18px' : '12px'};
+          background: ${stn.isInterchange ? '#F59E0B' : '#FFFFFF'};
+          border: 2px solid #080B11;
+          border-radius: 9999px;
+          box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          ${stn.isInterchange ? '<span style="font-size: 8px; color: #000; font-weight: 900;">★</span>' : ''}
+        </div>
+      `;
 
-    rafId = requestAnimationFrame(() => {
-      metroStationsLayer.clearLayers();
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([stn.lng, stn.lat])
+        .addTo(map);
 
-      if (!isMetroActive) return;
-
-      const dim = MapMarkerSizeHelper.getDimensions(currentZoom);
-      const tooltipOffset: [number, number] = [0, -dim.iconAnchor[1] - 4];
-
-      METRO_STATIONS.forEach((station) => {
-        // Filter out stations if a specific line is isolated
-        if (isolatedLine && !station.lines.includes(isolatedLine)) {
-          return;
+      el.addEventListener('click', () => {
+        if (onSelectStation) {
+          onSelectStation(stn);
+        } else {
+          const metroFacility: FacilityPoint = {
+            id: stn.id,
+            name: stn.name,
+            category: 'metro',
+            lat: stn.lat,
+            lng: stn.lng,
+            details: {
+              en: `Lines: ${stn.lines.join(', ').toUpperCase()}. Exit Gates: ${stn.exitGates.map((g) => `${g.gate}: ${g.destination.en}`).join(' | ')}`,
+              bn: `লাইন: ${stn.lines.join(', ').toUpperCase()}। এক্সিট গেট: ${stn.exitGates.map((g) => `${g.gate}: ${g.destination.bn}`).join(' | ')}`,
+              hi: `लाइन्स: ${stn.lines.join(', ').toUpperCase()}। निकास गेट: ${stn.exitGates.map((g) => `${g.gate}: ${g.destination.hi}`).join(' | ')}`,
+            },
+          };
+          onSelectFacility(metroFacility);
         }
-
-        const primaryLine = station.lines[0] || 'blue';
-        const lineColor =
-          primaryLine === 'green'
-            ? '#10B981'
-            : primaryLine === 'orange'
-            ? '#F97316'
-            : primaryLine === 'purple'
-            ? '#9333EA'
-            : primaryLine === 'yellow'
-            ? '#EAB308'
-            : '#2563EB';
-
-        const icon = station.isInterchange
-          ? createDynamicMarkerIcon('metro-interchange', currentZoom, {
-              metroLines: station.lines,
-            })
-          : createDynamicMarkerIcon('metro-station', currentZoom, {
-              metroColor: lineColor,
-            });
-
-        const marker = L.marker([station.lat, station.lng], {
-          icon,
-          title: station.name[language] || station.name.en,
-          zIndexOffset: station.isInterchange ? 600 : 350,
-        });
-
-        // Rich Informative Tooltip
-        const lineLabels = station.lines
-          .map((l) => {
-            if (l === 'blue') return 'Line 1 Blue';
-            if (l === 'green') return 'Line 2 Green';
-            if (l === 'orange') return 'Line 6 Orange';
-            if (l === 'purple') return 'Line 3 Purple';
-            return 'Line 4 Yellow';
-          })
-          .join(' · ');
-
-        const tooltipContent = `
-          <div style="font-family: system-ui, sans-serif; min-width: 130px; padding: 2px;">
-            <div style="font-weight: 700; font-size: 12px; color: #FFFFFF; display: flex; align-items: center; gap: 4px;">
-              ${station.isInterchange ? '<span>⇄</span>' : ''}
-              <span>${station.name[language] || station.name.en}</span>
-            </div>
-            <div style="font-size: 10px; color: #94A3B8; margin-top: 2px;">
-              ${lineLabels}
-            </div>
-            ${
-              station.isInterchange
-                ? `<div style="font-size: 9px; font-weight: 700; color: #F59E0B; margin-top: 3px;">★ Transfer Interchange Hub</div>`
-                : ''
-            }
-            <div style="font-size: 9px; color: #38BDF8; margin-top: 3px; font-weight: 600;">
-              Tap for exits & feeder pandals →
-            </div>
-          </div>
-        `;
-
-        marker.bindTooltip(tooltipContent, {
-          direction: 'top',
-          offset: tooltipOffset,
-          className: 'hopper-metro-station-tooltip',
-        });
-
-        marker.on('click', () => {
-          handleStationClick(station);
-        });
-
-        metroStationsLayer.addLayer(marker);
       });
+
+      stationMarkersRef.current.push(marker);
     });
+  }, [isMetroActive, isolatedLine, onSelectStation, onSelectFacility]);
 
-    return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [isMetroActive, isolatedLine, currentZoom, language]);
-
-  // Update Pandals and other POI Markers (Strict Exclusive Layer Isolation with RAF Batching)
+  // Civic Utilities & Transit are rendered via clean MapLibre GL vector layers (no bulky HTML pills)
   useEffect(() => {
-    const markersLayer = markersLayerRef.current;
-    if (!markersLayer) return;
+    utilityMarkersRef.current.forEach((m) => m.remove());
+    utilityMarkersRef.current = [];
+  }, [isUtilityActive]);
 
-    let rafId: number | null = null;
-
-    rafId = requestAnimationFrame(() => {
-      // Always clear entire markers layer first to prevent orphaned DOM nodes
-      markersLayer.clearLayers();
-
-      // Invariant 1: When Metro mode is active, completely clear all pandals and POIs
-      if (isMetroActive) {
-        return;
-      }
-
-      const visitedSet = new Set(visitedList.map((v) => v.pandalId));
-      const dim = MapMarkerSizeHelper.getDimensions(currentZoom);
-      const tooltipOffset: [number, number] = [0, -dim.iconAnchor[1] - 4];
-      const batchMarkers: L.Marker[] = [];
-
-      const refLat = effectiveCoords.lat;
-      const refLng = effectiveCoords.lng;
-
-      // Invariant 2: When ANY Utility Filter is active, ALL 724+ pandals are completely cleared/unmounted.
-      // Pandal markers only render when no utility filter is active.
-      if (!isUtilityActive) {
-        PANDALS_DATA.forEach((pandal) => {
-          // Search Query filter check
-          if (mapSearchQuery.trim()) {
-            const q = mapSearchQuery.toLowerCase();
-            const nameMatch =
-              pandal.name.en.toLowerCase().includes(q) ||
-              pandal.name.bn.toLowerCase().includes(q) ||
-              pandal.name.hi.toLowerCase().includes(q);
-            const metroMatch =
-              pandal.nearestMetro.toLowerCase().includes(q) ||
-              pandal.nearestMetroEn.toLowerCase().includes(q);
-            const zoneMatch = pandal.zone.toLowerCase().includes(q);
-            if (!nameMatch && !metroMatch && !zoneMatch) return;
-          }
-
-          // Single Source of Truth: Unified Capsule Rail Filter Check
-          const isMatchedByFilter = matchesPandalFilter(pandal, activeFilter, visitedList);
-          if (!isMatchedByFilter) return;
-
-          // In 'all' view with no search, prioritize featured first when zoomed out
-          if (
-            currentZoom < 14 &&
-            !pandal.isFeatured &&
-            activeFilter === 'all' &&
-            !mapSearchQuery.trim()
-          ) {
-            return;
-          }
-
-          const isVisited = visitedSet.has(pandal.id);
-          const consensus = crowdConsensusMap.get(pandal.id);
-          const effectiveCrowd = consensus?.dominantLevel || pandal.crowdLevel;
-          const crowdEmoji = effectiveCrowd === 'Low' ? '🟢' : effectiveCrowd === 'Moderate' ? '🟡' : effectiveCrowd === 'Heavy' ? '🔴' : '🟣';
-
-          const marker = L.marker([pandal.lat, pandal.lng], {
-            icon: createDynamicMarkerIcon('pandal', currentZoom, {
-              isVisited,
-              isFeatured: pandal.isFeatured,
-            }),
-            title: pandal.name[language] || pandal.name.en,
-            zIndexOffset: isVisited ? 100 : pandal.isFeatured ? 300 : 200,
-          });
-
-          const tooltipContent = `
-            <div style="font-family: system-ui, sans-serif; font-size: 11px; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 4px;">
-              <span>${pandal.name[language] || pandal.name.en}</span>
-              <span style="font-size: 10px; font-weight: 600; opacity: 0.9;">· ${crowdEmoji} ${effectiveCrowd}</span>
-            </div>
-          `;
-
-          marker.bindTooltip(tooltipContent, {
-            direction: 'top',
-            offset: tooltipOffset,
-            className: 'hopper-metro-station-tooltip',
-          });
-
-          marker.on('click', () => {
-            onSelectPandal(pandal);
-          });
-
-          batchMarkers.push(marker);
-        });
-
-        // Add Suggested Community Pandals
-        if (suggestedPandals && suggestedPandals.length > 0) {
-          suggestedPandals.forEach((sp) => {
-            if (!matchesPandalFilter(sp as unknown as Pandal, activeFilter)) return;
-
-            const marker = L.marker([sp.lat, sp.lng], {
-              icon: createDynamicMarkerIcon('pandal', currentZoom, {
-                isCommunity: true,
-                isFeatured: true,
-              }),
-              title: `[Community] ${sp.name[language] || sp.name.en}`,
-              zIndexOffset: 350,
-            });
-
-            marker.bindTooltip(`[Community] ${sp.name[language] || sp.name.en}`, {
-              direction: 'top',
-              offset: tooltipOffset,
-              className: 'hopper-metro-station-tooltip',
-            });
-
-            marker.on('click', () => {
-              onSelectPandal(sp as unknown as Pandal);
-            });
-
-            batchMarkers.push(marker);
-          });
-        }
-      }
-
-      // Proximity-Sorted Utility POIs (Only rendered when a utility category is actively selected)
-      if (isUtilityActive) {
-        const allFacilitySources = [...CRITICAL_FACILITIES, ...transitHubFacilities];
-        const matchingFacilities = allFacilitySources.filter((facility) => {
-          if (activeFilter === 'police') return facility.category === 'police';
-          if (activeFilter === 'toilets') return facility.category === 'toilets';
-          if (activeFilter === 'food') return facility.category === 'food' || facility.category === 'restaurant';
-          if (activeFilter === 'ferry') return facility.category === 'ferry';
-          if (activeFilter === 'railway') return facility.category === 'railway';
-          if ((activeFilter as string) === 'hospital') return facility.category === 'hospital' || facility.category === 'medical';
-          return false;
-        }).map((facility) => {
-          const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
-          const distM = distKm * 1000;
-          return { facility, distKm, distM };
-        });
-
-        // Sort ascending by distance from reference point
-        matchingFacilities.sort((a, b) => a.distKm - b.distKm);
-
-        // Limit to 15 closest nodes or nodes within 1.5km
-        const displayedFacilities =
-          matchingFacilities.length <= 15
-            ? matchingFacilities
-            : matchingFacilities.filter((item) => item.distM <= 1500).length >= 15
-            ? matchingFacilities.filter((item) => item.distM <= 1500)
-            : matchingFacilities.slice(0, 15);
-
-        displayedFacilities.forEach(({ facility, distM, distKm }) => {
-          let iconType: MarkerCategory = 'police';
-          if (facility.category === 'police') iconType = 'police';
-          else if (facility.category === 'toilets') iconType = 'toilet';
-          else if (facility.category === 'food' || facility.category === 'restaurant') iconType = 'food';
-          else if (facility.category === 'ferry') iconType = 'ferry';
-          else if (facility.category === 'railway') iconType = 'railway';
-
-          const eta = calculateCrowdWalkingEta(distM);
-          const distanceBadgeText =
-            distM < 1000 ? `${Math.round(distM)}m • ${eta.text}` : `${distKm.toFixed(1)} km • ${eta.text}`;
-          const distanceShort = distM < 1000 ? `${Math.round(distM)}m` : `${distKm.toFixed(1)} km`;
-          const displayName = facility.name[language] || facility.name.en;
-          const displayAddress = facility.address ? (facility.address[language] || facility.address.en) : '';
-
-          const marker = L.marker([facility.lat, facility.lng], {
-            icon: createDynamicMarkerIcon(iconType, currentZoom),
-            title: `${displayName} (${distanceShort})`,
-            zIndexOffset: 400,
-          });
-
-          // Proximity Tooltip
-          marker.bindTooltip(
-            `<div class="font-sans text-xs font-bold text-white flex items-center gap-1.5">
-              <span>${displayName}</span>
-              <span class="px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 text-[10px] font-black">${distanceShort}</span>
-            </div>`,
-            {
-              direction: 'top',
-              offset: tooltipOffset,
-              className: 'hopper-metro-station-tooltip',
-            }
-          );
-
-          // Rich Proximity Popup with Direct Google Maps Navigation
-          const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${facility.lat},${facility.lng}`;
-          const popupContent = `
-            <div style="font-family: inherit; min-width: 200px; padding: 4px; color: #f8fafc;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #fbbf24; background: rgba(251, 191, 36, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.3);">
-                  ${facility.category.toUpperCase()}
-                </span>
-                <span style="font-size: 10px; font-weight: 700; color: #34d399; background: rgba(52, 211, 153, 0.15); padding: 2px 6px; border-radius: 4px;">
-                  📍 ${distanceBadgeText}
-                </span>
-              </div>
-              <div style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 2px; line-height: 1.3;">
-                ${displayName}
-              </div>
-              ${
-                displayAddress
-                  ? `<div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      ${displayAddress}
-                    </div>`
-                  : ''
-              }
-              <div style="padding-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; background: #2563eb; color: #ffffff; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none;">
-                  🗺️ Directions
-                </a>
-              </div>
-            </div>
-          `;
-
-          marker.bindPopup(popupContent, {
-            className: 'hopper-leaflet-popup',
-            maxWidth: 280,
-          });
-
-          marker.on('click', () => {
-            onSelectFacility(facility);
-          });
-
-          batchMarkers.push(marker);
-        });
-      }
-
-      // Batch mount all prepared markers into layer in single frame
-      batchMarkers.forEach((m) => markersLayer.addLayer(m));
-    });
-
-    return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [
-    isMetroActive,
-    isUtilityActive,
-    activeFilter,
-    mapSearchQuery,
-    currentZoom,
-    language,
-    visitedList,
-    suggestedPandals,
-    effectiveCoords,
-    crowdConsensusMap,
-  ]);
-
-  // Handle Active Walking Route Polyline
+  // Render Active Routes (Walking Route, Metro Route, Bus Diversion, Multi-Stop Trail)
   useEffect(() => {
-    const routesLayer = routesLayerRef.current;
     const map = mapInstanceRef.current;
-    if (!routesLayer || !map) return;
+    if (!map || !isMapLoadedRef.current) return;
+    const source = map.getSource('active-routes') as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
 
-    if (!activeWalkRoute) {
-      if (!activeMetroRoute && (!trailStops || trailStops.length < 2)) {
-        routesLayer.clearLayers();
-      }
-      return;
+    const routeFeatures: GeoJSON.Feature<GeoJSON.LineString>[] = [];
+
+    // 1. Walking Route
+    if (activeWalkRoute) {
+      const from: [number, number] = [activeWalkRoute.fromCoords.lng, activeWalkRoute.fromCoords.lat];
+      const to: [number, number] = [activeWalkRoute.pandal.lng, activeWalkRoute.pandal.lat];
+      routeFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: [from, to] },
+        properties: { color: '#FBBF24', glowColor: '#F59E0B', isDashed: true },
+      });
+
+      const bounds = new maplibregl.LngLatBounds(from, to);
+      if (userCoords) bounds.extend([userCoords.lng, userCoords.lat]);
+      map.fitBounds(bounds, { padding: 80, maxZoom: 16 });
     }
 
-    routesLayer.clearLayers();
+    // 2. Metro Route
+    if (activeMetroRoute && activeMetroRoute.coordinates.length >= 2) {
+      const coords: [number, number][] = activeMetroRoute.coordinates.map(([lat, lng]) => [lng, lat]);
+      const lineColor =
+        activeMetroRoute.line === 'green'
+          ? '#10B981'
+          : activeMetroRoute.line === 'orange'
+          ? '#F97316'
+          : activeMetroRoute.line === 'purple'
+          ? '#9333EA'
+          : activeMetroRoute.line === 'yellow'
+          ? '#EAB308'
+          : '#2563EB';
 
-    const from: [number, number] = [activeWalkRoute.fromCoords.lat, activeWalkRoute.fromCoords.lng];
-    const to: [number, number] = [activeWalkRoute.pandal.lat, activeWalkRoute.pandal.lng];
+      routeFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
+        properties: { color: lineColor, glowColor: '#FFFFFF', isDashed: false },
+      });
 
-    const glowLine = L.polyline([from, to], {
-      color: '#F59E0B',
-      weight: 8,
-      opacity: 0.35,
-      lineCap: 'round',
-    });
-
-    const dashedLine = L.polyline([from, to], {
-      color: '#FFB300',
-      weight: 4,
-      dashArray: '8, 8',
-      opacity: 0.95,
-      lineCap: 'round',
-    });
-
-    routesLayer.addLayer(glowLine);
-    routesLayer.addLayer(dashedLine);
-
-    const points: [number, number][] = [from, to];
-    if (userCoords) {
-      points.push([userCoords.lat, userCoords.lng]);
-    }
-    const bounds = L.latLngBounds(points);
-    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16, animate: true });
-  }, [activeWalkRoute, userCoords]);
-
-  // Handle Active Metro Route Polyline
-  useEffect(() => {
-    const routesLayer = routesLayerRef.current;
-    const map = mapInstanceRef.current;
-    if (!routesLayer || !map) return;
-
-    if (!activeMetroRoute || activeMetroRoute.coordinates.length < 2) {
-      if (!activeWalkRoute && (!trailStops || trailStops.length < 2)) {
-        routesLayer.clearLayers();
-      }
-      return;
+      const bounds = coords.reduce(
+        (b, coord) => b.extend(coord),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 80, maxZoom: 15 });
     }
 
-    routesLayer.clearLayers();
-
-    const coords = activeMetroRoute.coordinates;
-    const lineColor =
-      activeMetroRoute.line === 'green'
-        ? '#10B981'
-        : activeMetroRoute.line === 'orange'
-        ? '#F97316'
-        : activeMetroRoute.line === 'purple'
-        ? '#9333EA'
-        : activeMetroRoute.line === 'yellow'
-        ? '#EAB308'
-        : activeMetroRoute.line === 'interchange'
-        ? '#EC4899'
-        : '#2563EB';
-
-    const outerCasing = L.polyline(coords, {
-      color: '#FFFFFF',
-      weight: 9,
-      opacity: 0.55,
-      lineCap: 'round',
-    });
-
-    const metroLine = L.polyline(coords, {
-      color: lineColor,
-      weight: 5.5,
-      opacity: 0.98,
-      lineCap: 'round',
-    });
-
-    routesLayer.addLayer(outerCasing);
-    routesLayer.addLayer(metroLine);
-
-    activeMetroRoute.stations.forEach((station) => {
-      const stationDot = L.circleMarker([station.lat, station.lng], {
-        radius: station.isInterchange ? 6.5 : 4.5,
-        fillColor: station.isInterchange ? '#F59E0B' : lineColor,
-        color: '#FFFFFF',
-        weight: 2,
-        fillOpacity: 1,
+    // 3. Multi-Stop Trail
+    if (trailStops && trailStops.length >= 2) {
+      const coords: [number, number][] = trailStops.map((s) => [s.lng, s.lat]);
+      routeFeatures.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
+        properties: { color: '#FBBF24', glowColor: '#F59E0B', isDashed: true },
       });
 
-      stationDot.bindTooltip(station.name[language] || station.name.en, {
-        direction: 'top',
-        className: 'metro-station-tooltip',
-      });
-
-      routesLayer.addLayer(stationDot);
-    });
-
-    const bounds = L.latLngBounds(coords);
-    map.fitBounds(bounds, { padding: [80, 80], animate: true });
-  }, [activeMetroRoute, language]);
-
-  // Handle Active Bus Diversion Polyline (Police Diverted Corridor)
-  useEffect(() => {
-    const routesLayer = routesLayerRef.current;
-    if (!routesLayer) return;
-
-    if (!activeBusDiversion) {
-      if (!activeWalkRoute && !activeMetroRoute && (!trailStops || trailStops.length < 2)) {
-        routesLayer.clearLayers();
-      }
-      return;
+      const bounds = coords.reduce(
+        (b, coord) => b.extend(coord),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 70, maxZoom: 16 });
     }
 
-    renderBusDiversionLine(activeBusDiversion.normalOrigin, activeBusDiversion.normalDestination);
-  }, [activeBusDiversion]);
-
-  // Handle Multi-Stop Trail Polyline (Batched via requestAnimationFrame)
-  useEffect(() => {
-    const routesLayer = routesLayerRef.current;
-    const map = mapInstanceRef.current;
-    if (!routesLayer || !map) return;
-
-    let rafId: number | null = null;
-
-    rafId = requestAnimationFrame(() => {
-      if (!trailStops || trailStops.length < 2) {
-        if (!activeWalkRoute && !activeMetroRoute) {
-          routesLayer.clearLayers();
-        }
-        return;
-      }
-
-      routesLayer.clearLayers();
-
-      const latlngs: [number, number][] = trailStops.map((s) => [s.lat, s.lng]);
-
-      const glowLine = L.polyline(latlngs, {
-        color: '#F59E0B',
-        weight: 8,
-        opacity: 0.35,
-        lineCap: 'round',
-        lineJoin: 'round',
-      });
-
-      const dashedLine = L.polyline(latlngs, {
-        color: '#FBBF24',
-        weight: 4,
-        dashArray: '8, 8',
-        opacity: 0.95,
-        lineCap: 'round',
-        lineJoin: 'round',
-      });
-
-      routesLayer.addLayer(glowLine);
-      routesLayer.addLayer(dashedLine);
-
-      const dim = MapMarkerSizeHelper.getDimensions(currentZoom);
-      const tooltipOffset: [number, number] = [0, -dim.iconAnchor[1] - 4];
-
-      trailStops.forEach((stop, idx) => {
-        const isStart = idx === 0;
-        const isEnd = idx === trailStops.length - 1;
-        const icon = createDynamicMarkerIcon('trail-stop', currentZoom, {
-          stopNumber: idx + 1,
-          isTrailStart: isStart,
-          isTrailEnd: isEnd,
-        });
-
-        const marker = L.marker([stop.lat, stop.lng], { icon, zIndexOffset: 2000 + idx });
-        marker.bindTooltip(`Stop #${idx + 1}: ${stop.name[language] || stop.name.en}`, {
-          direction: 'top',
-          offset: tooltipOffset,
-        });
-
-        if (stop.pandalId) {
-          marker.on('click', () => {
-            const found = PANDALS_DATA.find((p) => p.id === stop.pandalId);
-            if (found) onSelectPandal(found);
-          });
-        }
-
-        routesLayer.addLayer(marker);
-      });
-
-      const bounds = L.latLngBounds(latlngs);
-      map.fitBounds(bounds, { padding: [70, 70], maxZoom: 16, animate: true });
+    source.setData({
+      type: 'FeatureCollection',
+      features: routeFeatures,
     });
+  }, [activeWalkRoute, activeMetroRoute, trailStops, userCoords]);
 
-    return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [trailStops, currentZoom, language]);
-
-  // Center map on selectedItem (whether pandal, facility, or metro station)
+  // Center on Selected Item (Point 7: POI View Map flyTo & Point 9: Auto FitBounds 500m for Pandals)
   useEffect(() => {
     if (!selectedItem || !mapInstanceRef.current) return;
-    mapInstanceRef.current.setView([selectedItem.lat, selectedItem.lng], 16, { animate: true });
+    const map = mapInstanceRef.current;
+
+    const isPandal =
+      'zone' in selectedItem ||
+      'nearestMetro' in selectedItem ||
+      'crowdLevel' in selectedItem;
+
+    if (isPandal) {
+      // Point 9: Auto fitBounds for 500m Live Lock radius circle on mobile screens
+      // 500m latitude delta ≈ 0.00451 deg, 500m longitude delta ≈ 0.00488 deg at Kolkata 22.57°N
+      const latDelta = 0.00451;
+      const lngDelta = 0.00488;
+      map.fitBounds(
+        [
+          [selectedItem.lng - lngDelta, selectedItem.lat - latDelta],
+          [selectedItem.lng + lngDelta, selectedItem.lat + latDelta],
+        ],
+        {
+          padding: { top: 80, bottom: 200, left: 30, right: 30 },
+          duration: 900,
+          maxZoom: 16.5,
+        }
+      );
+    } else {
+      // Point 7: POI Facility / Metro Station - smoothly fly to the location on the live map canvas
+      map.flyTo({
+        center: [selectedItem.lng, selectedItem.lat],
+        zoom: 16.5,
+        duration: 800,
+      });
+    }
   }, [selectedItem]);
 
-  // Line isolation handler with smooth map fitBounds
+  // User GPS Blue Dot Marker
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (userCoords) {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLngLat([userCoords.lng, userCoords.lat]);
+      } else {
+        const el = document.createElement('div');
+        el.className = 'relative flex items-center justify-center';
+        el.innerHTML = `
+          <div style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background: rgba(59, 130, 246, 0.4); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: relative; width: 14px; height: 14px; border-radius: 9999px; background: #2563EB; border: 3px solid #FFFFFF; box-shadow: 0 0 10px rgba(37, 99, 235, 0.9);"></div>
+        `;
+
+        userMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat([userCoords.lng, userCoords.lat])
+          .addTo(map);
+      }
+    } else {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+    }
+  }, [userCoords]);
+
+  // Line isolation handler
   const handleToggleLineIsolation = (lineId: MetroLine | null) => {
     const map = mapInstanceRef.current;
     if (!isMetroActive) {
@@ -1191,17 +1997,24 @@ export const MapView: React.FC<Props> = ({
     if (!lineId || isolatedLine === lineId) {
       setIsolatedLine(null);
       if (map) {
-        // Fit all metro network stations
-        const allCoords = METRO_STATIONS.map((s) => [s.lat, s.lng] as [number, number]);
-        map.fitBounds(L.latLngBounds(allCoords), { padding: [60, 60], animate: true });
+        const allCoords = METRO_STATIONS.map((s) => [s.lng, s.lat] as [number, number]);
+        const bounds = allCoords.reduce(
+          (b, c) => b.extend(c),
+          new maplibregl.LngLatBounds(allCoords[0], allCoords[0])
+        );
+        map.fitBounds(bounds, { padding: 60 });
       }
     } else {
       setIsolatedLine(lineId);
       if (map) {
         const lineStations = getLineStations(lineId);
         if (lineStations.length > 0) {
-          const coords = lineStations.map((s) => [s.lat, s.lng] as [number, number]);
-          map.fitBounds(L.latLngBounds(coords), { padding: [70, 70], animate: true });
+          const coords = lineStations.map((s) => [s.lng, s.lat] as [number, number]);
+          const bounds = coords.reduce(
+            (b, c) => b.extend(c),
+            new maplibregl.LngLatBounds(coords[0], coords[0])
+          );
+          map.fitBounds(bounds, { padding: 70 });
         }
       }
     }
@@ -1221,7 +2034,7 @@ export const MapView: React.FC<Props> = ({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setGpsLoading(false);
-        const { latitude, longitude, accuracy } = position.coords;
+        const { latitude, longitude } = position.coords;
         const clamped = clampToKolkata(latitude, longitude);
         onUserCoordsChange(clamped);
         setGpsStatusMsg(t.gpsFound);
@@ -1229,45 +2042,7 @@ export const MapView: React.FC<Props> = ({
 
         const map = mapInstanceRef.current;
         if (map) {
-          map.setView([clamped.lat, clamped.lng], 15, { animate: true });
-
-          if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([clamped.lat, clamped.lng]);
-          } else {
-            const userIcon = L.divIcon({
-              className: 'gps-user-marker',
-              html: `
-                <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                  <div style="position: absolute; width: 26px; height: 26px; border-radius: 9999px; background-color: rgba(59, 130, 246, 0.4); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                  <div style="position: relative; width: 14px; height: 14px; border-radius: 9999px; background-color: #2563EB; border: 3px solid #FFFFFF; box-shadow: 0 0 10px rgba(37, 99, 235, 0.9);"></div>
-                </div>
-              `,
-              iconSize: [28, 28],
-              iconAnchor: [14, 14],
-            });
-
-            const marker = L.marker([clamped.lat, clamped.lng], {
-              icon: userIcon,
-              zIndexOffset: 1000,
-            }).addTo(map);
-
-            marker.bindTooltip(t.yourLocation, { direction: 'top' });
-            userMarkerRef.current = marker;
-          }
-
-          if (userCircleRef.current) {
-            userCircleRef.current.setLatLng([clamped.lat, clamped.lng]);
-            userCircleRef.current.setRadius(Math.max(50, accuracy));
-          } else {
-            const circle = L.circle([clamped.lat, clamped.lng], {
-              radius: Math.max(50, accuracy),
-              color: '#3B82F6',
-              fillColor: '#3B82F6',
-              fillOpacity: 0.12,
-              weight: 1.5,
-            }).addTo(map);
-            userCircleRef.current = circle;
-          }
+          map.flyTo({ center: [clamped.lng, clamped.lat], zoom: 15, duration: 800 });
         }
       },
       () => {
@@ -1280,20 +2055,16 @@ export const MapView: React.FC<Props> = ({
   };
 
   const handleZoomIn = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.zoomIn();
-    }
+    if (mapInstanceRef.current) mapInstanceRef.current.zoomIn();
   };
 
   const handleZoomOut = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.zoomOut();
-    }
+    if (mapInstanceRef.current) mapInstanceRef.current.zoomOut();
   };
 
   const handleLockNorth = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.panBy([0, 0]);
+      mapInstanceRef.current.resetNorth({ duration: 500 });
       setGpsStatusMsg('Strict North Orientation Locked');
       setTimeout(() => setGpsStatusMsg(null), 2500);
     }
@@ -1303,7 +2074,7 @@ export const MapView: React.FC<Props> = ({
     setIsSearchDropdownOpen(false);
     setMapSearchQuery(pandal.name[language] || pandal.name.en);
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView([pandal.lat, pandal.lng], 16, { animate: true });
+      mapInstanceRef.current.flyTo({ center: [pandal.lng, pandal.lat], zoom: 16, duration: 600 });
     }
     onSelectPandal(pandal);
   };
@@ -1315,16 +2086,17 @@ export const MapView: React.FC<Props> = ({
   };
 
   return (
-    <div id="map-view-container" className="relative w-full h-full overflow-hidden">
-      {/* Primary Map Stage */}
+    <div id="map-view-container" className="relative w-full h-full overflow-hidden bg-[#080B11]">
+      {/* Primary MapLibre GL Stage */}
       <div
-        id="leaflet-map"
+        id="maplibre-map"
         ref={mapContainerRef}
-        className="w-full h-full bg-[#0B0F19] z-0"
+        style={{ width: '100%', height: '100%', backgroundColor: '#080B11' }}
+        className="w-full h-full z-0"
       />
 
-      {/* Floating Top Search Bar */}
-      <div className="absolute top-2.5 inset-x-2.5 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
+      {/* Floating Top Search Bar (Point 4: Gutter right-16 prevents collision with 44px dock buttons) */}
+      <div className="absolute top-2.5 left-2.5 right-16 max-w-md mx-auto z-25 pointer-events-none flex flex-col gap-1.5">
         <div className="relative pointer-events-auto">
           <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/95 backdrop-blur-xl border border-slate-750/90 rounded-2xl shadow-xl shadow-black/50 focus-within:border-amber-400/80 transition-colors">
             <Search className="w-4 h-4 text-amber-400 shrink-0" />
@@ -1397,7 +2169,7 @@ export const MapView: React.FC<Props> = ({
         return (
           <div
             id="active-walk-route-banner"
-            className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
+            className="absolute top-2 left-2.5 right-16 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="p-2 rounded-xl bg-amber-400/15 text-amber-400 shrink-0">
@@ -1439,7 +2211,7 @@ export const MapView: React.FC<Props> = ({
       {activeMetroRoute && !activeWalkRoute && (
         <div
           id="active-metro-route-banner"
-          className="absolute top-2 inset-x-2.5 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
+          className="absolute top-2 left-2.5 right-16 max-w-md mx-auto z-30 pointer-events-auto p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-800 shadow-xl flex items-center justify-between gap-3 animate-slide-up"
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 shrink-0">
@@ -1517,13 +2289,17 @@ export const MapView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Right HUD Controls: Compact Glassmorphic Dock */}
-      <div className="absolute top-[108px] right-3 z-20 flex flex-col gap-1 items-center pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-750/90 rounded-2xl p-1 shadow-xl shadow-black/50">
-        {/* Dedicated METRO Map Layer Toggle */}
+      {/* Right HUD Controls: Compact Glassmorphic Dock (Point 4: Min 44x44px touch targets & collision-free layout) */}
+      <div
+        className={`absolute right-3.5 z-20 flex flex-col gap-1.5 items-center pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-750/90 rounded-2xl p-1 shadow-xl shadow-black/50 transition-all duration-200 ${
+          activeWalkRoute || activeMetroRoute ? 'top-[116px]' : 'top-[68px]'
+        }`}
+      >
+        {/* Dedicated METRO Map Layer Toggle (Min 44x44px) */}
         <button
           id="map-metro-toggle-btn"
           onClick={handleToggleMetro}
-          className={`flex flex-col items-center justify-center w-8.5 h-8.5 rounded-xl transition-all active:scale-95 ${
+          className={`flex flex-col items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl transition-all active:scale-95 touch-manipulation ${
             isMetroActive
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
               : 'text-slate-400 hover:text-white hover:bg-slate-800'
@@ -1531,50 +2307,50 @@ export const MapView: React.FC<Props> = ({
           title={isMetroActive ? 'Deactivate Metro Mode & Restore Pandals' : 'Activate Metro Network Mode'}
           aria-label="Toggle Metro Lines"
         >
-          <Train className="w-4 h-4" />
+          <Train className="w-5 h-5" />
         </button>
 
-        <div className="w-5 h-[1px] bg-slate-800 my-0.5" />
+        <div className="w-6 h-[1px] bg-slate-800 my-0.5" />
 
-        {/* Zoom In & Zoom Out Buttons */}
+        {/* Zoom In & Zoom Out Buttons (Min 44x44px) */}
         <button
           id="map-zoom-in-btn"
           onClick={handleZoomIn}
-          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95 touch-manipulation"
           title="Zoom In"
           aria-label="Zoom In"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
         </button>
         <button
           id="map-zoom-out-btn"
           onClick={handleZoomOut}
-          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95 touch-manipulation"
           title="Zoom Out"
           aria-label="Zoom Out"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="w-5 h-5" />
         </button>
 
-        <div className="w-5 h-[1px] bg-slate-800 my-0.5" />
+        <div className="w-6 h-[1px] bg-slate-800 my-0.5" />
 
-        {/* Lock North Button */}
+        {/* Lock North Button (Min 44x44px) */}
         <button
           id="lock-north-btn"
           onClick={handleLockNorth}
-          className="w-8.5 h-8.5 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition active:scale-95 touch-manipulation"
           title="Strictly Locked to True North (N 0°)"
           aria-label="Lock North"
         >
-          <Compass className="w-4 h-4 text-amber-400" />
+          <Compass className="w-5 h-5 text-amber-400" />
         </button>
 
-        {/* Find My Location */}
+        {/* Find My Location (Min 44x44px) */}
         <button
           id="gps-locate-btn"
           onClick={handleFindLocation}
           disabled={gpsLoading}
-          className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+          className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center transition-all active:scale-95 touch-manipulation ${
             userCoords
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
               : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -1583,7 +2359,7 @@ export const MapView: React.FC<Props> = ({
           aria-label="Find GPS Location"
         >
           <Crosshair
-            className={`w-4 h-4 ${
+            className={`w-5 h-5 ${
               userCoords ? 'text-white' : 'text-slate-300'
             } ${gpsLoading ? 'animate-spin' : ''}`}
           />
@@ -1611,7 +2387,7 @@ export const MapView: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Floating Active Trail Badge (Non-intrusive when trail is active) */}
+      {/* Floating Active Trail Badge */}
       {trailStops && trailStops.length > 0 && onOpenTrailBuilder && (
         <div className="absolute top-[108px] left-3 z-20 pointer-events-auto animate-fade-in">
           <button
@@ -1631,8 +2407,8 @@ export const MapView: React.FC<Props> = ({
         id="map-floating-bottom-stage"
         className="absolute bottom-[calc(var(--bottom-dock-height)+var(--safe-bottom)+8px)] inset-x-0 z-20 pointer-events-none flex flex-col gap-2"
       >
-        {/* Proximity Quick-Preview Card for Closest Utility Node */}
-        {closestUtilitySummary && (
+        {/* Proximity Quick-Preview Card for Closest Utility Node (Point 5 & Point 6) */}
+        {closestUtilitySummary && !isFilterTrayExpanded && (
           <div className="w-full max-w-md mx-auto px-3 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
             <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-950/95 border border-slate-750/90 backdrop-blur-xl shadow-xl shadow-black/80 gap-2">
               <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1643,7 +2419,7 @@ export const MapView: React.FC<Props> = ({
                   <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
                     <span className="font-bold text-emerald-400">{closestUtilitySummary.distanceBadge}</span>
                     <span>•</span>
-                    <span className="truncate">{closestUtilitySummary.totalCount} in area</span>
+                    <span className="truncate">{closestUtilitySummary.totalCount} {closestUtilitySummary.isLocked ? 'within 500m' : 'in city'}</span>
                   </div>
                   <p className="text-xs font-bold text-white truncate">
                     {closestUtilitySummary.closest.name[language] || closestUtilitySummary.closest.name.en}
@@ -1651,6 +2427,23 @@ export const MapView: React.FC<Props> = ({
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
+                {!closestUtilitySummary.isLocked && currentZoom < 15 && (
+                  <button
+                    onClick={() => {
+                      const map = mapInstanceRef.current;
+                      if (map) {
+                        map.flyTo({
+                          center: [closestUtilitySummary.closest.lng, closestUtilitySummary.closest.lat],
+                          zoom: 15.5,
+                          duration: 800,
+                        });
+                      }
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs flex items-center gap-1 active:scale-95 transition"
+                  >
+                    <span>Zoom In</span>
+                  </button>
+                )}
                 <a
                   href={closestUtilitySummary.googleMapsUrl}
                   target="_blank"
@@ -1662,9 +2455,18 @@ export const MapView: React.FC<Props> = ({
                 </a>
                 <button
                   onClick={() => onSelectFacility(closestUtilitySummary.closest)}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs active:scale-95 transition"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 font-semibold text-xs active:scale-95 transition"
                 >
                   Details
+                </button>
+                {/* Point 6: Cancel/Dismiss Utility Filter Button */}
+                <button
+                  onClick={() => clearUtilityFilter()}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white active:scale-95 transition"
+                  title="Clear utility filter"
+                  aria-label="Clear utility filter"
+                >
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -1677,6 +2479,8 @@ export const MapView: React.FC<Props> = ({
             activeFilter={activeFilter}
             onFilterChange={handleFilterChange}
             language={language}
+            onClearFilter={clearUtilityFilter}
+            onTrayExpandedChange={setIsFilterTrayExpanded}
           />
         </div>
       </div>

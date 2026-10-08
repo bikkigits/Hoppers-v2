@@ -62,8 +62,82 @@ async function startServer() {
 
   // Vite middleware for local development
   if (!isProduction) {
-    const { createServer: createViteServer } = await import("vite");
+    // Intercept /@vite/client so browser does not attempt failing WebSocket HMR in the iframe preview
+    app.get("/@vite/client", (_req, res) => {
+      res.type("application/javascript").send(`
+        const sheetsMap = new Map();
+        export function updateStyle(id, content) {
+          try {
+            let style = sheetsMap.get(id);
+            if (!style) {
+              style = document.createElement("style");
+              style.setAttribute("type", "text/css");
+              style.setAttribute("data-vite-dev-id", id);
+              style.textContent = content;
+              document.head.appendChild(style);
+            } else {
+              style.textContent = content;
+            }
+            sheetsMap.set(id, style);
+          } catch (_) {}
+        }
+        export function removeStyle(id) {
+          try {
+            const style = sheetsMap.get(id);
+            if (style) {
+              style.remove();
+              sheetsMap.delete(id);
+            }
+          } catch (_) {}
+        }
+        export function injectQuery(url, query) {
+          return url + (url.includes("?") ? "&" : "?") + query;
+        }
+        export function createHotContext() {
+          return {
+            accept() {},
+            dispose() {},
+            prune() {},
+            invalidate() {},
+            decline() {},
+            on() {},
+            off() {},
+            send() {},
+          };
+        }
+        export class ErrorOverlay extends (typeof HTMLElement !== "undefined" ? HTMLElement : class {}) {}
+      `);
+    });
+
+    const { createServer: createViteServer, createLogger } = await import("vite");
+    const customLogger = createLogger("silent");
+    const filterMsg = (msg: unknown) => {
+      const str = typeof msg === "string" ? msg : String(msg ?? "");
+      return str.includes("[vite]") || str.toLowerCase().includes("websocket") || str.toLowerCase().includes("hmr");
+    };
+    const origError = customLogger.error.bind(customLogger);
+    const origWarn = customLogger.warn.bind(customLogger);
+    const origInfo = customLogger.info.bind(customLogger);
+    customLogger.error = (msg, options) => {
+      if (filterMsg(msg)) return;
+      origError(msg, options);
+    };
+    customLogger.warn = (msg, options) => {
+      if (filterMsg(msg)) return;
+      origWarn(msg, options);
+    };
+    customLogger.info = (msg, options) => {
+      if (filterMsg(msg)) return;
+      origInfo(msg, options);
+    };
+    customLogger.warnOnce = (msg, options) => {
+      if (filterMsg(msg)) return;
+      origWarn(msg, options);
+    };
+
     const vite = await createViteServer({
+      customLogger,
+      logLevel: "silent",
       server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });

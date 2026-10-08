@@ -14,6 +14,8 @@ import { TRANSLATIONS } from '../data/translations';
 import { calculateDistanceKm, formatDistance } from '../utils/geo';
 import { getPandalCrowdSummary } from '../utils/crowdReports';
 import { CrowdStatusBadge, getCrowdBadge } from './CrowdStatusBadge';
+import { useFilters } from '../context/FilterContext';
+import { matchesPandalFilter } from '../utils/pandalClassification';
 import {
   Search,
   Train,
@@ -75,9 +77,11 @@ export const DirectoryView: React.FC<Props> = ({
   // Bus section state
   const [busSearch, setBusSearch] = useState('');
 
+  // Global synchronized filter state
+  const { zoneFilter, setZoneFilter, poiFilter, setPoiFilter } = useFilters();
+
   // Pandal section states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [sortBy, setSortBy] = useState<'distance' | 'crowd' | 'name'>('distance');
   const [visibleCount, setVisibleCount] = useState(50);
   const [, setCrowdUpdateTick] = useState(0);
@@ -94,11 +98,10 @@ export const DirectoryView: React.FC<Props> = ({
 
   React.useEffect(() => {
     setVisibleCount(50);
-  }, [searchTerm, selectedFilter, sortBy]);
+  }, [searchTerm, zoneFilter, sortBy]);
 
   // POI section states
   const [poiSearch, setPoiSearch] = useState('');
-  const [selectedPoiCategory, setSelectedPoiCategory] = useState<string>('all');
 
   const visitedSet = useMemo(() => new Set(visitedList.map((v) => v.pandalId)), [visitedList]);
   const trailStopIds = useMemo(() => new Set(trailStops.map((s) => s.id)), [trailStops]);
@@ -137,38 +140,15 @@ export const DirectoryView: React.FC<Props> = ({
     const refCoords = userCoords || { lat: 22.5645, lng: 88.3516 }; // Esplanade fallback
 
     return PANDALS_DATA.filter((pandal) => {
-      // Zone / Category Filter
-      if (selectedFilter !== 'nearby' && selectedFilter !== 'all') {
-        const pZone = pandal.zone.toLowerCase();
-        if (selectedFilter === 'saltlake_rajarhat') {
-          const match =
-            pandal.zone === 'Salt Lake & Rajarhat' ||
-            pZone.includes('salt') ||
-            pZone.includes('rajarhat') ||
-            pandal.nearestMetro.toLowerCase().includes('salt lake') ||
-            pandal.nearestMetro.toLowerCase().includes('karunamoyee');
-          if (!match) return false;
-        } else if (selectedFilter === 'newtown') {
-          const match =
-            pandal.zone === 'Newtown' ||
-            pZone.includes('newtown') ||
-            pZone.includes('new town') ||
-            pandal.nearestMetro.toLowerCase().includes('new town');
-          if (!match) return false;
-        } else if (selectedFilter === 'howrah') {
-          const match =
-            pZone.includes('howrah') ||
-            pandal.nearestMetro.toLowerCase().includes('howrah') ||
-            (pandal.address?.toLowerCase().includes('howrah') ?? false);
-          if (!match) return false;
-        } else if (selectedFilter === 'behala') {
-          const match =
-            pZone.includes('behala') ||
-            pandal.name.en.toLowerCase().includes('behala') ||
-            (pandal.address?.toLowerCase().includes('behala') ?? false);
-          if (!match) return false;
-        } else if (pandal.zone.toLowerCase() !== selectedFilter.toLowerCase()) {
-          return false;
+      // Synchronized Zone / Category Filter
+      if (zoneFilter !== 'nearby' && zoneFilter !== 'all') {
+        const matches = matchesPandalFilter(pandal, zoneFilter, visitedList);
+        if (!matches) {
+          const pZone = pandal.zone.toLowerCase();
+          const target = zoneFilter.toLowerCase();
+          if (!pZone.includes(target) && !(target === 'west' && pZone.includes('howrah'))) {
+            return false;
+          }
         }
       }
 
@@ -186,7 +166,7 @@ export const DirectoryView: React.FC<Props> = ({
       const zoneMatch = pandal.zone.toLowerCase().includes(query);
       return nameMatch || themeMatch || metroMatch || zoneMatch;
     }).sort((a, b) => {
-      if (selectedFilter === 'nearby' || sortBy === 'distance') {
+      if (zoneFilter === 'nearby' || sortBy === 'distance') {
         const distA = calculateDistanceKm(refCoords.lat, refCoords.lng, a.lat, a.lng);
         const distB = calculateDistanceKm(refCoords.lat, refCoords.lng, b.lat, b.lng);
         return distA - distB;
@@ -199,44 +179,50 @@ export const DirectoryView: React.FC<Props> = ({
       const nameB = b.name[language] || b.name.en;
       return nameA.localeCompare(nameB);
     });
-  }, [selectedFilter, searchTerm, sortBy, userCoords, language]);
+  }, [zoneFilter, searchTerm, sortBy, userCoords, language, visitedList]);
 
   // Filtered POIs
   const filteredPois = useMemo(() => {
     return allPoiFacilities
       .filter((poi) => {
         // Category filter
-        if (selectedPoiCategory !== 'all') {
+        if (poiFilter !== 'all') {
           if (
-            selectedPoiCategory === 'hospital' &&
+            poiFilter === 'hospital' &&
             poi.category !== 'hospital' &&
             poi.category !== 'medical'
           )
             return false;
           if (
-            selectedPoiCategory === 'medical' &&
+            poiFilter === 'medical' &&
             poi.category !== 'hospital' &&
             poi.category !== 'medical'
           )
             return false;
-          if (selectedPoiCategory === 'police' && poi.category !== 'police') return false;
-          if (selectedPoiCategory === 'helpdesk' && poi.category !== 'helpdesk') return false;
-          if (selectedPoiCategory === 'metro' && poi.category !== 'metro') return false;
-          if (selectedPoiCategory === 'railway' && poi.category !== 'railway') return false;
-          if (selectedPoiCategory === 'ferry' && poi.category !== 'ferry') return false;
-          if (selectedPoiCategory === 'pharmacy' && poi.category !== 'pharmacy') return false;
-          if (selectedPoiCategory === 'atm' && poi.category !== 'atm') return false;
-          if (selectedPoiCategory === 'parking' && poi.category !== 'parking') return false;
+          if (poiFilter === 'police' && poi.category !== 'police') return false;
+          if (poiFilter === 'helpdesk' && poi.category !== 'helpdesk') return false;
+          if (poiFilter === 'metro' && poi.category !== 'metro') return false;
+          if (poiFilter === 'railway' && poi.category !== 'railway') return false;
+          if (poiFilter === 'ferry' && poi.category !== 'ferry') return false;
+          if (poiFilter === 'pharmacy' && poi.category !== 'pharmacy') return false;
+          if (poiFilter === 'atm' && poi.category !== 'atm') return false;
+          if (poiFilter === 'parking' && poi.category !== 'parking') return false;
           if (
-            selectedPoiCategory === 'restaurant' &&
+            poiFilter === 'restaurant' &&
             poi.category !== 'restaurant' &&
             poi.category !== 'food'
           )
             return false;
-          if (selectedPoiCategory === 'hotel' && poi.category !== 'hotel') return false;
-          if (selectedPoiCategory === 'landmark' && poi.category !== 'landmark') return false;
-          if (selectedPoiCategory === 'petrol' && poi.category !== 'petrol') return false;
-          if (selectedPoiCategory === 'toilets' && poi.category !== 'toilets') return false;
+          if (
+            poiFilter === 'food' &&
+            poi.category !== 'restaurant' &&
+            poi.category !== 'food'
+          )
+            return false;
+          if (poiFilter === 'hotel' && poi.category !== 'hotel') return false;
+          if (poiFilter === 'landmark' && poi.category !== 'landmark') return false;
+          if (poiFilter === 'petrol' && poi.category !== 'petrol') return false;
+          if (poiFilter === 'toilets' && poi.category !== 'toilets') return false;
         }
 
         // Search term
@@ -268,7 +254,7 @@ export const DirectoryView: React.FC<Props> = ({
         }
         return (a.name[language] || a.name.en).localeCompare(b.name[language] || b.name.en);
       });
-  }, [allPoiFacilities, selectedPoiCategory, poiSearch, userCoords, language]);
+  }, [allPoiFacilities, poiFilter, poiSearch, userCoords, language]);
 
   // POI Category pills definition with counts
   const poiCategories = useMemo(() => {
@@ -398,50 +384,57 @@ export const DirectoryView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Primary Section Switcher: Pandals vs POI vs Buses */}
-      <div className="flex items-center p-1 bg-slate-900/90 rounded-2xl border border-slate-800 mb-4 shadow-sm gap-1">
-        <button
-          id="tab-pandals-btn"
-          onClick={() => setSection('pandals')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
-            section === 'pandals'
-              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
+      {/* Primary Section Switcher: Pandals vs POI vs Buses (Horizontally scrollable on mobile with right-edge fade) */}
+      <div className="relative w-full max-w-full mb-3">
+        <div
+          className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth p-1 bg-slate-900/95 rounded-2xl border border-slate-800 shadow-sm pr-7"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
         >
-          <span>🛕</span>
-          <span className="truncate">
-            {t.tabPandals} ({PANDALS_DATA.length})
-          </span>
-        </button>
-        <button
-          id="tab-poi-btn"
-          onClick={() => setSection('poi')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
-            section === 'poi'
-              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span>🚨</span>
-          <span className="truncate">
-            {t.tabPoi} ({allPoiFacilities.length})
-          </span>
-        </button>
-        <button
-          id="tab-buses-btn"
-          onClick={() => setSection('buses')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition ${
-            section === 'buses'
-              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <span>🚌</span>
-          <span className="truncate">
-            Buses ({BUS_DIVERSIONS.length})
-          </span>
-        </button>
+          <button
+            id="tab-pandals-btn"
+            onClick={() => setSection('pandals')}
+            className={`whitespace-nowrap px-3 py-2 min-h-[40px] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 touch-manipulation active:scale-95 ${
+              section === 'pandals'
+                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <span className="text-sm">🛕</span>
+            <span>
+              {t.tabPandals} ({PANDALS_DATA.length})
+            </span>
+          </button>
+          <button
+            id="tab-poi-btn"
+            onClick={() => setSection('poi')}
+            className={`whitespace-nowrap px-3 py-2 min-h-[40px] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 touch-manipulation active:scale-95 ${
+              section === 'poi'
+                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <span className="text-sm">🚨</span>
+            <span>
+              {t.tabPoi} ({allPoiFacilities.length})
+            </span>
+          </button>
+          <button
+            id="tab-buses-btn"
+            onClick={() => setSection('buses')}
+            className={`whitespace-nowrap px-3 py-2 min-h-[40px] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 touch-manipulation active:scale-95 ${
+              section === 'buses'
+                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <span className="text-sm">🚌</span>
+            <span>
+              Buses ({BUS_DIVERSIONS.length})
+            </span>
+          </button>
+        </div>
+        {/* Subtle Right-edge fade gradient to visually signal horizontal scroll */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent rounded-r-2xl" />
       </div>
 
       {/* ================= SECTION 1: DURGA PANDALS DIRECTORY ================= */}
@@ -468,25 +461,31 @@ export const DirectoryView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Zone Filter Chips (Strict Order Invariant) */}
+          {/* Synchronized Zone Filter Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {[
+              { id: 'all', label: t.allZones || 'All Zones', emoji: '🛕' },
               { id: 'nearby', label: 'Nearby', emoji: '📍' },
-              { id: 'all', label: t.allZones || 'All Zones' },
-              { id: 'North', label: t.zoneNorth || 'North', emoji: '🧭' },
-              { id: 'South', label: t.zoneSouth || 'South', emoji: '📍' },
-              { id: 'Central', label: t.zoneCentral || 'Central', emoji: '🏛️' },
-              { id: 'East', label: 'East', emoji: '🌅' },
+              { id: 'featured', label: 'Featured', emoji: '✨' },
+              { id: 'heritage', label: 'Heritage', emoji: '👑' },
+              { id: 'saved', label: 'Saved', emoji: '🔖' },
+              { id: 'north', label: t.zoneNorth || 'North', emoji: '🧭' },
+              { id: 'south', label: t.zoneSouth || 'South', emoji: '📍' },
+              { id: 'central', label: t.zoneCentral || 'Central', emoji: '🏛️' },
               { id: 'saltlake_rajarhat', label: 'Salt Lake & Rajarhat', emoji: '🌲' },
               { id: 'newtown', label: 'Newtown', emoji: '🏢' },
-              { id: 'howrah', label: 'Howrah', emoji: '🌉' },
+              { id: 'dumdum', label: 'Dum Dum', emoji: '✈️' },
+              { id: 'west', label: 'West (Howrah)', emoji: '🌉' },
               { id: 'behala', label: 'Behala', emoji: '⛵' },
             ].map((option) => {
-              const isActive = selectedFilter === option.id;
+              const isActive =
+                zoneFilter.toLowerCase() === option.id.toLowerCase() ||
+                (zoneFilter === 'west' && option.id === 'howrah') ||
+                (zoneFilter === 'howrah' && option.id === 'west');
               return (
                 <button
                   key={option.id}
-                  onClick={() => setSelectedFilter(option.id)}
+                  onClick={() => setZoneFilter(option.id as any)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition active:scale-95 ${
                     isActive
                       ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
@@ -757,14 +756,14 @@ export const DirectoryView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Horizontal Scrolling POI Category Pills (Matching Reference Video) */}
+          {/* Horizontal Scrolling POI Category Pills (Synchronized with Map) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {poiCategories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedPoiCategory(cat.id)}
+                onClick={() => setPoiFilter(cat.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 active:scale-95 ${
-                  selectedPoiCategory === cat.id
+                  poiFilter === cat.id
                     ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20'
                     : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200'
                 }`}
@@ -786,7 +785,7 @@ export const DirectoryView: React.FC<Props> = ({
               <button
                 onClick={() => {
                   setPoiSearch('');
-                  setSelectedPoiCategory('all');
+                  setPoiFilter('all');
                 }}
                 className="mt-3 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-amber-400 text-xs font-bold border border-amber-400/30 flex items-center gap-1 mx-auto"
               >

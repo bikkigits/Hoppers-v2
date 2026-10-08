@@ -207,7 +207,13 @@ export const TrailBuilderSheet: React.FC<Props> = ({
   const handleLoadCuratedTrail = (preset: CuratedTrailPreset) => {
     const newStops: TrailStop[] = [];
     for (const pid of preset.pandalIds) {
-      const found = allPandals.find((p) => p.id === pid);
+      const cleanPid = pid.toLowerCase().replace(/^dk_/, '').replace(/[^a-z0-9]/g, '');
+      const found = allPandals.find((p) => {
+        if (p.id === pid || p.id === `dk_${pid}`) return true;
+        const cleanId = p.id.toLowerCase().replace(/^dk_/, '').replace(/[^a-z0-9]/g, '');
+        return cleanId === cleanPid || cleanId.includes(cleanPid) || cleanPid.includes(cleanId);
+      });
+
       if (found) {
         newStops.push({
           id: found.id,
@@ -223,7 +229,7 @@ export const TrailBuilderSheet: React.FC<Props> = ({
     }
     if (newStops.length > 0) {
       onUpdateTrailStops(newStops);
-      showToast(`Loaded "${preset.title[language] || preset.title.en}"`);
+      showToast(`✨ Loaded "${preset.title[language] || preset.title.en}" (${newStops.length} stops)`);
       if (onFocusMapOnTrail) onFocusMapOnTrail();
     }
   };

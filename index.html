@@ -1,6 +1,140 @@
 <!doctype html>
 <html lang="en" class="dark">
   <head>
+    <script>
+      (function() {
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var RealWebSocket = window.WebSocket;
+          window.WebSocket = function(url, protocols) {
+            try {
+              var urlStr = String(url || '');
+              if (
+                urlStr.indexOf('localhost') !== -1 ||
+                urlStr.indexOf('127.0.0.1') !== -1 ||
+                urlStr.indexOf('vite') !== -1 ||
+                urlStr.indexOf(':3000') !== -1 ||
+                urlStr.indexOf('run.app') !== -1 ||
+                (typeof protocols === 'string' && protocols.indexOf('vite') !== -1)
+              ) {
+                var listeners = {};
+                var dummy = {
+                  url: urlStr,
+                  readyState: 1, // WebSocket.OPEN
+                  protocol: protocols || '',
+                  OPEN: 1,
+                  CONNECTING: 0,
+                  CLOSING: 2,
+                  CLOSED: 3,
+                  send: function() {},
+                  close: function() {},
+                  addEventListener: function(event, cb) {
+                    if (!listeners[event]) listeners[event] = [];
+                    listeners[event].push(cb);
+                    if (event === 'open') {
+                      setTimeout(function() {
+                        try { cb({ type: 'open', target: dummy }); } catch(err) {}
+                      }, 0);
+                    }
+                  },
+                  removeEventListener: function(event, cb) {
+                    if (listeners[event]) {
+                      listeners[event] = listeners[event].filter(function(fn) { return fn !== cb; });
+                    }
+                  },
+                  dispatchEvent: function() { return true; }
+                };
+                dummy.onopen = null;
+                dummy.onclose = null;
+                dummy.onerror = null;
+                dummy.onmessage = null;
+                setTimeout(function() {
+                  if (typeof dummy.onopen === 'function') {
+                    try { dummy.onopen({ type: 'open', target: dummy }); } catch(err) {}
+                  }
+                }, 0);
+                return dummy;
+              }
+            } catch (e) {}
+            return new RealWebSocket(url, protocols);
+          };
+          window.WebSocket.prototype = RealWebSocket.prototype;
+          window.WebSocket.CONNECTING = RealWebSocket.CONNECTING || 0;
+          window.WebSocket.OPEN = RealWebSocket.OPEN || 1;
+          window.WebSocket.CLOSING = RealWebSocket.CLOSING || 2;
+          window.WebSocket.CLOSED = RealWebSocket.CLOSED || 3;
+        }
+
+        function isViteOrWs(item) {
+          if (!item) return false;
+          try {
+            var str = '';
+            if (typeof item === 'string') {
+              str = item;
+            } else if (item instanceof Error) {
+              str = (item.message || '') + ' ' + (item.stack || '');
+            } else if (typeof item === 'object') {
+              try {
+                str = JSON.stringify(item);
+              } catch (_) {
+                str = (item.message || '') + ' ' + (item.reason || '') + ' ' + (item.data || '') + ' ' + (item.type || '') + ' ' + String(item);
+              }
+            } else {
+              str = String(item);
+            }
+            var lower = str.toLowerCase();
+            return (
+              lower.indexOf('[vite]') !== -1 ||
+              lower.indexOf('vite') !== -1 ||
+              lower.indexOf('[hmr]') !== -1 ||
+              lower.indexOf('hmr') !== -1 ||
+              lower.indexOf('websocket') !== -1
+            );
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function safeSerializeArg(arg) {
+          if (!arg || typeof arg !== 'object') return arg;
+          if (arg instanceof Error) return arg;
+          // Check for circular structures or MapLibre instances that break iframe postMessage JSON serialization
+          if (arg.target || arg._camera || arg._eventedParent || (arg.constructor && arg.constructor.name === 'UP')) {
+            return String(arg.message || arg.type || '[MapLibre Object]');
+          }
+          return arg;
+        }
+
+        ['error', 'warn', 'info', 'log', 'debug'].forEach(function(method) {
+          var orig = console[method];
+          console[method] = function() {
+            var safeArgs = [];
+            for (var i = 0; i < arguments.length; i++) {
+              if (isViteOrWs(arguments[i])) {
+                return;
+              }
+              safeArgs.push(safeSerializeArg(arguments[i]));
+            }
+            return orig.apply(console, safeArgs);
+          };
+        });
+
+        window.addEventListener('error', function(e) {
+          if (isViteOrWs(e && e.message) || isViteOrWs(e && e.error) || isViteOrWs(e && e.filename)) {
+            e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          if (isViteOrWs(e && e.reason)) {
+            e.preventDefault();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Hoppers – Durga Puja Companion</title>
@@ -19,7 +153,6 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">

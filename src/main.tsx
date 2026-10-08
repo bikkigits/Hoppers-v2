@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Register service worker with instant update propagation and cache purging
 const updateSW = registerSW({

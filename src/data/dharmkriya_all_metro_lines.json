@@ -1,0 +1,2566 @@
+[
+  {
+    "line": "Blue Line",
+    "stations_count": 25,
+    "stations": [
+      {
+        "station": "Dakshineswar",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Dakshineswar Dolpere Adi Sabojonin Durgapuja",
+            "slug": "dakshineswar-dolpere-adi-sabojonin-durgapuja"
+          }
+        ]
+      },
+      {
+        "station": "Baranagar",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Milangarh Sarbojanin",
+            "slug": "milangarh-sarbojanin"
+          }
+        ]
+      },
+      {
+        "station": "Noapara",
+        "pandal_count": 3,
+        "pandals": [
+          {
+            "name": "Noapara Udayan Sangha",
+            "slug": "noapara-udayan-sangha"
+          },
+          {
+            "name": "Nawpara Dadabhai Sangha",
+            "slug": "nawpara-dadabhai-sangha"
+          },
+          {
+            "name": "Rangkol Mandal Para Yubak Brinda",
+            "slug": "rangkol-mandal-para-yubak-brinda"
+          }
+        ]
+      },
+      {
+        "station": "Dum Dum",
+        "pandal_count": 6,
+        "pandals": [
+          {
+            "name": "Sinthee Sarbojanin",
+            "slug": "sinthee-sarbojanin"
+          },
+          {
+            "name": "Paikpara 14 Pally",
+            "slug": "paikpara-14-pally"
+          },
+          {
+            "name": "7 Tanks",
+            "slug": "7-tanks"
+          },
+          {
+            "name": "Kadamtala Durga Mandap",
+            "slug": "kadamtala-durga-mandap"
+          },
+          {
+            "name": "Sinthee Roy Para Sarbojanin Club",
+            "slug": "sinthee-roy-para-sarbojanin-club"
+          },
+          {
+            "name": "Tala Park 15 Pally",
+            "slug": "paikpara-15-pally"
+          }
+        ]
+      },
+      {
+        "station": "Belgachhia",
+        "pandal_count": 10,
+        "pandals": [
+          {
+            "name": "Tala Prattoy",
+            "slug": "tala-prattoy-durga-puja-art"
+          },
+          {
+            "name": "Dakshindari Youths",
+            "slug": "dakshindari-youth"
+          },
+          {
+            "name": "Dakshinpara",
+            "slug": "dakshinpara"
+          },
+          {
+            "name": "Tala Park",
+            "slug": "tala-park"
+          },
+          {
+            "name": "Belgachia Sadharan Durgatsab",
+            "slug": "belgachia-sadharan-durgatsab"
+          },
+          {
+            "name": "Dutta Bagan Adhibashibrinda Durgoutsav Committee",
+            "slug": "duttabagan"
+          },
+          {
+            "name": "Belgachia Yuba Sammilani",
+            "slug": "belgachiayuba-sammilani"
+          },
+          {
+            "name": "Patipukur Bidhan Pally Netaji Sangha",
+            "slug": "patipukur-bidhan-pally-netaji-sangha"
+          },
+          {
+            "name": "Campbagan Sadharan",
+            "slug": "campbagan-sadharan"
+          },
+          {
+            "name": "Paikpara Sarbojanin Durgatsav Samity",
+            "slug": "paikpara-sarbojanin-durgatsav-samity"
+          }
+        ]
+      },
+      {
+        "station": "Shyambazar",
+        "pandal_count": 30,
+        "pandals": [
+          {
+            "name": "Baghbazar 7 Pally Sarbojanin Durgotsav",
+            "slug": "baghbazar-7-pally-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Naba Baghbazar",
+            "slug": "naba-baghbazar"
+          },
+          {
+            "name": "Baghbazar Pally",
+            "slug": "baghbazar-pally"
+          },
+          {
+            "name": "Baghbazar Haldar Bari er Pujo",
+            "slug": "baghbazar-haldar-bari-er-pujo"
+          },
+          {
+            "name": "Baghbazar Sarbojonin Durgotsav",
+            "slug": "baghbazar-sarbojonin-durgotsav"
+          },
+          {
+            "name": "Bidhan Sarani Atlas Club",
+            "slug": "bidhan-sarani-atlas-club"
+          },
+          {
+            "name": "Friends Union (puja Committee)",
+            "slug": "friends-union-puja-committee"
+          },
+          {
+            "name": "Uttar Kalikata Sarbojanin Durgotsav Samity",
+            "slug": "uttar-kolkata-sarbojanin-durga-puja-birendra-mancha"
+          },
+          {
+            "name": "Shyam Square",
+            "slug": "shyam-square"
+          },
+          {
+            "name": "Shyampukur Adi Sarbojanin Durgotsab Comm",
+            "slug": "shyampukur-adi-sarbojanin-durgotsab-comm"
+          },
+          {
+            "name": "Mohan Bagan Barwari",
+            "slug": "mohan-bagan-barwari"
+          },
+          {
+            "name": "Shyambazar Nabin Sangha Sarbojanin Durgotsav",
+            "slug": "shyambazar-nabin-sangha-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Deshbandhu Park",
+            "slug": "deshbandhu-park"
+          },
+          {
+            "name": "Sikdar Bagan Sadharan Durgotsov",
+            "slug": "sikdar-bagan-sadharan-durgotsov"
+          },
+          {
+            "name": "Hatibagan Nabinpally Sarbojanin Durgotsav",
+            "slug": "hatibagan-nabinpally-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Raja Raj Ballav Street Sadanga Durgoutsav Samiti",
+            "slug": "raja-raj-ballav-street-sadanga-durgoutsav-samiti"
+          },
+          {
+            "name": "Sarkarbagan Adhibasibrinda",
+            "slug": "sarkarbagan-adhibasibrinda"
+          },
+          {
+            "name": "Hatibagan Nabin Pally",
+            "slug": "hatibagan-nabin-pally"
+          },
+          {
+            "name": "Nalin Sarkar Street",
+            "slug": "nalin-sarkar-street"
+          },
+          {
+            "name": "Jagat Mukherjee Park",
+            "slug": "jagat-mukherjee-park"
+          },
+          {
+            "name": "Belgachia Yuba Sammilani",
+            "slug": "belgachiayuba-sammilani"
+          },
+          {
+            "name": "Sovabazar 9 Pally Sarbojanin",
+            "slug": "sovabazar-9-pally-sarbojanin"
+          },
+          {
+            "name": "Sarkar Bagan Sammilita Sangha",
+            "slug": "sarkar-bagan-sammilita-sangha"
+          },
+          {
+            "name": "Sovabazar Rajbari",
+            "slug": "sovabazar-rajbari"
+          },
+          {
+            "name": "Tala Barowari",
+            "slug": "tala-barowari"
+          },
+          {
+            "name": "Sovabazar Rajbarir Durga Pujo",
+            "slug": "sovabazar-rajbarir-durga-pujo"
+          },
+          {
+            "name": "Hatibagan Sarbojonin",
+            "slug": "hatibagan-sarbojonin"
+          },
+          {
+            "name": "Bagbazar Sarbajanin",
+            "slug": "bagbazar-sarbajanin"
+          },
+          {
+            "name": "Tala Palli",
+            "slug": "tala-palli"
+          },
+          {
+            "name": "Satadal Sarbojanin Durgotsav",
+            "slug": "satadal"
+          }
+        ]
+      },
+      {
+        "station": "Shobhabazar Sutanuti",
+        "pandal_count": 45,
+        "pandals": [
+          {
+            "name": "Kumartuli Park",
+            "slug": "kumartuli-park"
+          },
+          {
+            "name": "Baghbazar Pally",
+            "slug": "baghbazar-pally"
+          },
+          {
+            "name": "Baghbazar Haldar Bari er Pujo",
+            "slug": "baghbazar-haldar-bari-er-pujo"
+          },
+          {
+            "name": "Hatkhola Dutta Bari",
+            "slug": "hatkhola-dutta-bari"
+          },
+          {
+            "name": "Sovabazar Rajbari",
+            "slug": "sovabazar-rajbari"
+          },
+          {
+            "name": "Sovabazar Rajbarir Durga Pujo",
+            "slug": "sovabazar-rajbarir-durga-pujo"
+          },
+          {
+            "name": "Satadal Sarbojanin Durgotsav",
+            "slug": "satadal"
+          },
+          {
+            "name": "Chatterjee Para Sunday Club (gobardanga)",
+            "slug": "chatterjee-para-sunday-club-gobardanga"
+          },
+          {
+            "name": "Maitry Sangha Durga Puja Committee",
+            "slug": "maitry-sangha-durga-puja-committee"
+          },
+          {
+            "name": "Sovabazar Sarbojanin",
+            "slug": "sovabazar-sarbojanin"
+          },
+          {
+            "name": "Bhar'der Thakur Bari",
+            "slug": "bharder-thakur-bari"
+          },
+          {
+            "name": "Sovabazar 9 Pally Sarbojanin",
+            "slug": "sovabazar-9-pally-sarbojanin"
+          },
+          {
+            "name": "Jagat Mukherjee Park",
+            "slug": "jagat-mukherjee-park"
+          },
+          {
+            "name": "Beniatola Sarbojonin Durgostsav",
+            "slug": "beniatola-sarbojonin-durgostsav"
+          },
+          {
+            "name": "Sovabazar Beniatola",
+            "slug": "sovabazar-beniatola"
+          },
+          {
+            "name": "Darjeepara Sarbojonin",
+            "slug": "darjeepara-sarbojonin"
+          },
+          {
+            "name": "Hatkhola Gosain Para",
+            "slug": "hatkhola-gosain-para"
+          },
+          {
+            "name": "Raja Raj Ballav Street Sadanga Durgoutsav Samiti",
+            "slug": "raja-raj-ballav-street-sadanga-durgoutsav-samiti"
+          },
+          {
+            "name": "Darjipara Mitra Bari",
+            "slug": "darjipara-mitra-bari"
+          },
+          {
+            "name": "Uttar Kalikata Sarbojanin Durgotsav Samity",
+            "slug": "uttar-kolkata-sarbojanin-durga-puja-birendra-mancha"
+          },
+          {
+            "name": "Kumartuli Sarbojanin",
+            "slug": "kumartuli-sarbojanin"
+          },
+          {
+            "name": "BK Paul Park Sarbojanin Durgotsav",
+            "slug": "bk-paul-park-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Kashi Bose Lane",
+            "slug": "kashi-bose-lane"
+          },
+          {
+            "name": "Shyampukur Adi Sarbojanin Durgotsab Comm",
+            "slug": "shyampukur-adi-sarbojanin-durgotsab-comm"
+          },
+          {
+            "name": "Chatu Babu & Latu Babu's Thakur Bari",
+            "slug": "chatu-babu-latu-babus-thakur-bari"
+          },
+          {
+            "name": "Mahalla Sarbojanin Durgautsab Samity",
+            "slug": "mahalla-sarbojanin-durgautsab-samity"
+          },
+          {
+            "name": "RAMDULAL NIBAS er Durga Pujo",
+            "slug": "ramdulal-nibas-er-durga-pujo"
+          },
+          {
+            "name": "Kumortuli Sarbojonin Durgotsab",
+            "slug": "kumortuli-sarbojonin-durgotsab"
+          },
+          {
+            "name": "Shyam Square",
+            "slug": "shyam-square"
+          },
+          {
+            "name": "Hari Ghosh Street Sarbojonin",
+            "slug": "hari-ghosh-street-sarbojonin"
+          },
+          {
+            "name": "Hatibagan Sarbojonin",
+            "slug": "hatibagan-sarbojonin"
+          },
+          {
+            "name": "Hatkhola Gosaipara Sarbojonin Durgotsab",
+            "slug": "hatkhola-gosaipara-sarbojonin-durgotsab"
+          },
+          {
+            "name": "Sikdar Bagan Sadharan Durgotsov",
+            "slug": "sikdar-bagan-sadharan-durgotsov"
+          },
+          {
+            "name": "Rabindra Kanan Sarbojanin Durgotsab",
+            "slug": "rabindra-kanan-sarbojanin-durgotsab"
+          },
+          {
+            "name": "20 Palli Sarbojanin Durgotsav",
+            "slug": "20-palli-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Ramdulal Sarkar Street",
+            "slug": "ramdulal-sarkar-street"
+          },
+          {
+            "name": "Ahiritola Sarbojanin Durgotsab",
+            "slug": "ahiritola"
+          },
+          {
+            "name": "Beadon Street Sarbojanin",
+            "slug": "beadon-street-sarbojanin"
+          },
+          {
+            "name": "Nalin Sarkar Street",
+            "slug": "nalin-sarkar-street"
+          },
+          {
+            "name": "Nimtala Sarbojanin Durgotsav",
+            "slug": "nimtala-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Ramesh Dutta Street Sarbojanin",
+            "slug": "ramesh-dutta-street-sarbojanin"
+          },
+          {
+            "name": "Hatibagan Nabin Pally",
+            "slug": "hatibagan-nabin-pally"
+          },
+          {
+            "name": "Mohan Bagan Barwari",
+            "slug": "mohan-bagan-barwari"
+          },
+          {
+            "name": "AHIRITOLA JUBAK BRINDA SARBOJONIN SARODOTSAB",
+            "slug": "ahiritola-jubak-brinda-sarbojonin-sarodotsab"
+          },
+          {
+            "name": "Bidhan Sarani Atlas Club",
+            "slug": "bidhan-sarani-atlas-club"
+          }
+        ]
+      },
+      {
+        "station": "Girish Park",
+        "pandal_count": 42,
+        "pandals": [
+          {
+            "name": "Jorasanko Daw Bari",
+            "slug": "jorasanko-daw-bari"
+          },
+          {
+            "name": "Chhatubabu Latubabu Bari",
+            "slug": "chhatubabu-latubabu-bari"
+          },
+          {
+            "name": "Dutta Bari Durga Pujo",
+            "slug": "dutta-bari-durga-pujo"
+          },
+          {
+            "name": "Tarun Sporting Club",
+            "slug": "tarun-sporting-club"
+          },
+          {
+            "name": "Ramdulal Sarkar Street",
+            "slug": "ramdulal-sarkar-street"
+          },
+          {
+            "name": "Hindu Mahasabha Sarbojanin Durgotsav",
+            "slug": "hindu-mahasabha-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Simla Byayam Samity",
+            "slug": "simla-byam-samity"
+          },
+          {
+            "name": "Ramesh Dutta Street Sarbojanin",
+            "slug": "ramesh-dutta-street-sarbojanin"
+          },
+          {
+            "name": "Jorasanko Shib Krishna Daw Bari",
+            "slug": "jorasanko-shib-krishna-daw-bari"
+          },
+          {
+            "name": "RAMDULAL NIBAS er Durga Pujo",
+            "slug": "ramdulal-nibas-er-durga-pujo"
+          },
+          {
+            "name": "Chatu Babu & Latu Babu's Thakur Bari",
+            "slug": "chatu-babu-latu-babus-thakur-bari"
+          },
+          {
+            "name": "Jorasanko 7 Palli Sarbojonin Durgotsav",
+            "slug": "jorasanko-7-palli-sarbojonin-durgotsav"
+          },
+          {
+            "name": "Amra Sabai Sarbojanin Durgotsav",
+            "slug": "amra-sabai-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Chorebagan Sarbojanin",
+            "slug": "chorbagan-sarbojanin"
+          },
+          {
+            "name": "Vivekananda Sporting Club Sarbojanin Durgotsav",
+            "slug": "vivekananda-sporting-club-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Simla Sporting Club Sarbojanin Durgotsav",
+            "slug": "simla-sporting-club-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Dorji Para Mitra Bari'r Pujo",
+            "slug": "dorji-para-mitra-barir-pujo"
+          },
+          {
+            "name": "Shimla Street",
+            "slug": "shimla-street"
+          },
+          {
+            "name": "Rabindra Kanan Sarbojanin Durgotsab",
+            "slug": "rabindra-kanan-sarbojanin-durgotsab"
+          },
+          {
+            "name": "Darjipara Mitra Bari",
+            "slug": "darjipara-mitra-bari"
+          },
+          {
+            "name": "Pathuriaghata Pancher Pally",
+            "slug": "pathuriaghata-pancher-pally"
+          },
+          {
+            "name": "Chorbagan Chatterjee Bari",
+            "slug": "chorbagan-chatterjee-bari"
+          },
+          {
+            "name": "Mahalla Sarbojanin Durgautsab Samity",
+            "slug": "mahalla-sarbojanin-durgautsab-samity"
+          },
+          {
+            "name": "Chorbagan Sil Thakurbari",
+            "slug": "chorbagan-sil-thakurbari"
+          },
+          {
+            "name": "Beadon Street Sarbojanin",
+            "slug": "beadon-street-sarbojanin"
+          },
+          {
+            "name": "Harakutir Ray-Banerjee Barir Durga Pujo",
+            "slug": "harakutir-ray-banerjee-barir-durga-pujo"
+          },
+          {
+            "name": "Maitry Sangha Durga Puja Committee",
+            "slug": "maitry-sangha-durga-puja-committee"
+          },
+          {
+            "name": "Hari Ghosh Street Sarbojonin",
+            "slug": "hari-ghosh-street-sarbojonin"
+          },
+          {
+            "name": "Hedua Park Durga Puja",
+            "slug": "hedua-park-durga-puja"
+          },
+          {
+            "name": "Nimtala Sarbojanin Durgotsav",
+            "slug": "nimtala-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Khelat Ghose er Durga Pujo",
+            "slug": "khelat-ghose-er-durga-pujo"
+          },
+          {
+            "name": "Mallick Bari (pathuriaghata/singha Bahini)",
+            "slug": "mallick-bari-pathuriaghata-singha-bahini"
+          },
+          {
+            "name": "Kailash Bose Street Sarbojanin Durgotsava",
+            "slug": "kailash-bose-street-sarbojanin-durgotsava"
+          },
+          {
+            "name": "Thonthonia Dutta Bari",
+            "slug": "thonthonia-dutta-bari"
+          },
+          {
+            "name": "Laha Bari",
+            "slug": "laha-bari"
+          },
+          {
+            "name": "Darjeepara Sarbojonin",
+            "slug": "darjeepara-sarbojonin"
+          },
+          {
+            "name": "Bhar'der Thakur Bari",
+            "slug": "bharder-thakur-bari"
+          },
+          {
+            "name": "Durga Puja of 4 Ghosh Lane",
+            "slug": "durga-puja-of-4-ghosh-lane"
+          },
+          {
+            "name": "Sammilita Malapara",
+            "slug": "sammilita-malapara"
+          },
+          {
+            "name": "Kashi Bose Lane",
+            "slug": "kashi-bose-lane"
+          },
+          {
+            "name": "20 Palli Sarbojanin Durgotsav",
+            "slug": "20-palli-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Machua Bazar Sarbojanik Durgapuja Samity",
+            "slug": "machua-bazar-sarbojanik-durgapuja-samity"
+          }
+        ]
+      },
+      {
+        "station": "Mahatma Gandhi Road",
+        "pandal_count": 29,
+        "pandals": [
+          {
+            "name": "College Square Sarbojanin Durgotsab Committee",
+            "slug": "college-square-sarbojanin-durgotsab-committee"
+          },
+          {
+            "name": "Chorbagan Chatterjee Bari",
+            "slug": "chorbagan-chatterjee-bari"
+          },
+          {
+            "name": "Dorji Para Mitra Bari'r Pujo",
+            "slug": "dorji-para-mitra-barir-pujo"
+          },
+          {
+            "name": "Machua Bazar Sarbojanik Durgapuja Samity",
+            "slug": "machua-bazar-sarbojanik-durgapuja-samity"
+          },
+          {
+            "name": "Chorbagan Sil Thakurbari",
+            "slug": "chorbagan-sil-thakurbari"
+          },
+          {
+            "name": "Jorasanko 7 Palli Sarbojonin Durgotsav",
+            "slug": "jorasanko-7-palli-sarbojonin-durgotsav"
+          },
+          {
+            "name": "Chorebagan Sarbojanin",
+            "slug": "chorbagan-sarbojanin"
+          },
+          {
+            "name": "Mohammad Ali Park",
+            "slug": "md-ali-park"
+          },
+          {
+            "name": "Thonthonia Dutta Bari",
+            "slug": "thonthonia-dutta-bari"
+          },
+          {
+            "name": "Laha Bari",
+            "slug": "laha-bari"
+          },
+          {
+            "name": "Hindu Mahasabha Sarbojanin Durgotsav",
+            "slug": "hindu-mahasabha-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Motilal Seal Bari",
+            "slug": "motilal-seal-bari"
+          },
+          {
+            "name": "Simla Byayam Samity",
+            "slug": "simla-byam-samity"
+          },
+          {
+            "name": "Badan Chand Roy Bari",
+            "slug": "badan-chand-roy-bari"
+          },
+          {
+            "name": "Jorasanko Shib Krishna Daw Bari",
+            "slug": "jorasanko-shib-krishna-daw-bari"
+          },
+          {
+            "name": "Shimla Street",
+            "slug": "shimla-street"
+          },
+          {
+            "name": "Jhamapukur Sadharan",
+            "slug": "jhamapukur-sadharan"
+          },
+          {
+            "name": "Jorasanko Daw Bari",
+            "slug": "jorasanko-daw-bari"
+          },
+          {
+            "name": "Chhatubabu Latubabu Bari",
+            "slug": "chhatubabu-latubabu-bari"
+          },
+          {
+            "name": "Tarun Sporting Club",
+            "slug": "tarun-sporting-club"
+          },
+          {
+            "name": "Young Men's Sporting Association",
+            "slug": "young-mens-sporting-association"
+          },
+          {
+            "name": "Simla Sporting Club Sarbojanin Durgotsav",
+            "slug": "simla-sporting-club-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Dutta Bari Durga Pujo",
+            "slug": "dutta-bari-durga-pujo"
+          },
+          {
+            "name": "Pallir Yubak Brinda",
+            "slug": "pallir-yubak-brinda"
+          },
+          {
+            "name": "Vivekananda Sporting Club Sarbojanin Durgotsav",
+            "slug": "vivekananda-sporting-club-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Kailash Bose Street Sarbojanin Durgotsava",
+            "slug": "kailash-bose-street-sarbojanin-durgotsava"
+          },
+          {
+            "name": "Young Blood Sarbojanin",
+            "slug": "young-blood-sarbojanin"
+          },
+          {
+            "name": "Purna Chandra Dhar Bari",
+            "slug": "purna-chandra-dhar-bari"
+          },
+          {
+            "name": "Nayer Pally Sealdah Sarbojanin Durga Puja",
+            "slug": "nayer-pally-sealdah-sarbojanin-durga-puja"
+          }
+        ]
+      },
+      {
+        "station": "Central",
+        "pandal_count": 13,
+        "pandals": [
+          {
+            "name": "College Square Sarbojanin Durgotsab Committee",
+            "slug": "college-square-sarbojanin-durgotsab-committee"
+          },
+          {
+            "name": "Subodh Mallick Square",
+            "slug": "subodh-mallick-square"
+          },
+          {
+            "name": "Kapalitola Sarbajanin",
+            "slug": "kapalitola-sarbajanin"
+          },
+          {
+            "name": "Purna Chandra Dhar Bari",
+            "slug": "purna-chandra-dhar-bari"
+          },
+          {
+            "name": "Motilal Seal Bari",
+            "slug": "motilal-seal-bari"
+          },
+          {
+            "name": "Badan Chand Roy Bari",
+            "slug": "badan-chand-roy-bari"
+          },
+          {
+            "name": "Mohammad Ali Park",
+            "slug": "md-ali-park"
+          },
+          {
+            "name": "Pataldanga Basu Mullick Family Durgapujo",
+            "slug": "pataldanga-basu-mullick-family-durgapujo"
+          },
+          {
+            "name": "Chandra Family's Durga Pujo",
+            "slug": "chandra-familys-durga-pujo"
+          },
+          {
+            "name": "Adhibasibrinda Kanaidhar Lane",
+            "slug": "adhibasibrinda-kanaidhar-lane"
+          },
+          {
+            "name": "Janbazar Rajbari",
+            "slug": "janbazar-rajbari"
+          },
+          {
+            "name": "Akrur Dutta Durga Puja",
+            "slug": "akrur-dutta-durga-puja"
+          },
+          {
+            "name": "Machua Bazar Sarbojanik Durgapuja Samity",
+            "slug": "machua-bazar-sarbojanik-durgapuja-samity"
+          }
+        ]
+      },
+      {
+        "station": "Chandni Chowk",
+        "pandal_count": 15,
+        "pandals": [
+          {
+            "name": "Janbazar Rajbari",
+            "slug": "janbazar-rajbari"
+          },
+          {
+            "name": "Kolkata Poura Karmachari Sarbojanin",
+            "slug": "poura-karmachari-sarbojanin"
+          },
+          {
+            "name": "Rani Rashmoni Thakur Bari",
+            "slug": "rani-rashmoni-thakur-bari"
+          },
+          {
+            "name": "Rani Rashmoni Kachari Bari",
+            "slug": "rani-rashmoni-kachari-bari"
+          },
+          {
+            "name": "Rani Rashmoni er Durga Pujo",
+            "slug": "rani-rashmoni-er-durga-pujo"
+          },
+          {
+            "name": "Wellington Nagarik Kalyan Committee Sarbojanin Durgotsav",
+            "slug": "wellington-nagarik-kalyan-committee-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Chandra Family's Durga Pujo",
+            "slug": "chandra-familys-durga-pujo"
+          },
+          {
+            "name": "New Market (54 Pally) Sarbajanin Durgotsav Parichalan Samity",
+            "slug": "new-market-54-pally-sarbajanin-durgotsav-parichalan-samity"
+          },
+          {
+            "name": "Rani Rashmoni Palace",
+            "slug": "rani-rashmoni-palace"
+          },
+          {
+            "name": "Akrur Dutta Durga Puja",
+            "slug": "akrur-dutta-durga-puja"
+          },
+          {
+            "name": "New Market Sarbojonin Sri Sri",
+            "slug": "new-market-sarbojonin-sri-sri"
+          },
+          {
+            "name": "Subodh Mallick Square",
+            "slug": "subodh-mallick-square"
+          },
+          {
+            "name": "Kapalitola Sarbajanin",
+            "slug": "kapalitola-sarbajanin"
+          },
+          {
+            "name": "Ramgopal Saha House Durga Pujo",
+            "slug": "ramgopal-saha-house-durga-pujo"
+          },
+          {
+            "name": "Purna Chandra Dhar Bari",
+            "slug": "purna-chandra-dhar-bari"
+          }
+        ]
+      },
+      {
+        "station": "Esplanade",
+        "pandal_count": 11,
+        "pandals": [
+          {
+            "name": "Kolkata Poura Karmachari Sarbojanin",
+            "slug": "poura-karmachari-sarbojanin"
+          },
+          {
+            "name": "New Market (54 Pally) Sarbajanin Durgotsav Parichalan Samity",
+            "slug": "new-market-54-pally-sarbajanin-durgotsav-parichalan-samity"
+          },
+          {
+            "name": "Janbazar Rajbari",
+            "slug": "janbazar-rajbari"
+          },
+          {
+            "name": "Rani Rashmoni Kachari Bari",
+            "slug": "rani-rashmoni-kachari-bari"
+          },
+          {
+            "name": "Rani Rashmoni er Durga Pujo",
+            "slug": "rani-rashmoni-er-durga-pujo"
+          },
+          {
+            "name": "Rani Rashmoni Thakur Bari",
+            "slug": "rani-rashmoni-thakur-bari"
+          },
+          {
+            "name": "Rani Rashmoni Palace",
+            "slug": "rani-rashmoni-palace"
+          },
+          {
+            "name": "New Market Sarbojonin Sri Sri",
+            "slug": "new-market-sarbojonin-sri-sri"
+          },
+          {
+            "name": "Wellington Nagarik Kalyan Committee Sarbojanin Durgotsav",
+            "slug": "wellington-nagarik-kalyan-committee-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Chandra Family's Durga Pujo",
+            "slug": "chandra-familys-durga-pujo"
+          },
+          {
+            "name": "Akrur Dutta Durga Puja",
+            "slug": "akrur-dutta-durga-puja"
+          }
+        ]
+      },
+      {
+        "station": "Park Street",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "New Market Sarbojonin Sri Sri",
+            "slug": "new-market-sarbojonin-sri-sri"
+          },
+          {
+            "name": "New Market (54 Pally) Sarbajanin Durgotsav Parichalan Samity",
+            "slug": "new-market-54-pally-sarbajanin-durgotsav-parichalan-samity"
+          }
+        ]
+      },
+      {
+        "station": "Rabindra Sadan",
+        "pandal_count": 4,
+        "pandals": [
+          {
+            "name": "Gokhale Sporting",
+            "slug": "gokhale-sporting"
+          },
+          {
+            "name": "Bhowanipur Sarbojanin Durgotsav",
+            "slug": "bhowanipur-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Ray Street Sarbojanin",
+            "slug": "ray-street-sarbojanin"
+          },
+          {
+            "name": "Mallick Bari (bhowanipore)",
+            "slug": "mallick-bari-bhowanipore"
+          }
+        ]
+      },
+      {
+        "station": "Netaji Bhavan",
+        "pandal_count": 30,
+        "pandals": [
+          {
+            "name": "Agradut Udaya Sangha",
+            "slug": "agradut-udaya-sangha"
+          },
+          {
+            "name": "22 Pally (Northern Park)",
+            "slug": "22-pally-northern-park"
+          },
+          {
+            "name": "75 Pally",
+            "slug": "75-pally"
+          },
+          {
+            "name": "Bhowanipur Swadhin Sangha",
+            "slug": "bhowanipur-swadhin-sangha"
+          },
+          {
+            "name": "Bhawanipur Kishor Sangha",
+            "slug": "bhawanipur-kishor-sangha"
+          },
+          {
+            "name": "Bhowanipur Sarbojanin Durgotsav",
+            "slug": "bhowanipur-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Mallick Bari (bhowanipore)",
+            "slug": "mallick-bari-bhowanipore"
+          },
+          {
+            "name": "Paddapukur Youth Association",
+            "slug": "paddapukur-youth-association"
+          },
+          {
+            "name": "76 Pally",
+            "slug": "76-pally"
+          },
+          {
+            "name": "Bhawanipore Mitra Bari",
+            "slug": "bhawanipore-mitra-bari"
+          },
+          {
+            "name": "Harish Park Puja",
+            "slug": "harish-park-puja"
+          },
+          {
+            "name": "Sanghamitra",
+            "slug": "sanghamitra"
+          },
+          {
+            "name": "Uday Sangha",
+            "slug": "uday-sangha"
+          },
+          {
+            "name": "Jagritee Durga Puja Bhowanipur",
+            "slug": "jagritee-durga-puja-bhowanipur"
+          },
+          {
+            "name": "Chakraberia Sarbojanin",
+            "slug": "chakraberia-sarbojanin"
+          },
+          {
+            "name": "68 Pally",
+            "slug": "68-pally"
+          },
+          {
+            "name": "Sanatan Dharmotsahini Sabha Bhowanipore",
+            "slug": "sanatan-dharmotsahini-sabha-bhowanipore"
+          },
+          {
+            "name": "Padmapukur Youth Association",
+            "slug": "padmapukur-youth-association"
+          },
+          {
+            "name": "Ray Street Sarbojanin",
+            "slug": "ray-street-sarbojanin"
+          },
+          {
+            "name": "Rupchand Mukherjee Lane Sarbojanin",
+            "slug": "rupchand-mukherjee-lane-sarbojanin"
+          },
+          {
+            "name": "Bhowanipur Muktadal",
+            "slug": "bhowanipur-muktadal"
+          },
+          {
+            "name": "Abasar Sarbojonin",
+            "slug": "abasar-sarbojonin"
+          },
+          {
+            "name": "64 Pally",
+            "slug": "64-pally"
+          },
+          {
+            "name": "Chandranath Chatterjee Street",
+            "slug": "chandranath-chatterjee-street"
+          },
+          {
+            "name": "Manoharpukur Youngs",
+            "slug": "manoharpukur-youngs"
+          },
+          {
+            "name": "Bakul Bagan Sarbojanin",
+            "slug": "bakul-bagan-sarbojanin"
+          },
+          {
+            "name": "Gokhale Sporting",
+            "slug": "gokhale-sporting"
+          },
+          {
+            "name": "Paddapukur Balak Sangha",
+            "slug": "paddapukur-balak-sangha"
+          },
+          {
+            "name": "Goal Math",
+            "slug": "goal-math"
+          },
+          {
+            "name": "Padmapukur Baroyari",
+            "slug": "padmapukur-baroyari"
+          }
+        ]
+      },
+      {
+        "station": "Jatin Das Park",
+        "pandal_count": 31,
+        "pandals": [
+          {
+            "name": "Matri Mandir",
+            "slug": "matri-mandir"
+          },
+          {
+            "name": "Chandranath Chatterjee Street",
+            "slug": "chandranath-chatterjee-street"
+          },
+          {
+            "name": "64 Pally",
+            "slug": "64-pally"
+          },
+          {
+            "name": "23 Pally",
+            "slug": "23-pally"
+          },
+          {
+            "name": "Manoharpukur Youngs",
+            "slug": "manoharpukur-youngs"
+          },
+          {
+            "name": "Bakul Bagan Sarbojanin",
+            "slug": "bakul-bagan-sarbojanin"
+          },
+          {
+            "name": "Forward Club",
+            "slug": "forward-club"
+          },
+          {
+            "name": "Sanghasree",
+            "slug": "sanghasree"
+          },
+          {
+            "name": "68 Pally",
+            "slug": "68-pally"
+          },
+          {
+            "name": "Rupchand Mukherjee Lane Sarbojanin",
+            "slug": "rupchand-mukherjee-lane-sarbojanin"
+          },
+          {
+            "name": "Goal Math",
+            "slug": "goal-math"
+          },
+          {
+            "name": "Shree Sangha",
+            "slug": "shree-sangha"
+          },
+          {
+            "name": "Abasar Sarbojonin",
+            "slug": "abasar-sarbojonin"
+          },
+          {
+            "name": "Bhowanipur Muktadal",
+            "slug": "bhowanipur-muktadal"
+          },
+          {
+            "name": "Beltala Road Shakti Sangha",
+            "slug": "beltala-road-shakti-sangha"
+          },
+          {
+            "name": "Kalighat Milan Sangha",
+            "slug": "kalighat-milan-sangha"
+          },
+          {
+            "name": "Bhowanipore Durgotsab",
+            "slug": "bhowanipore-durgotsab"
+          },
+          {
+            "name": "Sarat Bose Road",
+            "slug": "sarat-bose-road"
+          },
+          {
+            "name": "Jana Mangal Samiti",
+            "slug": "jana-mangal-samiti"
+          },
+          {
+            "name": "Moitri Sangha Durga Puja Pandel",
+            "slug": "moitri-sangha-durga-puja-pandel"
+          },
+          {
+            "name": "Lake Market Jubak Brinda",
+            "slug": "lake-market-jubak-brinda"
+          },
+          {
+            "name": "Dilip Smriti Sangha",
+            "slug": "dilip-smriti-sangha"
+          },
+          {
+            "name": "Sanatan Dharmotsahini Sabha Bhowanipore",
+            "slug": "sanatan-dharmotsahini-sabha-bhowanipore"
+          },
+          {
+            "name": "Badamtala Ashar Sangha",
+            "slug": "badamtala-ashar-sangha"
+          },
+          {
+            "name": "Harish Park Puja",
+            "slug": "harish-park-puja"
+          },
+          {
+            "name": "66 Palli",
+            "slug": "66-palli"
+          },
+          {
+            "name": "Durga Puja Pandal (manohar Pukur Rd)",
+            "slug": "durga-puja-pandal-manohar-pukur-rd"
+          },
+          {
+            "name": "Jagritee Durga Puja Bhowanipur",
+            "slug": "jagritee-durga-puja-bhowanipur"
+          },
+          {
+            "name": "Bhowanipur Swadhin Sangha",
+            "slug": "bhowanipur-swadhin-sangha"
+          },
+          {
+            "name": "Maddox Square",
+            "slug": "maddox-square"
+          },
+          {
+            "name": "Golden Arrow Club",
+            "slug": "golden-arrow-club"
+          }
+        ]
+      },
+      {
+        "station": "Kalighat",
+        "pandal_count": 26,
+        "pandals": [
+          {
+            "name": "Deshapriya Park",
+            "slug": "deshapriya-park"
+          },
+          {
+            "name": "Golden Arrow Club",
+            "slug": "golden-arrow-club"
+          },
+          {
+            "name": "Dilip Smriti Sangha",
+            "slug": "dilip-smriti-sangha"
+          },
+          {
+            "name": "Badamtala Ashar Sangha",
+            "slug": "badamtala-ashar-sangha"
+          },
+          {
+            "name": "Lake Market Jubak Brinda",
+            "slug": "lake-market-jubak-brinda"
+          },
+          {
+            "name": "Pratapaditya Road Tricone Park",
+            "slug": "pratapaditya-road-tricone-park"
+          },
+          {
+            "name": "66 Palli",
+            "slug": "66-palli"
+          },
+          {
+            "name": "Adi Lake Palli",
+            "slug": "adi-lake-palli"
+          },
+          {
+            "name": "Shree Sangha",
+            "slug": "shree-sangha"
+          },
+          {
+            "name": "Moitri Sangha Durga Puja Pandel",
+            "slug": "moitri-sangha-durga-puja-pandel"
+          },
+          {
+            "name": "The Bengal Boys Training Association",
+            "slug": "the-bengal-boys-training-association"
+          },
+          {
+            "name": "Sanghasree",
+            "slug": "sanghasree"
+          },
+          {
+            "name": "Nepal Bhattacharjee Street",
+            "slug": "nepal-bhattacharjee-street"
+          },
+          {
+            "name": "Bengal United Club",
+            "slug": "bengal-united-club"
+          },
+          {
+            "name": "Jana Mangal Samiti",
+            "slug": "jana-mangal-samiti"
+          },
+          {
+            "name": "Sebak Sangha",
+            "slug": "sebak-sangha"
+          },
+          {
+            "name": "Sarodiya Sammilani",
+            "slug": "sarodiya-sammilani"
+          },
+          {
+            "name": "Chelta Sarbasadharaner Club",
+            "slug": "chelta-sarbasadharaner-club"
+          },
+          {
+            "name": "Lake Youth Corner",
+            "slug": "lake-youth-corner"
+          },
+          {
+            "name": "Mudiali Club",
+            "slug": "mudiali-club"
+          },
+          {
+            "name": "Shibmandir Sarbojanin Durgotsab",
+            "slug": "shibmandir-sarbojanin-durgotsab"
+          },
+          {
+            "name": "Sarat Bose Road",
+            "slug": "sarat-bose-road"
+          },
+          {
+            "name": "Forward Club",
+            "slug": "forward-club"
+          },
+          {
+            "name": "Dakshin Kolkata Sarbojanin",
+            "slug": "dakshin-kolkata-sarbojanin"
+          },
+          {
+            "name": "Matri Mandir",
+            "slug": "matri-mandir"
+          },
+          {
+            "name": "Durga Puja Pandal (manohar Pukur Rd)",
+            "slug": "durga-puja-pandal-manohar-pukur-rd"
+          }
+        ]
+      },
+      {
+        "station": "Rabindra Sarobar",
+        "pandal_count": 13,
+        "pandals": [
+          {
+            "name": "Lake Pally Sarbojanin",
+            "slug": "lake-pally-sarbojanin"
+          },
+          {
+            "name": "Nabapalli Sangha",
+            "slug": "nabapalli-sangha"
+          },
+          {
+            "name": "Tollygunge Nagarik Sangsad Durga Puja Area",
+            "slug": "tollygunge-nagarik-sangsad-durga-puja-area"
+          },
+          {
+            "name": "Mudiali Club",
+            "slug": "mudiali-club"
+          },
+          {
+            "name": "Lake Youth Corner",
+            "slug": "lake-youth-corner"
+          },
+          {
+            "name": "Sebak Sangha",
+            "slug": "sebak-sangha"
+          },
+          {
+            "name": "Shibmandir Sarbojanin Durgotsab",
+            "slug": "shibmandir-sarbojanin-durgotsab"
+          },
+          {
+            "name": "Sarodiya Sammilani",
+            "slug": "sarodiya-sammilani"
+          },
+          {
+            "name": "Tollygunge Adi Durga Mancha",
+            "slug": "tollygunge-adi-durga-mancha"
+          },
+          {
+            "name": "Bengal United Club",
+            "slug": "bengal-united-club"
+          },
+          {
+            "name": "Pratapaditya Road Tricone Park",
+            "slug": "pratapaditya-road-tricone-park"
+          },
+          {
+            "name": "Hindusthan Pally Sarbojanin Durgotsav",
+            "slug": "hindusthan-pally-sarbojanin-durgotsav"
+          },
+          {
+            "name": "New Alipore Children's Park",
+            "slug": "new-alipore-childrens-park"
+          }
+        ]
+      },
+      {
+        "station": "Mahanayak Uttam Kumar",
+        "pandal_count": 4,
+        "pandals": [
+          {
+            "name": "Atlanta Club",
+            "slug": "atlanta-club"
+          },
+          {
+            "name": "Suktara Sangha",
+            "slug": "suktara-sangha"
+          },
+          {
+            "name": "Hindusthan Pally Sarbojanin Durgotsav",
+            "slug": "hindusthan-pally-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Tollygunge Adi Durga Mancha",
+            "slug": "tollygunge-adi-durga-mancha"
+          }
+        ]
+      },
+      {
+        "station": "Netaji",
+        "pandal_count": 10,
+        "pandals": [
+          {
+            "name": "Putiary Club",
+            "slug": "putiary-club"
+          },
+          {
+            "name": "Unnayani Sangha",
+            "slug": "unnayani-sangha"
+          },
+          {
+            "name": "Pally Unnayan Samity Paschim Putiary",
+            "slug": "pally-unnayan-samity-paschim-putiary"
+          },
+          {
+            "name": "Naskarpara Pally Unnayan Samity - Haridevpur",
+            "slug": "naskarpara-pally-unnayan-samity---haridevpur"
+          },
+          {
+            "name": "Purba Putiary Pragati Sangha",
+            "slug": "purba-putiary-pragati-sangha"
+          },
+          {
+            "name": "Tilak Nagar Sarbajanin Durgatsab Committee",
+            "slug": "tilak-nagar-sarbajanin-durgatsab-committee"
+          },
+          {
+            "name": "41 Pally",
+            "slug": "41-pally"
+          },
+          {
+            "name": "Judge Bagan Recreation Club",
+            "slug": "judge-bagan-recreation-club"
+          },
+          {
+            "name": "Haridevpur Apanjan Club",
+            "slug": "haridevpur-apanjan-club"
+          },
+          {
+            "name": "Ajeya Sanghati",
+            "slug": "ajeya-sanghati"
+          }
+        ]
+      },
+      {
+        "station": "Masterda Surya Sen",
+        "pandal_count": 9,
+        "pandals": [
+          {
+            "name": "Naktala Udayan Sangha",
+            "slug": "naktala-udayan-sangha-club"
+          },
+          {
+            "name": "Roynagar Unnayan Samity",
+            "slug": "roynagar-unnayan-samity"
+          },
+          {
+            "name": "Surya Nagar Sarbojanin",
+            "slug": "surya-nagar-sarbojanin"
+          },
+          {
+            "name": "Tala Pally Sadharan",
+            "slug": "tala-pally-sadharan"
+          },
+          {
+            "name": "Purba Kalikata Sarbojanin",
+            "slug": "purba-kalikata-sarbojanin"
+          },
+          {
+            "name": "Bansdroni Park Association",
+            "slug": "bansdroni-park-association"
+          },
+          {
+            "name": "Bhatrimilan Sangha",
+            "slug": "bhatrimilan-sangha"
+          },
+          {
+            "name": "Sree Guru Sangha",
+            "slug": "sree-guru-sangha"
+          },
+          {
+            "name": "Netaji Nagar Sarbojanin",
+            "slug": "netaji-nagar-sarbojanin"
+          }
+        ]
+      },
+      {
+        "station": "Gitanjali",
+        "pandal_count": 6,
+        "pandals": [
+          {
+            "name": "Naktala Udayan Sangha",
+            "slug": "naktala-udayan-sangha-club"
+          },
+          {
+            "name": "Baishnabghata Balak Samity",
+            "slug": "baishnabghata-balak-samity"
+          },
+          {
+            "name": "Madhya Bidhan Pally Sarbojonin Puja Mandap",
+            "slug": "madhya-bidhan-pally-sarbojonin-puja-mandap"
+          },
+          {
+            "name": "Sree Guru Sangha",
+            "slug": "sree-guru-sangha"
+          },
+          {
+            "name": "Jatra Suru Sangha",
+            "slug": "jatra-suru-sangha"
+          },
+          {
+            "name": "Tala Pally Sadharan",
+            "slug": "tala-pally-sadharan"
+          }
+        ]
+      },
+      {
+        "station": "Kavi Nazrul",
+        "pandal_count": 13,
+        "pandals": [
+          {
+            "name": "Kamdahari Purbapara",
+            "slug": "kamdahari-purbapara"
+          },
+          {
+            "name": "Tarun Sathi",
+            "slug": "tarun-sathi"
+          },
+          {
+            "name": "Garia Nabadurga",
+            "slug": "naba-durga"
+          },
+          {
+            "name": "Garia Sreerampur Kalyan Samity",
+            "slug": "garia-sreerampur-kalyan-samity"
+          },
+          {
+            "name": "Garia Pancha Durga",
+            "slug": "garia-pancha-durga"
+          },
+          {
+            "name": "Kanungo Park Recreation Club & Liabrary",
+            "slug": "kanungo-park-recreation-club-liabrary"
+          },
+          {
+            "name": "Kheyali Sangha",
+            "slug": "kheyali-sangha"
+          },
+          {
+            "name": "Garia Sabuj Dal",
+            "slug": "garia-sabuj-dal"
+          },
+          {
+            "name": "Dakshin Phalguni Club",
+            "slug": "dakshin-phalguni-club"
+          },
+          {
+            "name": "Subhashpally Sarbojonin",
+            "slug": "subhashpally-sarbojonin"
+          },
+          {
+            "name": "Jatra Suru Sangha",
+            "slug": "jatra-suru-sangha"
+          },
+          {
+            "name": "Baishnabghata Patuli Upanagari",
+            "slug": "baishnabghata-patuli-upanagari"
+          },
+          {
+            "name": "Kendua Shanti Sangha - Patuli",
+            "slug": "kendua-shanti-sangha---patuli"
+          }
+        ]
+      },
+      {
+        "station": "Shahid Khudiram",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "Patuli Sarbojanin",
+            "slug": "patuli-sarbojanin"
+          },
+          {
+            "name": "Balia Baishakhi Sangha",
+            "slug": "balia-baishakhi-sangha"
+          }
+        ]
+      },
+      {
+        "station": "Kavi Subhash",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Balia Baishakhi Sangha",
+            "slug": "balia-baishakhi-sangha"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "line": "Green Line",
+    "stations_count": 12,
+    "stations": [
+      {
+        "station": "Howrah Maidan",
+        "pandal_count": 6,
+        "pandals": [
+          {
+            "name": "Durga Puja Pandal (howrah-1, Hat Ln)",
+            "slug": "durga-puja-pandal-howrah-1-hat-ln"
+          },
+          {
+            "name": "Howrah Saraswati Club",
+            "slug": "howrah-saraswati-club"
+          },
+          {
+            "name": "Pagla Fouz",
+            "slug": "pagla-fouz"
+          },
+          {
+            "name": "Howrah Maidan Sarbojanin Durgotsab",
+            "slug": "howrah-maidan-sarbojanin-durgotsab"
+          },
+          {
+            "name": "Annapurna Club",
+            "slug": "annapurna-club"
+          },
+          {
+            "name": "Howrah Maidan Young Boys Club",
+            "slug": "howrah-maidan-young-boys-club"
+          }
+        ]
+      },
+      {
+        "station": "Howrah",
+        "pandal_count": 3,
+        "pandals": [
+          {
+            "name": "Howrah Maidan Mitra Mandir Durga Puja",
+            "slug": "howrah-maidan-mitra-mandir-durga-puja"
+          },
+          {
+            "name": "Ghas Bagan",
+            "slug": "ghas-bagan"
+          },
+          {
+            "name": "Durga Puja Pandal (howrah-1, Hat Ln)",
+            "slug": "durga-puja-pandal-howrah-1-hat-ln"
+          }
+        ]
+      },
+      {
+        "station": "Mahakaran",
+        "pandal_count": 5,
+        "pandals": [
+          {
+            "name": "Janbazar Rajbari",
+            "slug": "janbazar-rajbari"
+          },
+          {
+            "name": "Kolkata Poura Karmachari Sarbojanin",
+            "slug": "poura-karmachari-sarbojanin"
+          },
+          {
+            "name": "Purna Chandra Dhar Bari",
+            "slug": "purna-chandra-dhar-bari"
+          },
+          {
+            "name": "Subodh Mallick Square",
+            "slug": "subodh-mallick-square"
+          },
+          {
+            "name": "Kapalitola Sarbajanin",
+            "slug": "kapalitola-sarbajanin"
+          }
+        ]
+      },
+      {
+        "station": "Esplanade",
+        "pandal_count": 11,
+        "pandals": [
+          {
+            "name": "Kolkata Poura Karmachari Sarbojanin",
+            "slug": "poura-karmachari-sarbojanin"
+          },
+          {
+            "name": "New Market (54 Pally) Sarbajanin Durgotsav Parichalan Samity",
+            "slug": "new-market-54-pally-sarbajanin-durgotsav-parichalan-samity"
+          },
+          {
+            "name": "Janbazar Rajbari",
+            "slug": "janbazar-rajbari"
+          },
+          {
+            "name": "Rani Rashmoni Kachari Bari",
+            "slug": "rani-rashmoni-kachari-bari"
+          },
+          {
+            "name": "Rani Rashmoni er Durga Pujo",
+            "slug": "rani-rashmoni-er-durga-pujo"
+          },
+          {
+            "name": "Rani Rashmoni Thakur Bari",
+            "slug": "rani-rashmoni-thakur-bari"
+          },
+          {
+            "name": "Rani Rashmoni Palace",
+            "slug": "rani-rashmoni-palace"
+          },
+          {
+            "name": "New Market Sarbojonin Sri Sri",
+            "slug": "new-market-sarbojonin-sri-sri"
+          },
+          {
+            "name": "Wellington Nagarik Kalyan Committee Sarbojanin Durgotsav",
+            "slug": "wellington-nagarik-kalyan-committee-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Chandra Family's Durga Pujo",
+            "slug": "chandra-familys-durga-pujo"
+          },
+          {
+            "name": "Akrur Dutta Durga Puja",
+            "slug": "akrur-dutta-durga-puja"
+          }
+        ]
+      },
+      {
+        "station": "Sealdah",
+        "pandal_count": 8,
+        "pandals": [
+          {
+            "name": "Santosh Mitra Square",
+            "slug": "santosh-mitra-square"
+          },
+          {
+            "name": "Sealdah Railway Athletic Club",
+            "slug": "sealdah-railway-athletic-club"
+          },
+          {
+            "name": "Lal Building",
+            "slug": "lal-building"
+          },
+          {
+            "name": "Entally Kanthal Bagan Sarbojanin Saradiya Utsav Comm",
+            "slug": "entally-kanthal-bagan-sarbojanin-saradiya-utsav-comm"
+          },
+          {
+            "name": "Entally Sen Villa",
+            "slug": "entally-sen-villa"
+          },
+          {
+            "name": "Adhibasibrinda Kanaidhar Lane",
+            "slug": "adhibasibrinda-kanaidhar-lane"
+          },
+          {
+            "name": "37 Pally",
+            "slug": "37-pally"
+          },
+          {
+            "name": "37 Palli Sarbojanin Durgotsav",
+            "slug": "37-palli-sarbojanin-durgotsav"
+          }
+        ]
+      },
+      {
+        "station": "Phoolbagan",
+        "pandal_count": 4,
+        "pandals": [
+          {
+            "name": "Beliaghata 33 Pally",
+            "slug": "beliaghata-33-no-palli"
+          },
+          {
+            "name": "Beleghata Sarkar Bazar Vivekananda Sangha",
+            "slug": "beleghata-sarkar-bazar-vivekananda-sangha"
+          },
+          {
+            "name": "Avijit Club",
+            "slug": "avijit-club"
+          },
+          {
+            "name": "Kankurgachi Yubak Brinda",
+            "slug": "kankurgachi-yubak-brinda"
+          }
+        ]
+      },
+      {
+        "station": "Salt Lake Stadium",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "Purbachal Sarbojanin",
+            "slug": "purbachal-sarbojanin"
+          },
+          {
+            "name": "Salt Lake IA Block",
+            "slug": "salt-lake-ia-block"
+          }
+        ]
+      },
+      {
+        "station": "Bengal Chemical",
+        "pandal_count": 10,
+        "pandals": [
+          {
+            "name": "Kankurgachi Milan Mela Samity",
+            "slug": "kankurgachi-milan-mela-samity"
+          },
+          {
+            "name": "DA Block",
+            "slug": "da-block"
+          },
+          {
+            "name": "Swapnar Bagan",
+            "slug": "swapnar-bagan"
+          },
+          {
+            "name": "Salt Lake Laboni",
+            "slug": "salt-lake-laboni"
+          },
+          {
+            "name": "LABONY ESTATE",
+            "slug": "labony-estate"
+          },
+          {
+            "name": "Mitali Kankurghachi",
+            "slug": "mitali-kankurghachi"
+          },
+          {
+            "name": "Mitali - Kankurgachi",
+            "slug": "mitali---kankurgachi"
+          },
+          {
+            "name": "Salt Lake CA Block",
+            "slug": "ca-block"
+          },
+          {
+            "name": "DB Block",
+            "slug": "db-block"
+          },
+          {
+            "name": "FC Block",
+            "slug": "fc-block"
+          }
+        ]
+      },
+      {
+        "station": "City Centre",
+        "pandal_count": 19,
+        "pandals": [
+          {
+            "name": "Sreebhumi Sporting Club",
+            "slug": "sreebhumi-sporting-club"
+          },
+          {
+            "name": "BB Block",
+            "slug": "bb-block"
+          },
+          {
+            "name": "A B Block Abasik Sangha",
+            "slug": "b-block-abasik-sangha"
+          },
+          {
+            "name": "BC Block",
+            "slug": "bc-block"
+          },
+          {
+            "name": "AC Block",
+            "slug": "ac-block"
+          },
+          {
+            "name": "AB Block",
+            "slug": "ab-block"
+          },
+          {
+            "name": "CB Block",
+            "slug": "cb-block"
+          },
+          {
+            "name": "AA Block",
+            "slug": "aa-block"
+          },
+          {
+            "name": "BA Block",
+            "slug": "ba-block"
+          },
+          {
+            "name": "Salt Lake AD Block",
+            "slug": "salt-lake-ad-block"
+          },
+          {
+            "name": "Golaghata Sammelani",
+            "slug": "golaghata-sammelani"
+          },
+          {
+            "name": "Salt Lake CA Block",
+            "slug": "ca-block"
+          },
+          {
+            "name": "BD Block",
+            "slug": "bd-block"
+          },
+          {
+            "name": "Salkia 61 Pally Sarbojanin Durga Puja",
+            "slug": "salkia-61-pally-sarbojanin-durga-puja"
+          },
+          {
+            "name": "CD Block",
+            "slug": "cd-block"
+          },
+          {
+            "name": "Sangrami",
+            "slug": "sangrami"
+          },
+          {
+            "name": "DB Block",
+            "slug": "db-block"
+          },
+          {
+            "name": "Sreebhumi Durga Puja Pandal 7TH Lane",
+            "slug": "sreebhumi-durga-puja-pandal-7th-lane"
+          },
+          {
+            "name": "DA Block",
+            "slug": "da-block"
+          }
+        ]
+      },
+      {
+        "station": "Central Park",
+        "pandal_count": 11,
+        "pandals": [
+          {
+            "name": "CF Block Residents' Association",
+            "slug": "cf-block-residents-association"
+          },
+          {
+            "name": "CE Block",
+            "slug": "ce-block"
+          },
+          {
+            "name": "CG Block",
+            "slug": "cg-block"
+          },
+          {
+            "name": "Salt Lake BE Block - East Sarbojanin Durgotsav",
+            "slug": "salt-lake-be-block-east-sarbojanin-durgotsav"
+          },
+          {
+            "name": "CD Block",
+            "slug": "cd-block"
+          },
+          {
+            "name": "Salt Lake BE Block - Part 2",
+            "slug": "salt-lake-be-block---part-2"
+          },
+          {
+            "name": "Salt Lake CJ Block",
+            "slug": "salt-lake-cj-block"
+          },
+          {
+            "name": "Salt Lake FD Block",
+            "slug": "salt-lake-fd-block"
+          },
+          {
+            "name": "EC Market",
+            "slug": "ec-market"
+          },
+          {
+            "name": "BE Block",
+            "slug": "be-block"
+          },
+          {
+            "name": "Salt Lake BG Block",
+            "slug": "bg-block"
+          }
+        ]
+      },
+      {
+        "station": "Karunamoyee",
+        "pandal_count": 10,
+        "pandals": [
+          {
+            "name": "Salt Lake CJ Block",
+            "slug": "salt-lake-cj-block"
+          },
+          {
+            "name": "Karunamayee G Block",
+            "slug": "karunamayee-g-block"
+          },
+          {
+            "name": "CG Block",
+            "slug": "cg-block"
+          },
+          {
+            "name": "Salt Lake DL block",
+            "slug": "salt-lake-dl-block"
+          },
+          {
+            "name": "FE Block",
+            "slug": "fe-block"
+          },
+          {
+            "name": "Salt Lake CK-CL Block",
+            "slug": "salt-lake-ck-cl-block"
+          },
+          {
+            "name": "Salt Lake BJ Block",
+            "slug": "salt-lake-bj-block"
+          },
+          {
+            "name": "EE Block",
+            "slug": "ee-block"
+          },
+          {
+            "name": "BK Block",
+            "slug": "bk-block"
+          },
+          {
+            "name": "BH Block",
+            "slug": "bh-block"
+          }
+        ]
+      },
+      {
+        "station": "Salt Lake Sector V",
+        "pandal_count": 8,
+        "pandals": [
+          {
+            "name": "BL Block",
+            "slug": "bl-block"
+          },
+          {
+            "name": "Salt Lake CK-CL Block",
+            "slug": "salt-lake-ck-cl-block"
+          },
+          {
+            "name": "Salt Lake DL block",
+            "slug": "salt-lake-dl-block"
+          },
+          {
+            "name": "EE Block",
+            "slug": "ee-block"
+          },
+          {
+            "name": "AL Block",
+            "slug": "al-block"
+          },
+          {
+            "name": "BK Block",
+            "slug": "bk-block"
+          },
+          {
+            "name": "Karunamayee G Block",
+            "slug": "karunamayee-g-block"
+          },
+          {
+            "name": "AK Block",
+            "slug": "ak-block"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "line": "Purple Line",
+    "stations_count": 7,
+    "stations": [
+      {
+        "station": "Joka",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "Diamond Park Sarbojanin",
+            "slug": "diamond-park-sarbojanin"
+          },
+          {
+            "name": "Bratachari Gram Sarbojanin",
+            "slug": "bratachari-gram-sarbojanin"
+          }
+        ]
+      },
+      {
+        "station": "Thakurpukur",
+        "pandal_count": 3,
+        "pandals": [
+          {
+            "name": "Udayan Pally",
+            "slug": "udayan-pally"
+          },
+          {
+            "name": "State Bank Park Sarbojanin",
+            "slug": "sb-park-sarbojanin"
+          },
+          {
+            "name": "Sister Nivedita Multipurpose Society Durga Puja Mandap",
+            "slug": "sister-nivedita-multipurpose-society-durga-puja-mandap"
+          }
+        ]
+      },
+      {
+        "station": "Sakherbazar",
+        "pandal_count": 11,
+        "pandals": [
+          {
+            "name": "Barisha Tapoban",
+            "slug": "barisha-tapoban"
+          },
+          {
+            "name": "Barisha Sabuj Sathi Club",
+            "slug": "barisha-sabuj-sathi-club"
+          },
+          {
+            "name": "Saborna Roychoudhury Borobari Durga Puja Area",
+            "slug": "saborna-roychoudhury-borobari-durga-puja-area"
+          },
+          {
+            "name": "BARISHA SARBOJANIN DURGOTSAB",
+            "slug": "barisha-sarbojanin-durgotsab"
+          },
+          {
+            "name": "Bhola Maheshwartala Sarbojanin",
+            "slug": "bhola-maheshwartala-sarbojanin"
+          },
+          {
+            "name": "Roychoudhury Barir Durga Pujo",
+            "slug": "roychoudhury-barir-durga-pujo"
+          },
+          {
+            "name": "State Bank Park Sarbojanin",
+            "slug": "sb-park-sarbojanin"
+          },
+          {
+            "name": "Barisha Club, Srishti Sahajatri",
+            "slug": "barisha-club-srishti-sahajatri"
+          },
+          {
+            "name": "Barisha Tarun Tirtha",
+            "slug": "barisha-tarun-tirtha"
+          },
+          {
+            "name": "Sister Nivedita Multipurpose Society Durga Puja Mandap",
+            "slug": "sister-nivedita-multipurpose-society-durga-puja-mandap"
+          },
+          {
+            "name": "Udayan Pally",
+            "slug": "udayan-pally"
+          }
+        ]
+      },
+      {
+        "station": "Behala Chowrasta",
+        "pandal_count": 14,
+        "pandals": [
+          {
+            "name": "Nabalia Para United Club",
+            "slug": "nabalila-para-united-club"
+          },
+          {
+            "name": "Barisha Player's Corner",
+            "slug": "barisha-players-corner"
+          },
+          {
+            "name": "Behala Player's Corner",
+            "slug": "behala-players-corner"
+          },
+          {
+            "name": "Barisha Janakalyan Sangha",
+            "slug": "barisha-janakalyan-sangha"
+          },
+          {
+            "name": "Sabeda Bagan",
+            "slug": "sabeda-bagan"
+          },
+          {
+            "name": "Acharya Prafulla Sangha - Behala",
+            "slug": "acharya-prafulla-sangha---behala"
+          },
+          {
+            "name": "Barisha Netaji Sangha",
+            "slug": "barisha-netaji-sangha"
+          },
+          {
+            "name": "Barisha Club, Srishti Sahajatri",
+            "slug": "barisha-club-srishti-sahajatri"
+          },
+          {
+            "name": "Behala Arcadia Sarbojanin",
+            "slug": "behala-arcadia-sarbojanin"
+          },
+          {
+            "name": "Natunpara",
+            "slug": "natunpara"
+          },
+          {
+            "name": "Barisha Yubak Brinda",
+            "slug": "barisha-yubak-brinda"
+          },
+          {
+            "name": "Pragati Sangha",
+            "slug": "pragati-sangha"
+          },
+          {
+            "name": "Saborna Roychoudhury Borobari Durga Puja Area",
+            "slug": "saborna-roychoudhury-borobari-durga-puja-area"
+          },
+          {
+            "name": "Bhola Maheshwartala Sarbojanin",
+            "slug": "bhola-maheshwartala-sarbojanin"
+          }
+        ]
+      },
+      {
+        "station": "Behala Bazar",
+        "pandal_count": 18,
+        "pandals": [
+          {
+            "name": "Behala Trishakti Sangha",
+            "slug": "behala-trishakti-sangha"
+          },
+          {
+            "name": "Durgabari",
+            "slug": "durgabari"
+          },
+          {
+            "name": "Shree Sangha",
+            "slug": "shree-sangha-south-kolkata"
+          },
+          {
+            "name": "Sonar Durga Bari (Mukherjee Bari), Behala",
+            "slug": "sonar-durga-bari-behala"
+          },
+          {
+            "name": "Behala Sree Sangha",
+            "slug": "behala-sree-sangha"
+          },
+          {
+            "name": "Behala Nutan Dal",
+            "slug": "behala-nutan-dal"
+          },
+          {
+            "name": "Behala Friends Sarbojanin Durgotsav",
+            "slug": "behala-friends-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Debdaru Fatak",
+            "slug": "debdaru-fatak"
+          },
+          {
+            "name": "11 Pally Club",
+            "slug": "11-pally-club"
+          },
+          {
+            "name": "Bakshi Bagan Club",
+            "slug": "bakshi-bagan-club"
+          },
+          {
+            "name": "Pragati Sangha",
+            "slug": "pragati-sangha"
+          },
+          {
+            "name": "Behala Arcadia Sarbojanin",
+            "slug": "behala-arcadia-sarbojanin"
+          },
+          {
+            "name": "Tarun Matri Sevak Samity",
+            "slug": "tarun-matri-sevak-samity"
+          },
+          {
+            "name": "Mitra Sangha",
+            "slug": "mitra-sangha"
+          },
+          {
+            "name": "Mukul Sangha",
+            "slug": "mukul-sangha"
+          },
+          {
+            "name": "Aikya Sammilani",
+            "slug": "aikya-sammilani"
+          },
+          {
+            "name": "Agradut Club",
+            "slug": "agradut-club"
+          },
+          {
+            "name": "Behala Club",
+            "slug": "behala-club"
+          }
+        ]
+      },
+      {
+        "station": "Taratala",
+        "pandal_count": 18,
+        "pandals": [
+          {
+            "name": "Behala 29 Palli",
+            "slug": "behala-29-palli"
+          },
+          {
+            "name": "Pathakpara Balak Sangha",
+            "slug": "pathakpara-balak-sangha"
+          },
+          {
+            "name": "Jitendra Smriti Sangha",
+            "slug": "jitendra-smriti-sangha"
+          },
+          {
+            "name": "Durga Puja Pandal (taratala)",
+            "slug": "durga-puja-pandal-taratala"
+          },
+          {
+            "name": "Sahapur Sarbojanin Durgotsab (Palli Asar Sporting Club)",
+            "slug": "palli-asar-sporting-club"
+          },
+          {
+            "name": "Aikya Sammilani",
+            "slug": "aikya-sammilani"
+          },
+          {
+            "name": "Behala Youngmen's Association",
+            "slug": "behala-youngmens-association"
+          },
+          {
+            "name": "Sahapur Panchabatitala Sammilani Club",
+            "slug": "sahapur-panchabatitala-sammilani-club"
+          },
+          {
+            "name": "Debdaru Fatak",
+            "slug": "debdaru-fatak"
+          },
+          {
+            "name": "Tarun Matri Sevak Samity",
+            "slug": "tarun-matri-sevak-samity"
+          },
+          {
+            "name": "Behala Club",
+            "slug": "behala-club"
+          },
+          {
+            "name": "Behala Friends Sarbojanin Durgotsav",
+            "slug": "behala-friends-sarbojanin-durgotsav"
+          },
+          {
+            "name": "Behala Nutan Dal",
+            "slug": "behala-nutan-dal"
+          },
+          {
+            "name": "Nandana Yuva Sangha",
+            "slug": "nandana-yuva-sangha"
+          },
+          {
+            "name": "Mitra Sangha",
+            "slug": "mitra-sangha"
+          },
+          {
+            "name": "Sahapur Sarbojanin",
+            "slug": "sahapur-sarbojanin"
+          },
+          {
+            "name": "Mukul Sangha",
+            "slug": "mukul-sangha"
+          },
+          {
+            "name": "Naskarpur Sarbojanin",
+            "slug": "naskarpur-sarbojanin"
+          }
+        ]
+      },
+      {
+        "station": "Majerhat",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Durga Puja Pandal (taratala)",
+            "slug": "durga-puja-pandal-taratala"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "line": "Orange Line",
+    "stations_count": 9,
+    "stations": [
+      {
+        "station": "Kavi Subhash",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Balia Baishakhi Sangha",
+            "slug": "balia-baishakhi-sangha"
+          }
+        ]
+      },
+      {
+        "station": "Satyajit Ray",
+        "pandal_count": 4,
+        "pandals": [
+          {
+            "name": "Chotushkone Park Saradia Sammilani",
+            "slug": "chotushkone-park-saradia-sammilani"
+          },
+          {
+            "name": "Sarbodaya Sammilani",
+            "slug": "sarbodaya-sammilani"
+          },
+          {
+            "name": "Saraswat Sammilani",
+            "slug": "saraswat-sammilani"
+          },
+          {
+            "name": "Sarbojanin Durgoutsav Committee",
+            "slug": "sarbojanin-durgoutsav-committee"
+          }
+        ]
+      },
+      {
+        "station": "Jyotirindra Nandi",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "Mukundapur Sarbojanin",
+            "slug": "mukundapur-sarbojanin"
+          },
+          {
+            "name": "Sarbojanin Durgoutsav Committee",
+            "slug": "sarbojanin-durgoutsav-committee"
+          }
+        ]
+      },
+      {
+        "station": "Kavi Sukanta",
+        "pandal_count": 5,
+        "pandals": [
+          {
+            "name": "Greenwood Nook",
+            "slug": "greenwood-nook"
+          },
+          {
+            "name": "Madurdaha United Club",
+            "slug": "madurdaha-united-club"
+          },
+          {
+            "name": "Kalitala Sporting",
+            "slug": "kalitala-sporting"
+          },
+          {
+            "name": "Hossenpur Kishore Sangha",
+            "slug": "hossenpur-kishore-sangha"
+          },
+          {
+            "name": "Jagari Sangha",
+            "slug": "jagari-sangha"
+          }
+        ]
+      },
+      {
+        "station": "Hemanta Mukhopadhyay",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "East Kolkata Township Welfare Association",
+            "slug": "east-kolkata-township-welfare-association"
+          },
+          {
+            "name": "Hossenpur Kishore Sangha",
+            "slug": "hossenpur-kishore-sangha"
+          }
+        ]
+      },
+      {
+        "station": "VIP Bazar",
+        "pandal_count": 3,
+        "pandals": [
+          {
+            "name": "Tagore Park Sporting Club",
+            "slug": "tagore-park-sporting-club"
+          },
+          {
+            "name": "Milan Tirtha",
+            "slug": "milan-tirtha"
+          },
+          {
+            "name": "Uttar Panchanan Gram Milan",
+            "slug": "uttar-panchanan-gram-milan"
+          }
+        ]
+      },
+      {
+        "station": "Ritwik Ghatak",
+        "pandal_count": 2,
+        "pandals": [
+          {
+            "name": "Uttar Panchanan Gram Milan",
+            "slug": "uttar-panchanan-gram-milan"
+          },
+          {
+            "name": "Milan Tirtha",
+            "slug": "milan-tirtha"
+          }
+        ]
+      },
+      {
+        "station": "Barun Sengupta",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Gokhale Sporting",
+            "slug": "gokhale-sporting"
+          }
+        ]
+      },
+      {
+        "station": "Beleghata",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Metropolitan Durga Bari, Tangra",
+            "slug": "metropolitan-durga-bari-tangra"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "line": "Yellow Line",
+    "stations_count": 4,
+    "stations": [
+      {
+        "station": "Noapara",
+        "pandal_count": 3,
+        "pandals": [
+          {
+            "name": "Noapara Udayan Sangha",
+            "slug": "noapara-udayan-sangha"
+          },
+          {
+            "name": "Nawpara Dadabhai Sangha",
+            "slug": "nawpara-dadabhai-sangha"
+          },
+          {
+            "name": "Rangkol Mandal Para Yubak Brinda",
+            "slug": "rangkol-mandal-para-yubak-brinda"
+          }
+        ]
+      },
+      {
+        "station": "Dum Dum Cantonment",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Maitreyi Durga Puja Mandap",
+            "slug": "maitreyi-durga-puja-mandap"
+          }
+        ]
+      },
+      {
+        "station": "Jessore Road",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Hindusthan Volunteers",
+            "slug": "hindusthan-volunteers"
+          }
+        ]
+      },
+      {
+        "station": "Jai Hind",
+        "pandal_count": 1,
+        "pandals": [
+          {
+            "name": "Hindusthan Volunteers",
+            "slug": "hindusthan-volunteers"
+          }
+        ]
+      }
+    ]
+  }
+]

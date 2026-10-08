@@ -24,6 +24,8 @@ interface Props {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
   language: Language;
+  onClearFilter?: () => void;
+  onTrayExpandedChange?: (isExpanded: boolean) => void;
 }
 
 type FilterCategory = 'zones' | 'utilities';
@@ -32,18 +34,26 @@ export const NearbyFilterBar: React.FC<Props> = ({
   activeFilter,
   onFilterChange,
   language,
+  onClearFilter,
+  onTrayExpandedChange,
 }) => {
   const t = TRANSLATIONS[language];
   const [expandedCategory, setExpandedCategory] = useState<FilterCategory | null>(null);
   const trayRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    onTrayExpandedChange?.(Boolean(expandedCategory));
+  }, [expandedCategory, onTrayExpandedChange]);
+
   const isUtilityFilter = (filter: FilterType): boolean =>
     filter === 'police' ||
     filter === 'toilets' ||
     filter === 'food' ||
     filter === 'railway' ||
-    filter === 'ferry';
+    filter === 'ferry' ||
+    filter === 'hospital' ||
+    filter === 'parking';
 
   const isCurrentFilterUtility = isUtilityFilter(activeFilter);
 
@@ -64,9 +74,11 @@ export const NearbyFilterBar: React.FC<Props> = ({
   ];
 
   const utilityFilters: { id: FilterType; label: string; icon: React.ReactNode; shortLabel: string }[] = [
-    { id: 'food', label: t.filterFood || 'Food & Eateries', shortLabel: 'Food', icon: <Utensils className="w-3.5 h-3.5" /> },
     { id: 'toilets', label: t.filterToilets || 'Public Toilets', shortLabel: 'Toilets', icon: <Bath className="w-3.5 h-3.5" /> },
+    { id: 'hospital', label: 'Hospitals & Medical', shortLabel: 'Hospitals', icon: <span className="text-xs">🏥</span> },
     { id: 'police', label: t.filterPolice || 'Police & First Aid', shortLabel: 'Police', icon: <ShieldAlert className="w-3.5 h-3.5" /> },
+    { id: 'food', label: t.filterFood || 'Food & Eateries', shortLabel: 'Food', icon: <Utensils className="w-3.5 h-3.5" /> },
+    { id: 'parking', label: 'Puja Parking', shortLabel: 'Parking', icon: <span className="text-xs">🅿️</span> },
     { id: 'railway', label: t.filterRailway || 'Railway Terminals', shortLabel: 'Rail', icon: <Landmark className="w-3.5 h-3.5" /> },
     { id: 'ferry', label: t.filterFerry || 'Ferry Ghats', shortLabel: 'Ferry', icon: <Ship className="w-3.5 h-3.5" /> },
   ];
@@ -184,9 +196,26 @@ export const NearbyFilterBar: React.FC<Props> = ({
           <div className="flex items-center gap-1.5 truncate">
             <span className="shrink-0 text-sm">🏛️</span>
             <span className="truncate">Zones</span>
-            {!isCurrentFilterUtility && activeZonePill && (
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-bold text-[10px] border border-amber-400/30 truncate">
-                {activeZonePill.shortLabel}
+            {!isCurrentFilterUtility && activeZonePill && activeFilter !== 'all' && (
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-bold text-[10px] border border-amber-400/30 truncate">
+                <span>{activeZonePill.shortLabel}</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onClearFilter) {
+                      onClearFilter();
+                    } else {
+                      onFilterChange('all');
+                    }
+                  }}
+                  className="hover:text-white p-0.5 rounded-full hover:bg-amber-400/30 cursor-pointer"
+                  title="Clear zone filter"
+                  aria-label="Clear zone filter"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </span>
               </span>
             )}
           </div>
@@ -213,8 +242,25 @@ export const NearbyFilterBar: React.FC<Props> = ({
             <span className="shrink-0 text-sm">📍</span>
             <span className="truncate">Utilities</span>
             {isCurrentFilterUtility && activeUtilityPill && (
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-bold text-[10px] border border-amber-400/30 truncate">
-                {activeUtilityPill.shortLabel}
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 font-bold text-[10px] border border-amber-400/30 truncate">
+                <span>{activeUtilityPill.shortLabel}</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onClearFilter) {
+                      onClearFilter();
+                    } else {
+                      onFilterChange('all');
+                    }
+                  }}
+                  className="hover:text-white p-0.5 rounded-full hover:bg-amber-400/30 cursor-pointer"
+                  title="Clear utility filter"
+                  aria-label="Clear utility filter"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </span>
               </span>
             )}
           </div>

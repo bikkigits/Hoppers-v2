@@ -29,7 +29,6 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { OnboardingSplash } from './components/OnboardingSplash';
 import { PowerSaveProvider } from './context/PowerSaveContext';
 import { PowerSaveToast } from './components/PowerSaveToast';
-import { FilterProvider, useFilters } from './context/FilterContext';
 
 function AppContent() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('map');
@@ -237,24 +236,7 @@ function AppContent() {
     });
   };
 
-  const { setActiveUtility } = useFilters();
-
   const handleViewFacilityOnMap = (facility: FacilityPoint) => {
-    if (facility.category === 'hospital' || facility.category === 'medical') {
-      setActiveUtility('hospital');
-    } else if (facility.category === 'toilets') {
-      setActiveUtility('toilets');
-    } else if (facility.category === 'food' || facility.category === 'restaurant') {
-      setActiveUtility('food');
-    } else if (facility.category === 'police' || facility.category === 'helpdesk') {
-      setActiveUtility('police');
-    } else if (facility.category === 'parking') {
-      setActiveUtility('parking');
-    } else if (facility.category === 'railway') {
-      setActiveUtility('railway');
-    } else if (facility.category === 'ferry') {
-      setActiveUtility('ferry');
-    }
     setSelectedItem(facility);
     setCurrentTab('map');
   };
@@ -307,51 +289,48 @@ function AppContent() {
 
       {/* Main Content Area based on Tab */}
       <main className="flex-1 relative w-full h-[calc(100dvh-var(--top-header-height))] overflow-hidden">
-        <div
-          className={`relative w-full h-full ${
-            currentTab === 'map' || currentTab === 'metro' ? 'block' : 'hidden'
-          }`}
-        >
-          <MapView
-            language={language}
-            onSelectPandal={(pandal) => setSelectedItem(pandal)}
-            onSelectFacility={(facility) => setSelectedItem(facility)}
-            onSelectStation={(station) => setSelectedItem(station)}
-            userCoords={userCoords}
-            onUserCoordsChange={setUserCoords}
-            visitedList={visitedList}
-            activeWalkRoute={activeWalkRoute}
-            onClearWalkRoute={() => setActiveWalkRoute(null)}
-            activeMetroRoute={activeMetroRoute}
-            onClearMetroRoute={() => setActiveMetroRoute(null)}
-            activeBusDiversion={activeBusDiversion}
-            onClearBusDiversion={() => setActiveBusDiversion(null)}
-            trailStops={trailStops}
-            onOpenTrailBuilder={() => setIsTrailBuilderOpen(true)}
-            onOpenSuggestPandal={() => setIsSuggestModalOpen(true)}
-            suggestedPandals={suggestedPandals}
-            selectedItem={selectedItem}
-            isActiveTab={currentTab === 'map' || currentTab === 'metro'}
-          />
+        {(currentTab === 'map' || currentTab === 'metro') && (
+          <div className="relative w-full h-full">
+            <MapView
+              language={language}
+              onSelectPandal={(pandal) => setSelectedItem(pandal)}
+              onSelectFacility={(facility) => setSelectedItem(facility)}
+              onSelectStation={(station) => setSelectedItem(station)}
+              userCoords={userCoords}
+              onUserCoordsChange={setUserCoords}
+              visitedList={visitedList}
+              activeWalkRoute={activeWalkRoute}
+              onClearWalkRoute={() => setActiveWalkRoute(null)}
+              activeMetroRoute={activeMetroRoute}
+              onClearMetroRoute={() => setActiveMetroRoute(null)}
+              activeBusDiversion={activeBusDiversion}
+              onClearBusDiversion={() => setActiveBusDiversion(null)}
+              trailStops={trailStops}
+              onOpenTrailBuilder={() => setIsTrailBuilderOpen(true)}
+              onOpenSuggestPandal={() => setIsSuggestModalOpen(true)}
+              suggestedPandals={suggestedPandals}
+              selectedItem={selectedItem}
+            />
 
-          {/* Metro Router Overlay above the map */}
-          {currentTab === 'metro' && (
-            <div className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center p-3 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
-              <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto"
-                onClick={() => setCurrentTab('map')}
-              />
-              <MetroRouterView
-                language={language}
-                onSelectPandal={(pandal) => setSelectedItem(pandal)}
-                onRouteCalculated={setActiveMetroRoute}
-                isOverlay={true}
-                onCloseOverlay={() => setCurrentTab('map')}
-                onViewOnMap={() => setCurrentTab('map')}
-              />
-            </div>
-          )}
-        </div>
+            {/* Metro Router Overlay above the map */}
+            {currentTab === 'metro' && (
+              <div className="fixed inset-0 z-30 pointer-events-none flex items-center justify-center p-3 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+                <div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto"
+                  onClick={() => setCurrentTab('map')}
+                />
+                <MetroRouterView
+                  language={language}
+                  onSelectPandal={(pandal) => setSelectedItem(pandal)}
+                  onRouteCalculated={setActiveMetroRoute}
+                  isOverlay={true}
+                  onCloseOverlay={() => setCurrentTab('map')}
+                  onViewOnMap={() => setCurrentTab('map')}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {currentTab === 'directory' && (
           <DirectoryView
@@ -465,9 +444,7 @@ function AppContent() {
 export function App() {
   return (
     <PowerSaveProvider>
-      <FilterProvider>
-        <AppContent />
-      </FilterProvider>
+      <AppContent />
     </PowerSaveProvider>
   );
 }

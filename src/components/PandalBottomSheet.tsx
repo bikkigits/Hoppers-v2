@@ -37,8 +37,6 @@ import {
   HeartPulse,
   Droplets,
   ExternalLink,
-  ChevronUp,
-  ChevronDown,
 } from 'lucide-react';
 import {
   subscribePandalCrowd,
@@ -97,16 +95,6 @@ export const PandalBottomSheet: React.FC<Props> = ({
   );
   const [reportingStatus, setReportingStatus] = useState<string | null>(null);
   const [isSubmittingCrowd, setIsSubmittingCrowd] = useState(false);
-
-  // Tri-State Bottom Sheet: 'peek' (144px compact bar) | 'half' (46vh) | 'full' (84vh)
-  const [sheetState, setSheetState] = useState<'peek' | 'half' | 'full'>('peek');
-
-  // Reset to non-blocking 'peek' whenever a new item is tapped so the 500m Live Lock circle is visible
-  useEffect(() => {
-    if (selectedItem) {
-      setSheetState('peek');
-    }
-  }, [selectedItem]);
 
   useEffect(() => {
     if (!pandal) return;
@@ -409,113 +397,34 @@ export const PandalBottomSheet: React.FC<Props> = ({
   return (
     <div
       id="pandal-bottom-sheet-overlay"
-      className="fixed inset-x-0 bottom-0 z-40 flex items-end justify-center pointer-events-none pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+6px)]"
+      className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none"
     >
-      {/* Non-blocking Tri-State Bottom Sheet (Peek, Half, Full) without a solid blackout backdrop */}
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-xs pointer-events-auto transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Sheet Content */}
       <div
         id="pandal-bottom-sheet"
-        className={`relative w-full max-w-lg transition-all duration-300 ease-out pointer-events-auto bg-[#080B11]/98 backdrop-blur-2xl border-t border-[#1E2640] shadow-2xl rounded-t-3xl text-slate-100 flex flex-col ${
-          sheetState === 'peek'
-            ? 'h-[148px] max-h-[148px] overflow-hidden p-3.5'
-            : sheetState === 'half'
-            ? 'h-[48vh] max-h-[48vh] overflow-y-auto overscroll-y-contain p-4 pb-10'
-            : 'h-[85vh] max-h-[85vh] overflow-y-auto overscroll-y-contain p-4 pb-14'
-        }`}
+        className="relative w-full max-w-lg max-h-[88dvh] overflow-y-auto overscroll-y-contain pointer-events-auto bg-[#080B11]/98 backdrop-blur-2xl border-t border-[#1E2640] shadow-2xl rounded-t-3xl p-5 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+28px)] text-slate-100 animate-slide-up"
       >
-        {/* Drag Handle Bar & Tri-State Toggle */}
-        <div
-          onClick={() => {
-            setSheetState((prev) => (prev === 'peek' ? 'half' : prev === 'half' ? 'full' : 'peek'));
-          }}
-          className="w-full pt-0.5 pb-2 flex flex-col items-center justify-center cursor-pointer select-none group"
-        >
-          <div className="w-12 h-1 bg-slate-600/80 group-hover:bg-amber-400 rounded-full transition-colors" />
-          <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400 font-medium">
-            <span className={sheetState === 'peek' ? 'text-amber-400 font-bold' : ''}>Peek</span>
-            <span>•</span>
-            <span className={sheetState === 'half' ? 'text-amber-400 font-bold' : ''}>Half</span>
-            <span>•</span>
-            <span className={sheetState === 'full' ? 'text-amber-400 font-bold' : ''}>Full</span>
-            {sheetState === 'peek' ? (
-              <ChevronUp className="w-3 h-3 text-amber-400 ml-0.5" />
-            ) : sheetState === 'half' ? (
-              <ChevronUp className="w-3 h-3 text-slate-400 ml-0.5" />
-            ) : (
-              <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
-            )}
-          </div>
-        </div>
+        {/* Drag Handle Bar */}
+        <div className="w-12 h-1 bg-slate-700/80 rounded-full mx-auto mb-4" />
 
         {/* Close Button */}
         <button
           id="close-sheet-btn"
           onClick={onClose}
-          className="absolute top-2.5 right-3 p-1.5 rounded-full text-slate-400 hover:text-white bg-[#121826] hover:bg-[#1E2640] border border-[#1E2640] transition z-10"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white bg-[#121826] hover:bg-[#1E2640] border border-[#1E2640] transition"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* 1. PANDAL DETAIL VIEW */}
-        {isPandal && pandal && sheetState === 'peek' && (
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2 pr-8">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap mb-0.5 text-xs text-slate-400">
-                  <span className="font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 text-[10px]">
-                    {pandal.zone}
-                  </span>
-                  <CrowdStatusBadge
-                    crowdLevel={crowdRecord?.dominantLevel || pandal.crowdLevel}
-                    language={language}
-                    isCrowdsourced={crowdRecord?.isCrowdsourced}
-                  />
-                  {distanceStr && (
-                    <span className="text-[10px] text-slate-400">
-                      • {distanceStr} (~{walkMin}m walk)
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-base font-bold text-white tracking-tight truncate">
-                  {pandal.name[language] || pandal.name.en}
-                </h2>
-              </div>
-            </div>
-
-            {/* Quick Actions Row in Peek Mode */}
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => setSheetState('half')}
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-amber-300 font-bold text-xs border border-amber-400/30 flex items-center justify-center gap-1 active:scale-95 transition"
-              >
-                <span>Details & Transit</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-              {onPlanRoute && (
-                <button
-                  onClick={handlePlanRoute}
-                  className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
-                >
-                  <Navigation className="w-3.5 h-3.5" />
-                  <span>Route</span>
-                </button>
-              )}
-              <button
-                onClick={handleMarkVisited}
-                className={`py-1.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition ${
-                  isVisited
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-800 text-slate-300 hover:text-white'
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{isVisited ? 'Visited' : 'Check-in'}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isPandal && pandal && sheetState !== 'peek' && (
+        {isPandal && pandal && (
           <div className="space-y-4">
             {/* Header: Name & Zone */}
             <div className="pr-8">
@@ -962,42 +871,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
         )}
 
         {/* 2. METRO STATION DETAIL VIEW */}
-        {isStation && station && sheetState === 'peek' && (
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2 pr-8">
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5 inline-block">
-                  METRO STATION
-                </span>
-                <h2 className="text-base font-bold text-white tracking-tight truncate">
-                  {station.name[language] || station.name.en}
-                </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  🚇 {feederPandals.length} connecting pandals
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => setSheetState('half')}
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center gap-1 active:scale-95 transition"
-              >
-                <span>Exit Gates & Pandals</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={openGoogleMaps}
-                className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>Directions</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isStation && station && sheetState !== 'peek' && (
+        {isStation && station && (
           <div id="metro-station-sheet-content" className="space-y-4">
             {/* Header: Station Name & Line Badges */}
             <div className="pr-8">
@@ -1181,44 +1055,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
         )}
 
         {/* 3. FACILITY DETAIL VIEW */}
-        {isFacility && facility && sheetState === 'peek' && (
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2 pr-8">
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5 inline-block">
-                  {facility.category.toUpperCase()}
-                </span>
-                <h2 className="text-base font-bold text-white tracking-tight truncate">
-                  {facility.name[language] || facility.name.en}
-                </h2>
-                {distanceStr && (
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    📍 {distanceStr} away (~{walkMin}m walk)
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => setSheetState('half')}
-                className="flex-1 py-1.5 px-2.5 rounded-xl bg-[#121826] hover:bg-[#1E2640] text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center gap-1 active:scale-95 transition"
-              >
-                <span>Facility Details</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={openGoogleMaps}
-                className="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition shadow-xs"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>{t.takeMeThere}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isFacility && facility && sheetState !== 'peek' && (
+        {isFacility && facility && (
           <div className="space-y-4">
             <div className="pr-8">
               <span className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider mb-1 inline-block">

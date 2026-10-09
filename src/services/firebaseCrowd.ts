@@ -303,14 +303,25 @@ export async function submitCrowdVote(
   };
 }
 
+export async function reportCrowdUpdate(
+  pandalId: string,
+  level: CrowdLevel
+): Promise<{ success: boolean; message: string; record: PandalCrowdRecord; remainingMinutes?: number }> {
+  const category = (level.toLowerCase() as VoteCategory) || 'moderate';
+  return submitCrowdVote(pandalId, category, level);
+}
+
 /**
  * Subscribe in real-time to a specific pandal's crowd voting updates
  */
 export function subscribePandalCrowd(
   pandalId: string,
-  defaultLevel: CrowdLevel,
-  onUpdate: (record: PandalCrowdRecord) => void
+  arg2: CrowdLevel | ((record: PandalCrowdRecord) => void),
+  arg3?: (record: PandalCrowdRecord) => void
 ): () => void {
+  const defaultLevel: CrowdLevel = typeof arg2 === 'string' ? arg2 : 'Moderate';
+  const onUpdate: (record: PandalCrowdRecord) => void = typeof arg2 === 'function' ? arg2 : (arg3 || (() => {}));
+
   // Immediately emit current cached record
   onUpdate(getPandalConsensus(pandalId, defaultLevel));
 

@@ -9,6 +9,23 @@ try {
 } catch {
   // Ignore fallback if already set
 }
+
+// Check maplibregl.supported() safely across environments
+function checkMapLibreSupported(): boolean {
+  try {
+    if (typeof (maplibregl as any).supported === 'function') {
+      return (maplibregl as any).supported();
+    }
+    if (typeof window === 'undefined') return true;
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch {
+    return false;
+  }
+}
 import {
   Pandal,
   FacilityPoint,
@@ -46,6 +63,7 @@ import {
   PandalCrowdRecord,
 } from '../services/firebaseCrowd';
 import { usePowerSave } from '../context/PowerSaveContext';
+import { useFilter } from '../context/FilterContext';
 import { NearbyFilterBar } from './NearbyFilterBar';
 import { MetroLegend } from './MetroLegend';
 import { matchesPandalFilter } from '../utils/pandalClassification';
@@ -191,7 +209,7 @@ export const MapView: React.FC<Props> = ({
   const throttledCoords = useThrottledLocation(userCoords, 50, null);
 
   const prevNonMetroFilterRef = useRef<FilterType>('all');
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const { activeFilter, setActiveFilter } = useFilter();
   const { isPowerSaveMode } = usePowerSave();
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
@@ -414,17 +432,22 @@ export const MapView: React.FC<Props> = ({
     const withDist = pool.map((facility) => {
       const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
       const distM = distKm * 1000;
-      return { facility, distKm, distM };
+      return { facility, distKm, distM, isLocked: distM <= 500 };
     });
 
     withDist.sort((a, b) => a.distM - b.distM);
 
-    // Strictly enforce 500m Live Lock radius
-    const within500m = withDist.filter((item) => item.distM <= 500);
-    // If none within 500m in suburban areas, show closest 3 up to 1500m
-    const finalSelection = within500m.length > 0 ? within500m.slice(0, 30) : withDist.filter((i) => i.distM <= 1500).slice(0, 5);
+    // Expand search area to 3000m (3km), strictly cap to nearest 100 items (.slice(0, 100))
+    // Keep isLocked boolean for highlighting, but do not discard items based on it
+    const within3000m = withDist.filter((item) => item.distM <= 3000);
+    const finalSelection = within3000m.length > 0
+      ? within3000m.slice(0, 100)
+      : withDist.slice(0, 100);
 
-    return finalSelection.map((item) => item.facility);
+    return finalSelection.map((item) => ({
+      ...item.facility,
+      isLocked: item.isLocked,
+    }));
   }, [isUtilityActive, poiFeatures, activeFilter, liveLockReferenceCoords, transitHubFacilities]);
 
   // Proximity Summary for Active Utility Filter
@@ -556,8 +579,14 @@ export const MapView: React.FC<Props> = ({
     suggestedPandals,
   ]);
 
+  // WebGL Availability Check
+  const isWebGlSupported = useMemo(() => {
+    return checkMapLibreSupported();
+  }, []);
+
   // Initialize MapLibre GL Map
   useEffect(() => {
+    if (!checkMapLibreSupported()) return;
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
@@ -571,8 +600,13 @@ export const MapView: React.FC<Props> = ({
       attributionControl: false,
     });
 
+    map.on('style.load', () => {
+      map.resize();
+    });
+
     map.on('load', () => {
       isMapLoadedRef.current = true;
+      map.resize();
 
       // 0. Water Layer Override to Deep Blue/Cyan (#061B2E) for River Hooghly
       const setWaterPaint = () => {
@@ -661,26 +695,6 @@ export const MapView: React.FC<Props> = ({
         },
       });
 
-      map.addLayer({
-        id: 'bus-stops-label',
-        type: 'symbol',
-        source: 'bus-network',
-        filter: ['==', ['get', 'category'], 'bus_stop'],
-        minzoom: 15.5,
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 9,
-          'text-offset': [0, 1.2],
-          'text-anchor': 'top',
-          'text-optional': true,
-        },
-        paint: {
-          'text-color': '#E0F2FE',
-          'text-halo-color': '#080B11',
-          'text-halo-width': 1.5,
-        },
-      });
-
       // 0.3 Civic Utilities & Parking POIs (The Survival Layer - Separate from Pandals, Unclustered)
       map.addSource('civic-pois', {
         type: 'geojson',
@@ -733,24 +747,6 @@ export const MapView: React.FC<Props> = ({
           'circle-stroke-width': 2,
           'circle-stroke-color': '#FFFFFF',
           'circle-opacity': 0.95,
-        },
-      });
-
-      map.addLayer({
-        id: 'civic-pois-label',
-        type: 'symbol',
-        source: 'civic-pois',
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 10,
-          'text-offset': [0, 1.4],
-          'text-anchor': 'top',
-          'text-optional': true,
-        },
-        paint: {
-          'text-color': '#F8FAFC',
-          'text-halo-color': '#020617',
-          'text-halo-width': 2,
         },
       });
 
@@ -1431,14 +1427,9 @@ export const MapView: React.FC<Props> = ({
     const refLng = liveLockReferenceCoords.lng;
 
     activePoiFacilities.forEach((facility) => {
-      const distKm = calculateDistanceKm(refLat, refLng, facility.lat, facility.lng);
-      const distM = distKm * 1000;
-      const displayName = facility.name[language] || facility.name.en;
-      const distanceShort = distM < 1000 ? `${Math.round(distM)}m` : `${distKm.toFixed(1)} km`;
-
       let iconEmoji = '📍';
       let iconBg = '#3B82F6';
-      if (facility.category === 'police') {
+      if (facility.category === 'police' || facility.category === 'helpdesk') {
         iconEmoji = '🛡️';
         iconBg = '#EF4444';
       } else if (facility.category === 'toilets') {
@@ -1459,33 +1450,34 @@ export const MapView: React.FC<Props> = ({
       } else if (facility.category === 'hospital' || facility.category === 'medical') {
         iconEmoji = '🏥';
         iconBg = '#EC4899';
+      } else if (facility.category === 'atm') {
+        iconEmoji = '🏧';
+        iconBg = '#10B981';
       }
 
+      const isLocked = (facility as any).isLocked;
+
       const el = document.createElement('div');
-      el.className = 'cursor-pointer select-none';
+      el.className = 'cursor-pointer select-none transition-transform hover:scale-125';
       el.innerHTML = `
         <div style="
+          width: 32px;
+          height: 32px;
           display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 4px 8px;
-          background: rgba(15, 23, 42, 0.95);
-          border: 1.5px solid ${iconBg};
-          border-radius: 9999px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-          font-family: system-ui, sans-serif;
+          justify-content: center;
+          background: rgba(15, 23, 42, 0.92);
+          border: ${isLocked ? '2px solid #FBBF24' : `1.5px solid ${iconBg}`};
+          border-radius: 50%;
+          box-shadow: ${isLocked ? '0 0 12px rgba(251, 191, 36, 0.5), 0 4px 10px rgba(0,0,0,0.8)' : '0 4px 10px rgba(0,0,0,0.8)'};
+          font-size: 16px;
+          line-height: 1;
         ">
-          <span style="font-size: 13px;">${iconEmoji}</span>
-          <span style="font-size: 10px; font-weight: 800; color: #FFFFFF; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${displayName}
-          </span>
-          <span style="font-size: 9px; font-weight: 800; background: ${iconBg}; color: #FFFFFF; padding: 1px 4px; border-radius: 4px;">
-            ${distanceShort}
-          </span>
+          ${iconEmoji}
         </div>
       `;
 
-      const marker = new maplibregl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
         .setLngLat([facility.lng, facility.lat])
         .addTo(map);
 
@@ -1707,13 +1699,27 @@ export const MapView: React.FC<Props> = ({
     return '🚇 Metro/Cab recommended';
   };
 
+  if (!isWebGlSupported) {
+    return (
+      <div id="map-view-container" className="relative w-full h-full flex flex-col items-center justify-center p-6 bg-[#080B11] text-slate-200 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-3xl mb-4 text-amber-400 shadow-lg">
+          ⚠️
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">WebGL Disabled or Not Supported</h2>
+        <p className="text-sm text-slate-400 max-w-sm mb-4 leading-relaxed">
+          MapLibre requires WebGL to render interactive Durga Puja maps. Please enable WebGL or hardware acceleration in your browser settings.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div id="map-view-container" className="relative w-full h-full overflow-hidden bg-[#080B11]">
       {/* Primary MapLibre GL Stage */}
       <div
         id="maplibre-map"
         ref={mapContainerRef}
-        className="w-full h-full z-0"
+        className="absolute inset-0 w-full h-full z-0"
       />
 
       {/* Floating Top Search Bar */}

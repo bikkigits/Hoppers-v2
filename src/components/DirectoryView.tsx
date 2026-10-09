@@ -9,11 +9,13 @@ import {
   BusDiversion,
 } from '../types';
 import { PANDALS_DATA, CRITICAL_FACILITIES, METRO_STATIONS } from '../data/mockData';
+import { TRANSIT_HUBS } from '../data/transitHubsData';
 import { BUS_DIVERSIONS } from '../data/busDiversionsData';
 import { TRANSLATIONS } from '../data/translations';
 import { calculateDistanceKm, formatDistance } from '../utils/geo';
 import { getPandalCrowdSummary } from '../utils/crowdReports';
 import { CrowdStatusBadge, getCrowdBadge } from './CrowdStatusBadge';
+import { useFilter } from '../context/FilterContext';
 import {
   Search,
   Train,
@@ -76,10 +78,15 @@ export const DirectoryView: React.FC<Props> = ({
   const [busSearch, setBusSearch] = useState('');
 
   // Pandal section states
+  const {
+    selectedFilter,
+    setSelectedFilter,
+    selectedPoiCategory,
+    setSelectedPoiCategory,
+  } = useFilter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [sortBy, setSortBy] = useState<'distance' | 'crowd' | 'name'>('distance');
-  const [visibleCount, setVisibleCount] = useState(50);
+  const [visibleCount, setVisibleCount] = useState(20);
   const [, setCrowdUpdateTick] = useState(0);
 
   useEffect(() => {
@@ -93,12 +100,70 @@ export const DirectoryView: React.FC<Props> = ({
   }, []);
 
   React.useEffect(() => {
-    setVisibleCount(50);
+    setVisibleCount(20);
   }, [searchTerm, selectedFilter, sortBy]);
 
   // POI section states
   const [poiSearch, setPoiSearch] = useState('');
-  const [selectedPoiCategory, setSelectedPoiCategory] = useState<string>('all');
+  const [poiVisibleCount, setPoiVisibleCount] = useState(20);
+  const [geojsonPois, setGeojsonPois] = useState<FacilityPoint[]>([]);
+
+  useEffect(() => {
+    fetch('/Hoppers_2026_POIs.geojson')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch POIs');
+        return res.json();
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.features)) {
+          const parsed: FacilityPoint[] = data.features.map((f: any, idx: number) => {
+            const p = f.properties || {};
+            const coords = (f.geometry as GeoJSON.Point)?.coordinates || [88.36, 22.57];
+            const lat = coords[1];
+            const lng = coords[0];
+            const cat = (p.category || 'toilets') as FacilityCategory;
+            const isParking = cat === 'parking';
+            const name = p.name || `${cat.toUpperCase()} #${idx + 1}`;
+            const address = p.address || '';
+            return {
+              id: p.id ? String(p.id) : `poi-geo-${idx}`,
+              name: { en: name, bn: name, hi: name },
+              category: cat,
+              lat,
+              lng,
+              address: { en: address, bn: address, hi: address },
+              details: {
+                en: isParking
+                  ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}`
+                  : address || `${name} in Kolkata`,
+                bn: isParking
+                  ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}`
+                  : address || `${name} in Kolkata`,
+                hi: isParking
+                  ? `Capacity: ${p.capacity || 50} vehicles • ${p.fee_type || 'KMC Authorized'}`
+                  : address || `${name} in Kolkata`,
+              },
+              pujaHoursBadge:
+                cat === 'hospital'
+                  ? '24x7 Emergency'
+                  : isParking
+                  ? `${p.capacity || 50} Lots`
+                  : 'Puja 24x7',
+              is24x7: cat === 'hospital' || cat === 'police',
+              operator: p.operator,
+            };
+          });
+          setGeojsonPois(parsed);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load Hoppers_2026_POIs.geojson:', err);
+      });
+  }, []);
+
+  useEffect(() => {
+    setPoiVisibleCount(20);
+  }, [selectedPoiCategory, poiSearch]);
 
   const visitedSet = useMemo(() => new Set(visitedList.map((v) => v.pandalId)), [visitedList]);
   const trailStopIds = useMemo(() => new Set(trailStops.map((s) => s.id)), [trailStops]);
@@ -129,8 +194,34 @@ export const DirectoryView: React.FC<Props> = ({
       pujaHoursBadge: 'Extended during Puja',
     }));
 
-    return [...CRITICAL_FACILITIES, ...metroPois];
-  }, []);
+    const transitHubFacilities: FacilityPoint[] = TRANSIT_HUBS.map((hub) => ({
+      id: hub.id,
+      name: { en: hub.name, bn: hub.name, hi: hub.name },
+      category: hub.category === 'ferry' ? 'ferry' : 'railway',
+      lat: hub.lat,
+      lng: hub.lng,
+      address: { en: hub.connectingZones, bn: hub.connectingZones, hi: hub.connectingZones },
+      details: {
+        en: `${hub.travelTip} Nearby: ${hub.keyNearbyPandals}`,
+        bn: `${hub.travelTip} Nearby: ${hub.keyNearbyPandals}`,
+        hi: `${hub.travelTip} Nearby: ${hub.keyNearbyPandals}`,
+      },
+      operator: hub.operator,
+      hours: { en: '6:00 AM – 10:30 PM', bn: 'সকাল ৬:০০ – রাত ১০:৩০', hi: 'सुबह 6:00 – रात 10:30' },
+      pujaHoursBadge: 'Transit Hub',
+    }));
+
+    const combined = [...metroPois, ...transitHubFacilities, ...CRITICAL_FACILITIES, ...geojsonPois];
+    const seenIds = new Set<string>();
+    const unified: FacilityPoint[] = [];
+    for (const item of combined) {
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id);
+        unified.push(item);
+      }
+    }
+    return unified;
+  }, [geojsonPois]);
 
   // Filtered pandals
   const filteredPandals = useMemo(() => {
@@ -206,7 +297,8 @@ export const DirectoryView: React.FC<Props> = ({
     return allPoiFacilities
       .filter((poi) => {
         // Category filter
-        if (selectedPoiCategory !== 'all') {
+        // Category filter
+        if (selectedPoiCategory !== 'nearby' && selectedPoiCategory !== 'all') {
           if (
             selectedPoiCategory === 'hospital' &&
             poi.category !== 'hospital' &&
@@ -214,29 +306,29 @@ export const DirectoryView: React.FC<Props> = ({
           )
             return false;
           if (
-            selectedPoiCategory === 'medical' &&
-            poi.category !== 'hospital' &&
-            poi.category !== 'medical'
+            selectedPoiCategory === 'police' &&
+            poi.category !== 'police' &&
+            poi.category !== 'helpdesk'
           )
             return false;
-          if (selectedPoiCategory === 'police' && poi.category !== 'police') return false;
-          if (selectedPoiCategory === 'helpdesk' && poi.category !== 'helpdesk') return false;
-          if (selectedPoiCategory === 'metro' && poi.category !== 'metro') return false;
-          if (selectedPoiCategory === 'railway' && poi.category !== 'railway') return false;
-          if (selectedPoiCategory === 'ferry' && poi.category !== 'ferry') return false;
-          if (selectedPoiCategory === 'pharmacy' && poi.category !== 'pharmacy') return false;
-          if (selectedPoiCategory === 'atm' && poi.category !== 'atm') return false;
-          if (selectedPoiCategory === 'parking' && poi.category !== 'parking') return false;
+          if (selectedPoiCategory === 'toilets' && poi.category !== 'toilets')
+            return false;
           if (
             selectedPoiCategory === 'restaurant' &&
             poi.category !== 'restaurant' &&
             poi.category !== 'food'
           )
             return false;
+          if (selectedPoiCategory === 'metro' && poi.category !== 'metro') return false;
+          if (selectedPoiCategory === 'railway' && poi.category !== 'railway') return false;
+          if (selectedPoiCategory === 'ferry' && poi.category !== 'ferry') return false;
+          if (selectedPoiCategory === 'helpdesk' && poi.category !== 'helpdesk') return false;
+          if (selectedPoiCategory === 'pharmacy' && poi.category !== 'pharmacy') return false;
+          if (selectedPoiCategory === 'atm' && poi.category !== 'atm') return false;
+          if (selectedPoiCategory === 'parking' && poi.category !== 'parking') return false;
           if (selectedPoiCategory === 'hotel' && poi.category !== 'hotel') return false;
           if (selectedPoiCategory === 'landmark' && poi.category !== 'landmark') return false;
           if (selectedPoiCategory === 'petrol' && poi.category !== 'petrol') return false;
-          if (selectedPoiCategory === 'toilets' && poi.category !== 'toilets') return false;
         }
 
         // Search term
@@ -261,12 +353,10 @@ export const DirectoryView: React.FC<Props> = ({
         return nameMatch || detailsMatch || addressMatch || categoryMatch || cuisineMatch || operatorMatch;
       })
       .sort((a, b) => {
-        if (userCoords) {
-          const distA = calculateDistanceKm(userCoords.lat, userCoords.lng, a.lat, a.lng);
-          const distB = calculateDistanceKm(userCoords.lat, userCoords.lng, b.lat, b.lng);
-          return distA - distB;
-        }
-        return (a.name[language] || a.name.en).localeCompare(b.name[language] || b.name.en);
+        const ref = userCoords || { lat: 22.5645, lng: 88.3516 };
+        const distA = calculateDistanceKm(ref.lat, ref.lng, a.lat, a.lng);
+        const distB = calculateDistanceKm(ref.lat, ref.lng, b.lat, b.lng);
+        return distA - distB;
       });
   }, [allPoiFacilities, selectedPoiCategory, poiSearch, userCoords, language]);
 
@@ -280,7 +370,7 @@ export const DirectoryView: React.FC<Props> = ({
       metro: allPoiFacilities.filter((p) => p.category === 'metro').length,
       railway: allPoiFacilities.filter((p) => p.category === 'railway').length,
       ferry: allPoiFacilities.filter((p) => p.category === 'ferry').length,
-      police: allPoiFacilities.filter((p) => p.category === 'police').length,
+      police: allPoiFacilities.filter((p) => p.category === 'police' || p.category === 'helpdesk').length,
       helpdesk: allPoiFacilities.filter((p) => p.category === 'helpdesk').length,
       pharmacy: allPoiFacilities.filter((p) => p.category === 'pharmacy').length,
       atm: allPoiFacilities.filter((p) => p.category === 'atm').length,
@@ -291,18 +381,19 @@ export const DirectoryView: React.FC<Props> = ({
     };
 
     return [
+      { id: 'nearby', label: `Nearby (${counts.all})`, icon: '📍' },
       { id: 'all', label: `All (${counts.all})`, icon: '🧭' },
       { id: 'hospital', label: `24x7 Hospitals (${counts.hospital})`, icon: '🏥' },
+      { id: 'police', label: `Police & Aid (${counts.police})`, icon: '👮' },
       { id: 'toilets', label: `Public Toilets (${counts.toilets})`, icon: '🚻' },
+      { id: 'atm', label: `ATMs & Banks (${counts.atm})`, icon: '🏧' },
+      { id: 'parking', label: `Parking Lots (${counts.parking})`, icon: '🅿️' },
       { id: 'restaurant', label: `Food & Dining (${counts.restaurant})`, icon: '🍽️' },
       { id: 'metro', label: `Metro Stations (${counts.metro})`, icon: '🚇' },
       { id: 'railway', label: `Railway Terminals (${counts.railway})`, icon: '🚆' },
       { id: 'ferry', label: `Ferry Ghats (${counts.ferry})`, icon: '⛴️' },
-      { id: 'police', label: `Police Stations (${counts.police})`, icon: '👮' },
       { id: 'helpdesk', label: `Puja Help Desks (${counts.helpdesk})`, icon: '🚨' },
       { id: 'pharmacy', label: `Pharmacies (${counts.pharmacy})`, icon: '💊' },
-      { id: 'atm', label: `ATMs & Banks (${counts.atm})`, icon: '🏧' },
-      { id: 'parking', label: `Parking Lots (${counts.parking})`, icon: '🅿️' },
       { id: 'hotel', label: `Hotels (${counts.hotel})`, icon: '🏨' },
       { id: 'landmark', label: `Landmarks (${counts.landmark})`, icon: '🏛️' },
       { id: 'petrol', label: `Petrol Pumps (${counts.petrol})`, icon: '⛽' },
@@ -369,9 +460,21 @@ export const DirectoryView: React.FC<Props> = ({
     }
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 350) {
+      if (section === 'pandals' && visibleCount < filteredPandals.length) {
+        setVisibleCount((prev) => Math.min(prev + 20, filteredPandals.length));
+      } else if (section === 'poi' && poiVisibleCount < filteredPois.length) {
+        setPoiVisibleCount((prev) => Math.min(prev + 20, filteredPois.length));
+      }
+    }
+  };
+
   return (
     <div
       id="directory-view"
+      onScroll={handleScroll}
       className="w-full max-w-2xl mx-auto px-4 pt-3 pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+24px)] h-full overflow-y-auto overscroll-y-contain"
     >
       {/* Active Trail Floating Banner */}
@@ -637,7 +740,7 @@ export const DirectoryView: React.FC<Props> = ({
             <div className="pt-2 text-center">
               <button
                 id="load-more-pandals-btn"
-                onClick={() => setVisibleCount((prev) => prev + 50)}
+                onClick={() => setVisibleCount((prev) => Math.min(prev + 20, filteredPandals.length))}
                 className="w-full py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-400/50 hover:bg-slate-800 text-amber-300 font-semibold text-xs shadow-md transition active:scale-98 flex items-center justify-center gap-2"
               >
                 <span>Show More Pandals</span>
@@ -795,8 +898,9 @@ export const DirectoryView: React.FC<Props> = ({
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredPois.map((poi) => {
+            <>
+              <div className="space-y-3">
+              {filteredPois.slice(0, poiVisibleCount).map((poi) => {
                 const isInTrail = trailStopIds.has(poi.id);
                 const badgeStyle = getPoiBadgeStyle(poi.category);
                 const distKm = userCoords
@@ -967,7 +1071,23 @@ export const DirectoryView: React.FC<Props> = ({
                 );
               })}
             </div>
-          )}
+
+            {poiVisibleCount < filteredPois.length && (
+              <div className="pt-2 text-center pb-3">
+                <button
+                  id="load-more-pois-btn"
+                  onClick={() => setPoiVisibleCount((prev) => Math.min(prev + 20, filteredPois.length))}
+                  className="w-full py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-400/50 hover:bg-slate-800 text-amber-300 font-semibold text-xs shadow-md transition active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <span>Load More Facilities</span>
+                  <span className="text-[11px] text-slate-400">
+                    (Showing {Math.min(poiVisibleCount, filteredPois.length)} of {filteredPois.length})
+                  </span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
         </div>
       )}
 

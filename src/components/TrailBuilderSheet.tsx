@@ -49,9 +49,10 @@ import {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  trailStops: TrailStop[];
+  trailStops?: TrailStop[];
+  stops?: TrailStop[];
   onUpdateTrailStops: (stops: TrailStop[]) => void;
-  allPandals: Pandal[];
+  allPandals?: Pandal[];
   language: Language;
   userCoords: { lat: number; lng: number } | null;
   onSelectPandalPreview: (pandal: Pandal) => void;
@@ -61,14 +62,17 @@ interface Props {
 export const TrailBuilderSheet: React.FC<Props> = ({
   isOpen,
   onClose,
-  trailStops,
+  trailStops: propTrailStops,
+  stops: propStops,
   onUpdateTrailStops,
-  allPandals,
+  allPandals = [],
   language,
   userCoords,
   onSelectPandalPreview,
   onFocusMapOnTrail,
 }) => {
+  const trailStops = propTrailStops || propStops || [];
+
   const [travelMode, setTravelMode] = useState<TravelMode>('walking');
   const [isAddingStop, setIsAddingStop] = useState(false);
   const [searchPandalQuery, setSearchPandalQuery] = useState('');

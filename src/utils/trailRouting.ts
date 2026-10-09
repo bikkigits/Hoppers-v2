@@ -15,11 +15,12 @@ export interface TrailMetrics {
  * and estimated queuing times based on crowd levels.
  */
 export function calculateTrailMetrics(
-  stops: TrailStop[],
+  stops: TrailStop[] = [],
   travelMode: TravelMode = 'walking'
 ): TrailMetrics {
-  if (stops.length < 2) {
-    const queueTimeMin = stops.reduce((acc, stop) => acc + getQueueWaitMinutes(stop.crowdLevel), 0);
+  const safeStops = stops || [];
+  if (safeStops.length < 2) {
+    const queueTimeMin = safeStops.reduce((acc, stop) => acc + getQueueWaitMinutes(stop.crowdLevel), 0);
     return {
       totalDistanceKm: 0,
       travelTimeMin: 0,
@@ -143,19 +144,21 @@ export function optimizeTrailOrder(stops: TrailStop[]): TrailStop[] {
  * between consecutive stops in the user's trail.
  */
 export function detectPandalsOnWay(
-  stops: TrailStop[],
-  allPandals: Pandal[],
+  stops: TrailStop[] = [],
+  allPandals: Pandal[] = [],
   maxCorridorDistanceKm = 0.55 // 550 meters walking corridor
 ): CorridorDetourSuggestion[] {
-  if (stops.length < 2) return [];
+  const safeStops = stops || [];
+  const safePandals = allPandals || [];
+  if (safeStops.length < 2 || safePandals.length === 0) return [];
 
-  const existingIds = new Set(stops.map((s) => s.pandalId || s.id));
-  const candidatePandals = allPandals.filter((p) => !existingIds.has(p.id));
+  const existingIds = new Set(safeStops.map((s) => s.pandalId || s.id));
+  const candidatePandals = safePandals.filter((p) => !existingIds.has(p.id));
   const suggestions: CorridorDetourSuggestion[] = [];
 
-  for (let i = 0; i < stops.length - 1; i++) {
-    const stopA = stops[i];
-    const stopB = stops[i + 1];
+  for (let i = 0; i < safeStops.length - 1; i++) {
+    const stopA = safeStops[i];
+    const stopB = safeStops[i + 1];
 
     const directDistKm = calculateDistanceKm(stopA.lat, stopA.lng, stopB.lat, stopB.lng);
     // Skip if stops are extremely close (< 200m)
@@ -274,17 +277,18 @@ export function batchInsertAllDetours(
  * Supports origin, destination, and intermediate waypoints with travel mode
  */
 export function buildGoogleMapsMultiStopUrl(
-  stops: TrailStop[],
+  stops: TrailStop[] = [],
   travelMode: TravelMode = 'walking'
 ): string {
-  if (stops.length === 0) return 'https://www.google.com/maps';
+  const safeStops = stops || [];
+  if (safeStops.length === 0) return 'https://www.google.com/maps';
 
-  if (stops.length === 1) {
-    return `https://www.google.com/maps/search/?api=1&query=${stops[0].lat},${stops[0].lng}`;
+  if (safeStops.length === 1) {
+    return `https://www.google.com/maps/search/?api=1&query=${safeStops[0].lat},${safeStops[0].lng}`;
   }
 
-  const origin = `${stops[0].lat},${stops[0].lng}`;
-  const destination = `${stops[stops.length - 1].lat},${stops[stops.length - 1].lng}`;
+  const origin = `${safeStops[0].lat},${safeStops[0].lng}`;
+  const destination = `${safeStops[safeStops.length - 1].lat},${safeStops[safeStops.length - 1].lng}`;
   const gmapsTravelMode =
     travelMode === 'transit'
       ? 'transit'
@@ -298,8 +302,8 @@ export function buildGoogleMapsMultiStopUrl(
     origin
   )}&destination=${encodeURIComponent(destination)}&travelmode=${gmapsTravelMode}`;
 
-  if (stops.length > 2) {
-    const waypoints = stops
+  if (safeStops.length > 2) {
+    const waypoints = safeStops
       .slice(1, -1)
       .map((s) => `${s.lat},${s.lng}`)
       .join('|');
@@ -313,11 +317,12 @@ export function buildGoogleMapsMultiStopUrl(
  * Generates formatted WhatsApp Durga Puja Hopping Itinerary
  */
 export function buildWhatsAppItineraryText(
-  stops: TrailStop[],
+  stops: TrailStop[] = [],
   language: Language,
   metrics: TrailMetrics,
   travelMode: TravelMode
 ): string {
+  const safeStops = stops || [];
   const modeEmoji =
     travelMode === 'walking'
       ? '🚶'

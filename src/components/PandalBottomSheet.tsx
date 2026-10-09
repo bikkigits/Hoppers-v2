@@ -46,6 +46,7 @@ import {
   VoteCategory,
 } from '../services/firebaseCrowd';
 import { CrowdStatusBadge } from './CrowdStatusBadge';
+import { useFilter } from '../context/FilterContext';
 
 interface Props {
   selectedItem: SelectedMapItem | null;
@@ -73,6 +74,7 @@ export const PandalBottomSheet: React.FC<Props> = ({
   onToggleTrailStop,
 }) => {
   const t = TRANSLATIONS[language];
+  const { activeFilter, setActiveFilter, selectedFilter, setSelectedFilter } = useFilter();
   const isPandal = selectedItem ? 'theme' in selectedItem : false;
   const isStation = selectedItem ? 'exitGates' in selectedItem && 'lines' in selectedItem : false;
   const isFacility = selectedItem ? !isPandal && !isStation : false;

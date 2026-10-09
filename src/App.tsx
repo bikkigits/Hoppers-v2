@@ -28,6 +28,7 @@ import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OnboardingSplash } from './components/OnboardingSplash';
 import { PowerSaveProvider } from './context/PowerSaveContext';
+import { FilterProvider } from './context/FilterContext';
 import { PowerSaveToast } from './components/PowerSaveToast';
 
 function AppContent() {
@@ -444,7 +445,9 @@ function AppContent() {
 export function App() {
   return (
     <PowerSaveProvider>
-      <AppContent />
+      <FilterProvider>
+        <AppContent />
+      </FilterProvider>
     </PowerSaveProvider>
   );
 }
